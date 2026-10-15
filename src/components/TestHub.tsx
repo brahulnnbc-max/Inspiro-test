@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ExamPaper,
   ExamPattern,
@@ -17,6 +17,7 @@ import { DailyRoutineDesk } from './DailyRoutineDesk';
 import { ModulePracticeSection } from './ModulePracticeSection';
 import { AIMentorSchedulerChat } from './AIMentorSchedulerChat';
 import { RaceQuestionBank } from './RaceQuestionBank';
+import { MathRenderer } from './MathRenderer';
 import {
   UploadCloud,
   FileText,
@@ -25,7 +26,6 @@ import {
   Sparkles,
   AlertCircle,
   History,
-  Cpu,
   BookOpen,
   Calendar,
   Sun,
@@ -37,6 +37,13 @@ import {
   Bot,
   Layers,
   Award,
+  CheckCircle2,
+  Sliders,
+  ChevronRight,
+  Eye,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 interface TestHubProps {
@@ -98,12 +105,25 @@ export const TestHub: React.FC<TestHubProps> = ({
   const [mentorInitialPrompt, setMentorInitialPrompt] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
-  // Upload state
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  // Upload & Advanced AI Extraction State
   const [isUploading, setIsUploading] = useState(false);
+  const [activeStageIndex, setActiveStageIndex] = useState<number>(0);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [selectedPattern, setSelectedPattern] = useState<ExamPattern>('JEE_MAIN');
   const [customTitle, setCustomTitle] = useState('');
+  const [userCommand, setUserCommand] = useState<string>('');
+  const [customDuration, setCustomDuration] = useState<number>(180);
+  const [extractedPaperResult, setExtractedPaperResult] = useState<ExamPaper | null>(null);
+  const [showPreviewQuestions, setShowPreviewQuestions] = useState<boolean>(false);
 
   // Dual file refs & states
   const [questionFile, setQuestionFile] = useState<File | null>(null);
@@ -111,7 +131,7 @@ export const TestHub: React.FC<TestHubProps> = ({
   const qFileInputRef = useRef<HTMLInputElement | null>(null);
   const solFileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Convert files
+  // Convert files using Advanced Gemini 3.8 Flash Vision Engine
   const handleStartConversion = async () => {
     if (!questionFile) {
       setErrorMsg('Please select a Question Paper or Module Exercise PDF first');
@@ -120,7 +140,9 @@ export const TestHub: React.FC<TestHubProps> = ({
 
     setIsUploading(true);
     setErrorMsg('');
-    setUploadProgress('Reading Question / Module PDF...');
+    setExtractedPaperResult(null);
+    setActiveStageIndex(0);
+    setUploadProgress('Reading & encoding PDF documents with OCR pre-processor...');
 
     try {
       const readBase64 = (file: File): Promise<string> =>
@@ -138,18 +160,17 @@ export const TestHub: React.FC<TestHubProps> = ({
         solutionFileBase64 = await readBase64(solutionFile);
       }
 
-      setUploadProgress('Uploading to Gemini AI Vision engine...');
+      setActiveStageIndex(1);
+      setUploadProgress(
+        solutionFile
+          ? 'Gemini 3.8 Flash Vision is cross-referencing Question Paper & Solutions with LaTeX...'
+          : 'Gemini 3.8 Flash Vision is deep-scanning all questions, diagrams, and formulas...'
+      );
 
       const examTitle =
         customTitle.trim() ||
         questionFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') ||
         'Custom Module Practice Sprint';
-
-      setUploadProgress(
-        solutionFile
-          ? 'Gemini is cross-referencing Question Paper & Solutions with LaTeX...'
-          : 'Gemini is extracting questions, formulas, diagrams, & sections...'
-      );
 
       const response = await fetch('/api/parse-exam-pdf', {
         method: 'POST',
@@ -160,6 +181,8 @@ export const TestHub: React.FC<TestHubProps> = ({
           mimeType: questionFile.type || 'application/pdf',
           examTitle,
           pattern: selectedPattern,
+          userCommand: userCommand.trim() || undefined,
+          customDurationMinutes: customDuration,
         }),
       });
 
@@ -168,18 +191,22 @@ export const TestHub: React.FC<TestHubProps> = ({
         throw new Error(errorData.error || `Server status ${response.status}`);
       }
 
-      setUploadProgress('Compiling CBT room with verified answers & formulas...');
+      setActiveStageIndex(2);
+      setUploadProgress('Matching answer keys and formatting LaTeX equations & diagrams...');
       const data = await response.json();
 
       if (!data.success || !data.examPaper) {
         throw new Error(data.error || 'Failed to parse exam questions');
       }
 
+      setActiveStageIndex(3);
+      setUploadProgress('Assembling CBT examination palette & verified solutions...');
+
       const generatedPaper: ExamPaper = {
         id: `custom-paper-${Date.now()}`,
         title: data.examPaper.title || examTitle,
         pattern: (data.examPaper.pattern as ExamPattern) || selectedPattern,
-        durationMinutes: data.examPaper.durationMinutes || 180,
+        durationMinutes: data.examPaper.durationMinutes || customDuration || 180,
         totalMarks:
           data.examPaper.totalMarks ||
           (selectedPattern === 'JEE_MAIN' ? 300 : 180),
@@ -188,12 +215,12 @@ export const TestHub: React.FC<TestHubProps> = ({
       };
 
       onSaveCustomPaper(generatedPaper);
-      onSelectExam(generatedPaper);
+      setExtractedPaperResult(generatedPaper);
     } catch (err: any) {
       console.error('Error during PDF conversion:', err);
       setErrorMsg(
         err.message ||
-          'Failed to convert PDF. Ensure your Gemini API Key is configured.'
+          'Failed to convert PDF. Ensure your Gemini API Key is configured in settings or environment.'
       );
     } finally {
       setIsUploading(false);
@@ -213,38 +240,41 @@ export const TestHub: React.FC<TestHubProps> = ({
         isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800'
       }`}
     >
-      <div className="max-w-6xl mx-auto space-y-7">
-        {/* Hub Header */}
-        <div className="border-b border-slate-200 dark:border-slate-800 pb-5 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-indigo-600 dark:text-indigo-400 uppercase">
-              <Cpu className="w-4 h-4" />
-              NTA & MathonGo Live Coaching Suite
+      <div className="max-w-6xl mx-auto space-y-5">
+        {/* inspiro LIVE Brand App Corner Header */}
+        <header className="border-b border-slate-200/90 dark:border-slate-800/80 pb-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl md:text-2xl font-black tracking-tight font-display text-slate-900 dark:text-white select-none">
+                inspiro
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-wider bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-2xs select-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                LIVE
+              </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold font-display tracking-tight text-slate-900 dark:text-white mt-1">
-              JEE Test & Module Practice Hub
-            </h1>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Daily live module practice sprints, 3–6 month coaching test roadmap, and targeted Mistake Notebook.
-            </p>
+            <div className="hidden sm:block h-3.5 w-px bg-slate-300 dark:bg-slate-700" />
+            <span className="hidden sm:inline text-xs font-medium text-slate-500 dark:text-slate-400">
+              JEE Practice & CBT Test Hub
+            </span>
           </div>
 
           {/* Right Tools: Day/Night */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold shadow-2xs"
               title="Toggle Day/Night Mode"
             >
               {isDarkMode ? (
-                <Sun className="w-4 h-4 text-amber-400" />
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
               ) : (
-                <Moon className="w-4 h-4 text-slate-600" />
+                <Moon className="w-3.5 h-3.5 text-slate-600" />
               )}
               <span>{isDarkMode ? 'Day' : 'Night'}</span>
             </button>
           </div>
-        </div>
+        </header>
 
         {/* 7 Primary Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-1 overflow-x-auto">
@@ -448,18 +478,125 @@ export const TestHub: React.FC<TestHubProps> = ({
                 </div>
               </div>
 
-              {/* Title input */}
-              <div className="max-w-md">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  Session Title (Optional):
-                </label>
-                <input
-                  type="text"
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="e.g. Kinematics Module Exercise 1 / Allen Test 05"
-                  className="w-full px-3.5 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-                />
+              {/* Title & Duration Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Session Title (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    placeholder="e.g. Kinematics Module Ex 1 / Allen Leader Test 05"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Test Duration:
+                  </label>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[30, 45, 60, 90, 180].map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setCustomDuration(mins)}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+                          customDuration === mins
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-750 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
+                        }`}
+                      >
+                        {mins === 180 ? '3 Hours (NTA Mock)' : `${mins} Mins`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced AI Director Command & Custom Instructions Console */}
+              <div className="p-4 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/70 via-slate-50 to-purple-50/50 dark:from-indigo-950/30 dark:via-slate-850 dark:to-purple-950/20 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                      <Bot className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        Advanced AI Director Command Console
+                        <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                          Gemini 3.8 Flash Vision
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Give any specific instruction to the AI
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <textarea
+                    rows={2}
+                    value={userCommand}
+                    onChange={(e) => setUserCommand(e.target.value)}
+                    placeholder='Type any custom directive, e.g.: "Extract all 30 questions without skipping. The answer key is in the table on the last page. Format all equations in LaTeX and provide step-by-step solutions."'
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-indigo-200/80 dark:border-indigo-900/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 shadow-inner"
+                  />
+
+                  {/* 1-Click Command Preset Chips */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Quick Commands:
+                    </span>
+                    {[
+                      {
+                        label: '⚡ Extract ALL Questions',
+                        cmd: 'Extract every single question found in this document from start to finish without skipping or stopping early.',
+                      },
+                      {
+                        label: '🎯 Auto-Detect Answer Key & Solutions',
+                        cmd: 'Cross-reference the answer key table in the paper or solutions file, and synthesize step-by-step masterclass solutions for all questions.',
+                      },
+                      {
+                        label: '⏱️ 45-Min Module Practice Sprint',
+                        cmd: 'Configure this as a 45-minute high-speed module practice sprint with 25 questions and +4/-1 marking scheme.',
+                      },
+                      {
+                        label: '🔢 Numerical Section B with Working',
+                        cmd: 'Ensure all non-MCQ numerical integer/decimal questions in Section B are extracted with exact calculation steps.',
+                      },
+                      {
+                        label: '📚 Group Physics, Chemistry & Maths',
+                        cmd: 'Organize extracted questions into separate Physics, Chemistry, and Mathematics sections sequentially.',
+                      },
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() =>
+                          setUserCommand((prev) =>
+                            prev ? `${prev}\n${preset.cmd}` : preset.cmd
+                          )
+                        }
+                        className="text-[10px] font-semibold px-2 py-1 rounded-md bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-95 shadow-2xs"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                    {userCommand && (
+                      <button
+                        type="button"
+                        onClick={() => setUserCommand('')}
+                        className="text-[10px] text-rose-500 hover:underline px-1"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Dual File Picker Grid */}
@@ -485,7 +622,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     className="hidden"
                   />
                   <div className="space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto shadow-xs">
                       {questionFile ? (
                         <FileCheck className="w-5 h-5 text-emerald-600" />
                       ) : (
@@ -500,7 +637,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     <div className="text-[11px] text-slate-500">
                       {questionFile
                         ? `${(questionFile.size / (1024 * 1024)).toFixed(1)} MB • Click to replace`
-                        : 'Physics, Chem & Math questions or exercises'}
+                        : 'Physics, Chem & Math questions or chapter exercises'}
                     </div>
                   </div>
                 </div>
@@ -526,7 +663,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     className="hidden"
                   />
                   <div className="space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center mx-auto shadow-xs">
                       {solutionFile ? (
                         <FileCheck className="w-5 h-5 text-emerald-600" />
                       ) : (
@@ -541,7 +678,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     <div className="text-[11px] text-slate-500">
                       {solutionFile
                         ? `${(solutionFile.size / (1024 * 1024)).toFixed(1)} MB • Click to replace`
-                        : 'Auto-syncs verified answer keys & solutions'}
+                        : 'If omitted, Gemini 3.8 Flash solves questions automatically'}
                     </div>
                   </div>
                 </div>
@@ -551,35 +688,231 @@ export const TestHub: React.FC<TestHubProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
                 <div className="text-xs text-slate-500">
                   {questionFile ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                      ✓ Ready to build CBT session with Gemini Vision
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      Ready to execute with Gemini 3.8 Flash Vision Engine
                     </span>
                   ) : (
-                    <span>Select your PDF to begin</span>
+                    <span>Select your PDF file above to begin</span>
                   )}
                 </div>
 
-                <button
-                  onClick={handleStartConversion}
-                  disabled={!questionFile || isUploading}
-                  className="px-6 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  {isUploading ? 'Converting Paper...' : 'Convert & Launch CBT Room'}
-                </button>
+                <div className="flex items-center gap-2">
+                  {(questionFile || solutionFile) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuestionFile(null);
+                        setSolutionFile(null);
+                        setExtractedPaperResult(null);
+                      }}
+                      className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750 rounded-xl transition-all"
+                    >
+                      Reset
+                    </button>
+                  )}
+                  <button
+                    onClick={handleStartConversion}
+                    disabled={!questionFile || isUploading}
+                    className="px-6 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                    {isUploading ? 'AI is Extracting Questions...' : 'Extract Questions & Launch CBT Test'}
+                  </button>
+                </div>
               </div>
 
+              {/* 4-Stage Visual Progress Tracker */}
               {isUploading && (
-                <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 dark:border-indigo-900/50 flex items-center gap-3 text-xs text-indigo-900 dark:text-indigo-200">
-                  <div className="w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin shrink-0" />
-                  <span className="font-mono">{uploadProgress}</span>
+                <div className="p-5 bg-gradient-to-br from-indigo-50 to-indigo-100/60 dark:from-indigo-950/60 dark:to-slate-900 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin shrink-0" />
+                      <span className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                        {uploadProgress}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400">
+                      Step {activeStageIndex + 1} of 4
+                    </span>
+                  </div>
+
+                  {/* Visual Stepper */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
+                    {[
+                      { title: '1. Read & OCR PDF', desc: 'Pre-processing pages' },
+                      { title: '2. Gemini 3.8 Flash', desc: 'LaTeX math scanning' },
+                      { title: '3. Answer Key & Logic', desc: 'Step-by-step solving' },
+                      { title: '4. CBT Engine Ready', desc: 'NTA & MathonGo setup' },
+                    ].map((step, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-2.5 rounded-xl text-center border transition-all ${
+                          idx < activeStageIndex
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                            : idx === activeStageIndex
+                            ? 'bg-white dark:bg-slate-800 border-indigo-500 shadow-sm text-indigo-600 dark:text-indigo-300 font-bold'
+                            : 'bg-white/40 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400'
+                        }`}
+                      >
+                        <div className="text-[11px] font-bold">{step.title}</div>
+                        <div className="text-[10px] opacity-75">{step.desc}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {errorMsg && (
                 <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-3">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
+                  <div className="space-y-1">
+                    <p className="font-semibold">{errorMsg}</p>
+                    <p className="text-[11px] opacity-90">
+                      Tip: If deploying to Vercel, make sure GEMINI_API_KEY is configured in your Vercel Environment Variables.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* SUCCESSFUL EXTRACTION LAUNCHPAD */}
+              {extractedPaperResult && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50/50 to-indigo-50 dark:from-emerald-950/40 dark:via-teal-950/20 dark:to-slate-900 border-2 border-emerald-500/80 shadow-lg space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1 rounded-full bg-emerald-500 text-white">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </span>
+                        <h3 className="text-sm md:text-base font-bold font-display text-slate-900 dark:text-white">
+                          🎉 {extractedPaperResult.title} Extracted Successfully!
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        All questions, options, LaTeX mathematical formulas, and verified solutions have been structured into the CBT engine.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => onSelectExam(extractedPaperResult)}
+                        className="px-5 py-2.5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow-md transition-all flex items-center gap-2 shrink-0"
+                      >
+                        <Play className="w-4 h-4 fill-white" />
+                        Launch CBT Test Room
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Extracted Stats Breakdown */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-center">
+                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Total Questions</div>
+                      <div className="text-lg font-black text-slate-900 dark:text-white">
+                        {extractedPaperResult.sections.reduce((acc, s) => acc + s.questions.length, 0)}
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-center">
+                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Duration</div>
+                      <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">
+                        {extractedPaperResult.durationMinutes} Mins
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-center">
+                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Sections</div>
+                      <div className="text-lg font-black text-purple-600 dark:text-purple-400">
+                        {extractedPaperResult.sections.length} ({extractedPaperResult.sections.map((s) => s.name).join(', ')})
+                      </div>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-center">
+                      <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Total Marks</div>
+                      <div className="text-lg font-black text-amber-600 dark:text-amber-400">
+                        {extractedPaperResult.totalMarks}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Toggle Preview Accordion */}
+                  <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setShowPreviewQuestions(!showPreviewQuestions)}
+                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {showPreviewQuestions ? 'Hide Extracted Questions' : 'Preview Extracted Questions with LaTeX'}
+                      {showPreviewQuestions ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExtractedPaperResult(null);
+                        setQuestionFile(null);
+                        setSolutionFile(null);
+                      }}
+                      className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Convert Another PDF
+                    </button>
+                  </div>
+
+                  {/* Preview Question List */}
+                  {showPreviewQuestions && (
+                    <div className="max-h-96 overflow-y-auto space-y-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {extractedPaperResult.sections.flatMap((s) => s.questions).map((q, idx) => (
+                        <div
+                          key={q.id || idx}
+                          className="p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850 space-y-2 text-xs"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                              Question {q.questionNumber || idx + 1} ({q.sectionId?.toUpperCase() || 'SECTION'})
+                            </span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                              {q.type} • +{q.positiveMarks}/-{q.negativeMarks}
+                            </span>
+                          </div>
+
+                          <div className="text-slate-900 dark:text-slate-100 font-serif leading-relaxed">
+                            <MathRenderer content={q.promptLatex} />
+                          </div>
+
+                          {q.diagramDescription && (
+                            <div className="p-2 rounded bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300">
+                              {q.diagramDescription}
+                            </div>
+                          )}
+
+                          {q.options && q.options.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                              {q.options.map((opt) => (
+                                <div
+                                  key={opt.id}
+                                  className={`p-2 rounded border text-[11px] flex items-center gap-2 ${
+                                    opt.id === q.correctAnswer
+                                      ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-semibold'
+                                      : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                                  }`}
+                                >
+                                  <span className="font-bold shrink-0">{opt.id}.</span>
+                                  <MathRenderer content={opt.labelLatex} />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {q.explanationLatex && (
+                            <div className="pt-2 text-[11px] text-slate-600 dark:text-slate-400 border-t border-slate-200/60 dark:border-slate-800">
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">Solution: </span>
+                              <MathRenderer content={q.explanationLatex} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

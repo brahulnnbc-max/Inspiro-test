@@ -52,6 +52,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   // Day / Night mode
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   // Active section & question indices
   const [activeSectionId, setActiveSectionId] = useState<SubjectId>(
     paper.sections[0]?.id || 'physics'

@@ -15,7 +15,6 @@ import {
   Trash2,
   Filter,
   Check,
-  Cpu,
   Smile,
 } from 'lucide-react';
 
@@ -87,11 +86,11 @@ export const DailyRoutineDesk: React.FC<DailyRoutineDeskProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate master routine');
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || 'Failed to generate master routine');
       }
 
-      const resData = await response.json();
       if (resData.success && resData.data && resData.data.items) {
         const generated: DailyRoutineItem[] = resData.data.items.map(
           (item: any, idx: number) => ({
@@ -208,7 +207,7 @@ export const DailyRoutineDesk: React.FC<DailyRoutineDeskProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-              <Cpu className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-indigo-500" />
               AI Master Routine Director
             </div>
             <h3 className="text-base md:text-lg font-bold font-display text-slate-900 dark:text-white mt-0.5">

@@ -55,6 +55,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
   const [sprintDuration, setSprintDuration] = useState<number>(50);
   const [questionsPerSprint, setQuestionsPerSprint] = useState<number>(25);
   const [scheduledSlot, setScheduledSlot] = useState<string>('19:00 - 20:00');
+  const [moduleUserCommand, setModuleUserCommand] = useState<string>('');
 
   const qFileInputRef = useRef<HTMLInputElement | null>(null);
   const solInputRef = useRef<HTMLInputElement | null>(null);
@@ -215,6 +216,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
           mimeType: questionFile.type || 'application/pdf',
           examTitle: title,
           pattern: 'JEE_MAIN',
+          userCommand: moduleUserCommand.trim() || undefined,
+          customDurationMinutes: sprintDuration,
         }),
       });
 
@@ -395,6 +398,24 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
               className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
             />
           </div>
+        </div>
+
+        {/* AI Director Command Box for Module */}
+        <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              AI Director Custom Command (Optional)
+            </span>
+            <span className="text-[10px] text-slate-500">Gemini 3.8 Flash Vision</span>
+          </div>
+          <input
+            type="text"
+            value={moduleUserCommand}
+            onChange={(e) => setModuleUserCommand(e.target.value)}
+            placeholder='e.g. "Extract all 40 questions from Exercise 1. Answer key is on the last page. Format formulas in LaTeX."'
+            className="w-full px-3 py-2 text-xs rounded-lg border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
 
         {/* Dual Files: Question Module + Optional Solution Key */}

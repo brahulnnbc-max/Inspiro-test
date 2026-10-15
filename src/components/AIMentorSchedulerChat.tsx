@@ -78,11 +78,10 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to consult AI Mentor');
-      }
-
       const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || 'Failed to consult AI Mentor');
+      }
       const mentorData = resData.data;
 
       let mappedItems: DailyRoutineItem[] | undefined = undefined;
@@ -119,11 +118,11 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
 
       setMessages((prev) => [...prev, mentorMsg]);
     } catch (e: any) {
-      console.error(e);
+      console.error('Mentor error:', e);
       const errorMsg: ChatMessage = {
         id: `mentor-err-${Date.now()}`,
         sender: 'mentor',
-        text: 'Apologies, I encountered an issue reaching the coaching engine. Please verify your Gemini API key or try again.',
+        text: `I encountered a momentary delay: "${e.message || 'Connection timeout'}". Please try resending or tap one of the quick command buttons below!`,
         timestamp: 'Just now',
       };
       setMessages((prev) => [...prev, errorMsg]);

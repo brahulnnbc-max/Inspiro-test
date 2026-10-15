@@ -20,7 +20,6 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  Cpu,
   Flame,
   Award,
 } from 'lucide-react';
@@ -107,11 +106,10 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate test schedule');
-      }
-
       const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || 'Failed to generate test schedule');
+      }
       if (resData.success && resData.data && resData.data.tests) {
         const generatedTests: ScheduledTest[] = resData.data.tests.map(
           (t: any, idx: number) => ({
@@ -164,7 +162,7 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-              <Cpu className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-indigo-500" />
               AI Test Series Director & Roadmap Builder
             </div>
             <h2 className="text-lg md:text-xl font-bold font-display text-slate-900 dark:text-white mt-0.5">
