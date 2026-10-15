@@ -129,6 +129,28 @@ export const TestHub: React.FC<TestHubProps> = ({
   const [showAttachToScheduleModal, setShowAttachToScheduleModal] = useState(false);
   const [paperScheduledNotice, setPaperScheduledNotice] = useState('');
 
+  // Real-time AI engine connectivity state
+  const [aiStatus, setAiStatus] = useState<{
+    checked: boolean;
+    hasKey: boolean;
+    engine?: string;
+  }>({ checked: false, hasKey: false });
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then((res) => res.json())
+      .then((data) => {
+        setAiStatus({
+          checked: true,
+          hasKey: Boolean(data.hasGeminiKey),
+          engine: data.aiEngine || 'Gemini 3.8 Flash Vision',
+        });
+      })
+      .catch(() => {
+        setAiStatus({ checked: true, hasKey: false });
+      });
+  }, []);
+
   // Dual file refs & states
   const [questionFile, setQuestionFile] = useState<File | null>(null);
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
@@ -295,8 +317,38 @@ export const TestHub: React.FC<TestHubProps> = ({
             </span>
           </div>
 
-          {/* Right Status Badge */}
+          {/* Right Status Badges */}
           <div className="flex items-center gap-2">
+            {/* Real-time AI Status Indicator */}
+            {aiStatus.checked && (
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${
+                  aiStatus.hasKey
+                    ? 'bg-emerald-950/40 border-emerald-600/40 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400'
+                }`}
+                title={
+                  aiStatus.hasKey
+                    ? 'Gemini AI Engine is connected and ready for PDF question paper extraction, remedial PYQs, and academic mentor.'
+                    : 'GEMINI_API_KEY is not detected. Configure GEMINI_API_KEY in your server or .env for custom PDF extraction.'
+                }
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    aiStatus.hasKey
+                      ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                      : 'bg-amber-400'
+                  }`}
+                />
+                <span className="hidden md:inline">
+                  {aiStatus.hasKey ? 'Gemini AI Connected' : 'Gemini AI: Add Key'}
+                </span>
+                <span className="md:hidden">
+                  {aiStatus.hasKey ? 'AI Ready' : 'No Key'}
+                </span>
+              </span>
+            )}
+
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-zinc-900 border border-zinc-800 text-zinc-300">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
               <span className="text-white">NTA & MathonGo</span>

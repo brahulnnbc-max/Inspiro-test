@@ -42,15 +42,15 @@ interface CBTExamRoomProps {
 
 export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   paper,
-  initialMode = 'MATHANGO',
+  initialMode = 'NTA_OFFICIAL',
   onSubmitExam,
   onExit,
   onToggleTag,
 }) => {
   // Mode toggle: Official NTA vs Modern MathonGo
   const [uiMode, setUiMode] = useState<UIMode>(initialMode);
-  // Day / Night mode
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  // Default to day mode (false) in NTA Official for authentic government exam terminal appearance, toggleable to dark mode
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(initialMode === 'MATHANGO');
 
   useEffect(() => {
     if (isDarkMode) {
@@ -109,6 +109,19 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const currentQuestion: Question | undefined = useMemo(() => {
     return currentSection?.questions[activeQuestionIndex];
   }, [currentSection, activeQuestionIndex]);
+
+  // Section A (MCQ) vs Section B (Numerical) Filter for authentic NTA CBT
+  const [activeSubSection, setActiveSubSection] = useState<'ALL' | 'SECTION_A' | 'SECTION_B'>('ALL');
+
+  // Filter questions for the question palette based on active subsection
+  const displayedQuestions = useMemo(() => {
+    if (!currentSection) return [];
+    return currentSection.questions.map((q, idx) => ({ ...q, originalIdx: idx })).filter((q) => {
+      if (activeSubSection === 'SECTION_A') return q.type !== 'NUMERICAL';
+      if (activeSubSection === 'SECTION_B') return q.type === 'NUMERICAL';
+      return true;
+    });
+  }, [currentSection, activeSubSection]);
 
   // Initialize questions as NOT_VISITED except the initial one (NOT_ANSWERED)
   useEffect(() => {
@@ -403,82 +416,191 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
   // Palette View component (rendered in sidebar on desktop, inside drawer on mobile)
   const PaletteContent = (
-    <div className="flex flex-col justify-between h-full p-4 space-y-4">
-      <div>
-        <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-            Question Palette
-          </span>
-          <span className="text-xs text-slate-500 font-mono">
-            {overallCounts.answered} / {overallCounts.total} Ans
-          </span>
+    <div
+      className={`flex flex-col justify-between h-full p-3.5 space-y-3 ${
+        uiMode === 'NTA_OFFICIAL' && !isDarkMode
+          ? 'bg-[#eef2f5] text-slate-800'
+          : 'bg-zinc-950 text-zinc-100'
+      }`}
+    >
+      <div className="space-y-3">
+        {/* Candidate Profile Box (Authentic NTA Exam Hall Box) */}
+        <div
+          className={`p-2.5 rounded-md border flex items-center gap-3 ${
+            uiMode === 'NTA_OFFICIAL' && !isDarkMode
+              ? 'bg-white border-slate-300 shadow-xs'
+              : 'bg-zinc-900 border-zinc-800'
+          }`}
+        >
+          <div className="w-12 h-14 rounded border border-slate-400 bg-slate-200 dark:bg-zinc-800 flex flex-col items-center justify-center shrink-0 overflow-hidden text-slate-500">
+            <User className="w-7 h-7 text-slate-600 dark:text-zinc-400" />
+            <span className="text-[7px] font-mono font-bold mt-0.5 uppercase tracking-tighter">Candidate</span>
+          </div>
+          <div className="text-[11px] leading-tight space-y-1 overflow-hidden">
+            <div className="truncate">
+              <strong className={!isDarkMode ? 'text-slate-900' : 'text-white'}>Candidate Name:</strong> JEE Aspirant
+            </div>
+            <div className="truncate font-mono">
+              <strong className={!isDarkMode ? 'text-slate-900' : 'text-white'}>Roll No.:</strong> 250310084920
+            </div>
+            <div className="truncate">
+              <strong className={!isDarkMode ? 'text-slate-900' : 'text-white'}>Subject:</strong> {currentSection.name.toUpperCase()}
+            </div>
+            <div className="truncate text-slate-500 font-mono text-[10px]">
+              <strong>System:</strong> C001
+            </div>
+          </div>
         </div>
 
         {/* Legend counts */}
-        <div className="grid grid-cols-2 gap-2 text-[11px] my-3">
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-            <span className="w-5 h-5 flex items-center justify-center font-bold text-[10px] bg-emerald-600 text-white rounded shrink-0">
-              {overallCounts.answered}
-            </span>
-            <span className="truncate">Answered</span>
+        <div
+          className={`p-2.5 rounded-md border text-[11px] space-y-2 ${
+            uiMode === 'NTA_OFFICIAL' && !isDarkMode
+              ? 'bg-white border-slate-300 shadow-xs'
+              : 'bg-zinc-900 border-zinc-800'
+          }`}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="w-6 h-6 flex items-center justify-center font-bold text-[11px] nta-shape-answered shrink-0">
+                {overallCounts.answered}
+              </span>
+              <span className="truncate">Answered</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="w-6 h-6 flex items-center justify-center font-bold text-[11px] nta-shape-not-answered shrink-0">
+                {overallCounts.notAnswered}
+              </span>
+              <span className="truncate">Not Answered</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="w-6 h-6 flex items-center justify-center font-bold text-[11px] nta-shape-not-visited shrink-0">
+                {overallCounts.notVisited}
+              </span>
+              <span className="truncate">Not Visited</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="w-6 h-6 flex items-center justify-center font-bold text-[11px] nta-shape-review shrink-0">
+                {overallCounts.markedReview}
+              </span>
+              <span className="truncate">Marked Review</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-            <span className="w-5 h-5 flex items-center justify-center font-bold text-[10px] bg-rose-500 text-white rounded shrink-0">
-              {overallCounts.notAnswered}
-            </span>
-            <span className="truncate">Not Answered</span>
-          </div>
-
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-            <span className="w-5 h-5 flex items-center justify-center font-bold text-[10px] bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded shrink-0">
-              {overallCounts.notVisited}
-            </span>
-            <span className="truncate">Not Visited</span>
-          </div>
-
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-            <span className="w-5 h-5 flex items-center justify-center font-bold text-[10px] bg-purple-600 text-white rounded shrink-0">
-              {overallCounts.markedReview}
-            </span>
-            <span className="truncate">Review</span>
-          </div>
-
-          <div className="col-span-2 flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-800">
-            <span className="w-5 h-5 flex items-center justify-center font-bold text-[10px] bg-purple-700 ring-1 ring-emerald-400 text-white rounded shrink-0">
+          <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-200 dark:border-zinc-800">
+            <span className="w-6 h-6 flex items-center justify-center font-bold text-[11px] nta-shape-answered-review shrink-0 relative">
               {overallCounts.answeredMarkedReview}
+              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 border border-white" />
             </span>
-            <span className="truncate">Ans & Marked for Review</span>
+            <span className="truncate text-[10px]">Ans & Marked for Review (Evaluated)</span>
           </div>
         </div>
 
-        {/* Question Grid */}
-        <div className="pt-2">
-          <div className="text-xs font-semibold text-slate-500 mb-2 flex items-center justify-between">
+        {/* Question Grid with Section A / Section B tabs */}
+        <div>
+          <div
+            className={`text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode ? 'text-[#1f4e79]' : 'text-zinc-400'
+            }`}
+          >
             <span>{currentSection.name} Questions:</span>
-            <span>{currentSection.questions.length} Total</span>
+            <span className="font-mono text-[11px]">{currentSection.questions.length} Total</span>
           </div>
 
-          <div className="grid grid-cols-5 gap-2 max-h-[48vh] overflow-y-auto p-1">
-            {currentSection.questions.map((q, idx) =>
-              renderPaletteButton(q, idx)
+          {/* Sub-section palette filter tabs for NTA mode */}
+          {uiMode === 'NTA_OFFICIAL' && (
+            <div className="flex items-center gap-1 mb-2">
+              <button
+                type="button"
+                onClick={() => setActiveSubSection('ALL')}
+                className={`flex-1 py-1 text-[10px] font-bold rounded border transition-colors ${
+                  activeSubSection === 'ALL'
+                    ? 'bg-[#337ab7] text-white border-[#204d74]'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                All ({currentSection.questions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubSection('SECTION_A')}
+                className={`flex-1 py-1 text-[10px] font-bold rounded border transition-colors ${
+                  activeSubSection === 'SECTION_A'
+                    ? 'bg-[#337ab7] text-white border-[#204d74]'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Sec A ({currentSection.questions.filter((q) => q.type !== 'NUMERICAL').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubSection('SECTION_B')}
+                className={`flex-1 py-1 text-[10px] font-bold rounded border transition-colors ${
+                  activeSubSection === 'SECTION_B'
+                    ? 'bg-[#337ab7] text-white border-[#204d74]'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                Sec B ({currentSection.questions.filter((q) => q.type === 'NUMERICAL').length})
+              </button>
+            </div>
+          )}
+
+          <div
+            className={`grid grid-cols-5 gap-1.5 max-h-[40vh] overflow-y-auto p-1.5 rounded border ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-white border-slate-300'
+                : 'bg-zinc-900 border-zinc-800'
+            }`}
+          >
+            {displayedQuestions.map((q) =>
+              renderPaletteButton(q, q.originalIdx)
             )}
           </div>
         </div>
       </div>
 
-      <div className="space-y-2 pt-3 border-t border-zinc-800">
-        <button
-          onClick={() => setIsInstructionsModalOpen(true)}
-          className="w-full py-2 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded flex items-center justify-center gap-1.5 transition-colors"
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          Instructions
-        </button>
+      <div
+        className={`space-y-1.5 pt-2 border-t ${
+          uiMode === 'NTA_OFFICIAL' && !isDarkMode ? 'border-slate-300' : 'border-zinc-800'
+        }`}
+      >
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            onClick={() => setIsQuestionPaperModalOpen(true)}
+            className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-1 border transition-colors ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-white hover:bg-slate-100 text-[#337ab7] border-[#337ab7]'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Question Paper
+          </button>
+
+          <button
+            onClick={() => setIsInstructionsModalOpen(true)}
+            className={`py-2 text-xs font-bold rounded flex items-center justify-center gap-1 border transition-colors ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-white hover:bg-slate-100 text-[#337ab7] border-[#337ab7]'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
+            }`}
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            Instructions
+          </button>
+        </div>
 
         <button
           onClick={() => setIsSubmitModalOpen(true)}
-          className="w-full py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 rounded shadow-[0_0_15px_rgba(220,38,38,0.4)] uppercase tracking-wider transition-colors"
+          className={`w-full py-2.5 text-xs font-black rounded uppercase tracking-wider transition-colors shadow-xs ${
+            uiMode === 'NTA_OFFICIAL' && !isDarkMode
+              ? 'bg-[#28a745] hover:bg-[#218838] text-white border border-[#1e7e34]'
+              : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+          }`}
         >
           Submit Examination
         </button>
@@ -488,20 +610,24 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
   return (
     <div
-      className={`min-h-screen flex flex-col select-none bg-black text-zinc-100 font-sans`}
+      className={`min-h-screen flex flex-col select-none font-sans ${
+        uiMode === 'NTA_OFFICIAL' && !isDarkMode
+          ? 'bg-[#f4f6f9] text-slate-900'
+          : 'bg-black text-zinc-100'
+      }`}
     >
       {/* 1. TOP BAR */}
       <header
-        className={`px-3 md:px-4 py-2 md:py-2.5 flex items-center justify-between border-b ${
-          uiMode === 'NTA_OFFICIAL'
-            ? 'bg-zinc-950 text-white border-zinc-800 shadow-xs'
-            : 'bg-black text-white border-zinc-800'
+        className={`px-3 md:px-5 py-2 md:py-2.5 flex items-center justify-between border-b ${
+          uiMode === 'NTA_OFFICIAL' && !isDarkMode
+            ? 'bg-white text-slate-800 border-slate-300 shadow-2xs'
+            : 'bg-zinc-950 text-white border-zinc-800'
         }`}
       >
-        {/* Left: Branding with inspiro LIVE Logo & Paper title */}
+        {/* Left: Branding with official NTA & inspiro badge */}
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-1.5 select-none shrink-0">
-            <div className="w-6 h-6 rounded-md overflow-hidden flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
+            <div className="w-7 h-7 rounded overflow-hidden flex items-center justify-center border border-slate-300 bg-white shrink-0 shadow-2xs">
               <img
                 src="/src/assets/images/inspiro_logo.png"
                 alt="inspiro logo"
@@ -509,30 +635,37 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                 referrerPolicy="no-referrer"
               />
             </div>
-            <span className="font-display font-black text-xs md:text-sm text-white">inspiro</span>
-            <span className="font-display font-black text-xs md:text-sm text-red-500 font-extrabold drop-shadow-[0_0_8px_rgba(220,38,38,0.7)]">LIVE</span>
+            <div>
+              <div className="flex items-center gap-1 font-bold text-xs md:text-sm">
+                <span className={uiMode === 'NTA_OFFICIAL' && !isDarkMode ? 'text-[#1f4e79]' : 'text-white'}>
+                  JEE (Main) — CBT PORTAL
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-extrabold uppercase bg-emerald-600 text-white">
+                  Official Replica
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 font-medium truncate max-w-[150px] sm:max-w-xs">
+                {paper.title}
+              </div>
+            </div>
           </div>
-          <div className="h-3 w-px bg-zinc-800 hidden sm:block" />
-          <div className="bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[10px] md:text-xs font-bold uppercase tracking-wider shrink-0">
-            {uiMode === 'NTA_OFFICIAL' ? 'NTA CBT' : 'MATHANGO'}
-          </div>
-          <span className="font-bold text-xs md:text-sm truncate max-w-[130px] sm:max-w-xs md:max-w-md text-white">
-            {paper.title}
-          </span>
         </div>
 
-        {/* Center: Live Timer */}
+        {/* Center: Live Timer Box (Exact NTA Digital Display) */}
         <div
-          className={`flex items-center gap-1.5 px-2.5 md:px-4 py-1 md:py-1.5 rounded-lg border font-mono font-bold text-xs md:text-base shrink-0 ${
-            secondsRemaining < 300
-              ? 'bg-red-600/30 text-red-300 border-red-500 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-              : secondsRemaining < 900
-              ? 'bg-red-950/40 text-red-400 border-red-800'
+          className={`flex items-center gap-2 px-3.5 py-1 rounded border font-mono font-bold text-xs md:text-base shrink-0 shadow-xs ${
+            uiMode === 'NTA_OFFICIAL' && !isDarkMode
+              ? 'bg-[#337ab7] text-white border-[#204d74]'
+              : secondsRemaining < 300
+              ? 'bg-red-600/30 text-red-300 border-red-500 animate-pulse'
               : 'bg-zinc-900 border-zinc-800 text-white'
           }`}
         >
-          <Clock className="w-3.5 h-3.5 md:w-4 h-4 text-red-500" />
-          <span>{formattedTimer}</span>
+          <span className="text-[11px] font-sans font-semibold uppercase tracking-wider hidden sm:inline opacity-90">
+            Time Left :
+          </span>
+          <Clock className="w-4 h-4 text-amber-300" />
+          <span className="tabular-nums tracking-wider">{formattedTimer}</span>
         </div>
 
         {/* Right: Quick Tools & Mode/DayNight Toggle */}
@@ -540,15 +673,19 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
           {/* Day / Night Mode Switcher */}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-1.5 md:px-2.5 md:py-1 bg-white/15 hover:bg-white/25 rounded text-xs font-medium flex items-center gap-1 transition-colors"
+            className={`p-1.5 md:px-2.5 md:py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors border ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
+            }`}
             title={isDarkMode ? 'Switch to Day Mode' : 'Switch to Night Mode'}
           >
             {isDarkMode ? (
               <Sun className="w-3.5 h-3.5 text-amber-300" />
             ) : (
-              <Moon className="w-3.5 h-3.5" />
+              <Moon className="w-3.5 h-3.5 text-slate-600" />
             )}
-            <span className="hidden sm:inline">{isDarkMode ? 'Day' : 'Night'}</span>
+            <span className="hidden sm:inline">{isDarkMode ? 'Day Mode' : 'Night Mode'}</span>
           </button>
 
           {/* Theme switcher */}
@@ -556,19 +693,27 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
             onClick={() =>
               setUiMode(uiMode === 'NTA_OFFICIAL' ? 'MATHANGO' : 'NTA_OFFICIAL')
             }
-            className="px-2 md:px-2.5 py-1 bg-white/15 hover:bg-white/25 rounded text-xs font-medium flex items-center gap-1 transition-colors"
+            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors border ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
+            }`}
             title="Toggle between NTA Official & MathonGo modern interface"
           >
-            <Monitor className="w-3.5 h-3.5" />
+            <Monitor className="w-3.5 h-3.5 text-emerald-500" />
             <span className="hidden md:inline">
-              {uiMode === 'NTA_OFFICIAL' ? 'MathonGo' : 'NTA Official'}
+              {uiMode === 'NTA_OFFICIAL' ? 'Switch: MathonGo' : 'Switch: NTA CBT'}
             </span>
           </button>
 
           {/* Rough sheet scratchpad */}
           <button
             onClick={() => setIsScratchpadOpen(true)}
-            className="px-2 md:px-2.5 py-1 bg-white/15 hover:bg-white/25 rounded text-xs font-medium flex items-center gap-1 transition-colors"
+            className={`px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors border ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
+            }`}
             title="Open virtual scratchpad for rough work"
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -578,29 +723,27 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
           {/* Mobile Question Palette Drawer Button */}
           <button
             onClick={() => setIsMobilePaletteOpen(true)}
-            className="lg:hidden p-1.5 bg-white/15 hover:bg-white/25 rounded text-xs font-medium flex items-center gap-1 transition-colors"
+            className="lg:hidden p-1.5 bg-emerald-600 text-white rounded text-xs font-medium flex items-center gap-1 transition-colors"
             title="Open Question Palette"
           >
-            <Grid className="w-4 h-4 text-emerald-300" />
+            <Grid className="w-4 h-4" />
           </button>
         </div>
       </header>
 
       {/* 2. SUBJECT TABS & CANDIDATE STRIP */}
       <div
-        className={`px-3 md:px-4 py-2 flex flex-wrap items-center justify-between gap-2 border-b ${
-          uiMode === 'NTA_OFFICIAL'
-            ? isDarkMode
-              ? 'bg-slate-900 border-slate-800'
-              : 'bg-white border-slate-300'
-            : isDarkMode
-            ? 'bg-slate-900 border-slate-800'
-            : 'bg-white border-slate-200'
+        className={`px-3 md:px-5 py-2 flex flex-wrap items-center justify-between gap-2 border-b ${
+          uiMode === 'NTA_OFFICIAL' && !isDarkMode
+            ? 'bg-[#eef2f5] border-slate-300'
+            : 'bg-zinc-900 border-zinc-800'
         }`}
       >
         {/* Subject Navigation Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 max-w-full">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mr-1 hidden sm:inline">
+          <span className={`text-[11px] font-bold uppercase tracking-wider mr-1 hidden sm:inline ${
+            !isDarkMode ? 'text-slate-600' : 'text-slate-400'
+          }`}>
             Sections:
           </span>
           {paper.sections.map((section) => {
@@ -615,14 +758,20 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
               <button
                 key={section.id}
                 onClick={() => navigateToQuestion(section.id, 0)}
-                className={`px-3 md:px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
-                  isActive
-                    ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.45)]'
-                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800'
+                className={`px-4 py-1.5 text-xs font-bold rounded-t transition-all flex items-center gap-2 shrink-0 border ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? isActive
+                      ? 'bg-[#285e8e] text-white border-[#1c4466] shadow-xs'
+                      : 'bg-[#e6e6e6] hover:bg-[#dcdcdc] text-slate-800 border-slate-300'
+                    : isActive
+                    ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.45)] border-red-500'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border-zinc-800'
                 }`}
               >
                 <span>{section.name}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/40 text-white font-mono">
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  isActive ? 'bg-black/30 text-white' : 'bg-slate-300 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'
+                }`}>
                   {answeredInSec}/{section.questions.length}
                 </span>
               </button>
@@ -631,213 +780,294 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         </div>
 
         {/* Candidate Identifier badge */}
-        <div className="flex items-center gap-2 text-xs text-zinc-400 shrink-0">
-          <div className="w-6 h-6 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center font-bold text-red-400">
+        <div className="flex items-center gap-2 text-xs shrink-0">
+          <div className="w-6 h-6 rounded-full bg-[#337ab7]/20 border border-[#337ab7]/40 flex items-center justify-center font-bold text-[#337ab7]">
             <User className="w-3.5 h-3.5" />
           </div>
           <div className="hidden sm:block leading-tight text-right">
-            <div className="font-bold text-white">
+            <div className={`font-bold ${!isDarkMode ? 'text-slate-900' : 'text-white'}`}>
               JEE Aspirant
             </div>
-            <div className="text-[10px] text-zinc-500 font-mono">Roll: 240310084920</div>
+            <div className={`text-[10px] font-mono ${!isDarkMode ? 'text-slate-500' : 'text-zinc-500'}`}>
+              Roll: 250310084920
+            </div>
           </div>
         </div>
       </div>
+
+      {/* NTA Official Section A (MCQs) & Section B (Numerical) Sub-bar */}
+      {uiMode === 'NTA_OFFICIAL' && (
+        <div
+          className={`px-3 md:px-5 py-1.5 flex flex-wrap items-center justify-between text-xs border-b ${
+            !isDarkMode ? 'bg-[#d9edf7] border-[#bce8f1] text-[#31708f]' : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-bold uppercase tracking-wider text-[11px]">Sub Sections:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveSubSection('SECTION_A');
+                const firstA = currentSection.questions.findIndex((q) => q.type !== 'NUMERICAL');
+                if (firstA !== -1) navigateToQuestion(currentSection.id, firstA);
+              }}
+              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
+                activeSubSection === 'SECTION_A' || (activeSubSection === 'ALL' && currentQuestion?.type !== 'NUMERICAL')
+                  ? 'bg-[#337ab7] text-white shadow-xs'
+                  : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+              }`}
+            >
+              Section A (MCQ)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveSubSection('SECTION_B');
+                const firstB = currentSection.questions.findIndex((q) => q.type === 'NUMERICAL');
+                if (firstB !== -1) navigateToQuestion(currentSection.id, firstB);
+              }}
+              className={`px-3 py-1 rounded text-xs font-bold transition-all ${
+                activeSubSection === 'SECTION_B' || (activeSubSection === 'ALL' && currentQuestion?.type === 'NUMERICAL')
+                  ? 'bg-[#337ab7] text-white shadow-xs'
+                  : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+              }`}
+            >
+              Section B (Numerical)
+            </button>
+          </div>
+
+          <div className="text-[11px] font-medium hidden sm:block">
+            {currentQuestion?.type === 'NUMERICAL' ? (
+              <span>
+                <strong>Section B:</strong> Numerical Value | Correct: <span className="font-bold text-emerald-700 dark:text-emerald-400">+{currentQuestion.positiveMarks || 4}</span> | Negative: <span className="font-bold text-rose-700 dark:text-rose-400">-{currentQuestion.negativeMarks ?? 0}</span>
+              </span>
+            ) : (
+              <span>
+                <strong>Section A:</strong> Multiple Choice | Correct: <span className="font-bold text-emerald-700 dark:text-emerald-400">+{currentQuestion?.positiveMarks || 4}</span> | Negative: <span className="font-bold text-rose-700 dark:text-rose-400">-{currentQuestion?.negativeMarks ?? 1}</span>
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 3. MAIN WORKSPACE */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Left Pane: Question & Response Controls */}
         <div
-          className={`flex-1 flex flex-col justify-between overflow-y-auto p-4 md:p-6 ${
-            uiMode === 'NTA_OFFICIAL'
-              ? isDarkMode
-                ? 'bg-slate-900'
-                : 'bg-white'
-              : isDarkMode
-              ? 'bg-slate-900'
-              : 'bg-white'
+          className={`flex-1 flex flex-col justify-between overflow-y-auto p-3 md:p-5 ${
+            uiMode === 'NTA_OFFICIAL' && !isDarkMode
+              ? 'bg-[#f4f6f9]'
+              : 'bg-zinc-950'
           }`}
         >
           {currentQuestion ? (
-            <div className="max-w-4xl w-full mx-auto space-y-5">
-              {/* Question Header with In-Session Tagging Bar */}
+            <div className="max-w-4xl w-full mx-auto space-y-4">
+              {/* Question Subheader: NTA Type & Marking scheme */}
               <div
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800"
+                className={`p-2.5 rounded-t-lg border flex flex-wrap items-center justify-between gap-2 text-xs ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#eef2f5] border-slate-300 text-slate-800'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                }`}
               >
                 <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-                  <span className="font-bold text-sm md:text-base text-red-500">
-                    Question No. {currentQuestion.questionNumber}
+                  <span className="font-bold">
+                    Section :{' '}
+                    <span className="font-semibold text-[#1f4e79] dark:text-blue-400">
+                      {currentSection.name.toUpperCase()} — {currentQuestion.type === 'NUMERICAL' ? 'Section B' : 'Section A'}
+                    </span>
                   </span>
-                  <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-zinc-900 text-zinc-300 border border-zinc-800">
-                    {currentQuestion.type === 'SINGLE_CORRECT' && 'MCQ (+4, -1)'}
-                    {currentQuestion.type === 'MULTIPLE_CORRECT' && 'Multi (+4, -2)'}
-                    {currentQuestion.type === 'NUMERICAL' && 'Numerical (+4, 0)'}
-                    {currentQuestion.type === 'MATRIX_MATCH' && 'Match (+4, -1)'}
+                  <span className="opacity-40 hidden sm:inline">|</span>
+                  <span className="font-bold">
+                    Question Type :{' '}
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                      {currentQuestion.type === 'NUMERICAL'
+                        ? 'Numerical Value Question'
+                        : currentQuestion.type === 'MULTIPLE_CORRECT'
+                        ? 'Multiple Correct Options'
+                        : 'Multiple Choice Question (Single Correct)'}
+                    </span>
                   </span>
-                  <span className="text-xs text-zinc-400 hidden md:inline">
-                    Section: <strong className="text-white">{currentSection.name}</strong>
+                  <span className="opacity-40 hidden sm:inline">|</span>
+                  <span className="font-medium">
+                    Marks: <strong className="text-emerald-600 font-mono">+{currentQuestion.positiveMarks || 4}</strong> | Negative: <strong className="text-rose-600 font-mono">-{currentQuestion.negativeMarks ?? (currentQuestion.type === 'NUMERICAL' ? 0 : 1)}</strong>
                   </span>
                 </div>
 
-                {/* Quick Question Tagging Bar (Doubt, Hard, Tricky, RACE Star) */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] uppercase font-bold text-zinc-500 mr-1">
-                    Tag:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleTag('DOUBT')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
-                      (questionTags[currentQuestion.id] || []).includes('DOUBT')
-                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
-                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
-                    }`}
-                    title="Mark as Doubt / Unclear concept"
-                  >
-                    <HelpCircle className="w-3 h-3 text-red-400" />
-                    <span>Doubt</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleTag('HARD')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
-                      (questionTags[currentQuestion.id] || []).includes('HARD')
-                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
-                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
-                    }`}
-                    title="Mark as Hard / Difficult question"
-                  >
-                    <Flame className="w-3 h-3 text-red-400 fill-current" />
-                    <span>Hard</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleTag('TRICKY')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
-                      (questionTags[currentQuestion.id] || []).includes('TRICKY')
-                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
-                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
-                    }`}
-                    title="Mark as Tricky / Trap question"
-                  >
-                    <Zap className="w-3 h-3 text-red-400" />
-                    <span>Tricky</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleTag('RACE_STAR')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
-                      (questionTags[currentQuestion.id] || []).includes('RACE_STAR')
-                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
-                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
-                    }`}
-                    title="Save to Allen RACE (Daily Repeat & Consolidate Drill)"
-                  >
-                    <Star className="w-3 h-3 text-red-400 fill-current" />
-                    <span>RACE Star</span>
-                  </button>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-[11px] font-medium">
+                    <span>View in:</span>
+                    <select className="bg-white dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 px-2 py-0.5 rounded text-xs">
+                      <option>English</option>
+                      <option>Hindi</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* Question Prompt with KaTeX */}
-              <div className="space-y-4">
+              {/* Main Question Card */}
+              <div
+                className={`p-4 md:p-6 rounded-b-lg border border-t-0 space-y-4 ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-white border-slate-300 text-slate-900 shadow-xs'
+                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-100'
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-zinc-800">
+                  <span className={`font-bold text-sm md:text-base ${
+                    uiMode === 'NTA_OFFICIAL' && !isDarkMode ? 'text-[#1f4e79]' : 'text-red-500'
+                  }`}>
+                    Question No. {currentQuestion.questionNumber}
+                  </span>
+
+                  {/* Question Tagging Pill */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleTag('DOUBT')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                        (questionTags[currentQuestion.id] || []).includes('DOUBT')
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-300 dark:border-zinc-700'
+                      }`}
+                    >
+                      Doubt
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleTag('HARD')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                        (questionTags[currentQuestion.id] || []).includes('HARD')
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-300 dark:border-zinc-700'
+                      }`}
+                    >
+                      Hard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleTag('RACE_STAR')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+                        (questionTags[currentQuestion.id] || []).includes('RACE_STAR')
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-300 dark:border-zinc-700'
+                      }`}
+                    >
+                      RACE Star
+                    </button>
+                  </div>
+                </div>
+
+                {/* Question Prompt with KaTeX */}
                 <div className="text-sm md:text-base leading-relaxed">
                   <MathRenderer content={currentQuestion.promptLatex} />
                 </div>
 
                 {currentQuestion.diagramDescription && (
                   <div className="p-3 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20 text-xs text-indigo-900 dark:text-indigo-200">
-                    <strong>[Figure / Circuit Diagram]:</strong>{' '}
+                    <strong>[Figure / Diagram]:</strong>{' '}
                     {currentQuestion.diagramDescription}
                   </div>
                 )}
-              </div>
 
-              {/* Response Input Area */}
-              <div
-                className={`pt-4 border-t ${
-                  isDarkMode ? 'border-slate-800' : 'border-slate-200'
-                }`}
-              >
-                {currentQuestion.type === 'NUMERICAL' ? (
-                  <div className="py-2">
-                    <NumericalKeypad
-                      value={answers[currentQuestion.id] || ''}
-                      onChange={(val) =>
-                        setAnswers((prev) => ({
-                          ...prev,
-                          [currentQuestion.id]: val,
-                        }))
-                      }
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                      {currentQuestion.type === 'MULTIPLE_CORRECT'
-                        ? 'Select One or More Option(s):'
-                        : 'Choose One Correct Option:'}
+                {/* Response Input Area */}
+                <div
+                  className={`pt-4 border-t ${
+                    !isDarkMode ? 'border-slate-200' : 'border-zinc-800'
+                  }`}
+                >
+                  {currentQuestion.type === 'NUMERICAL' ? (
+                    <div className="py-2">
+                      <div className="text-xs font-semibold uppercase text-slate-500 mb-2">
+                        Enter Your Numerical Value (Use Keyboard or Keypad):
+                      </div>
+                      <NumericalKeypad
+                        value={answers[currentQuestion.id] || ''}
+                        onChange={(val) =>
+                          setAnswers((prev) => ({
+                            ...prev,
+                            [currentQuestion.id]: val,
+                          }))
+                        }
+                      />
                     </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {currentQuestion.type === 'MULTIPLE_CORRECT'
+                          ? 'Select One or More Option(s):'
+                          : 'Choose One Correct Option:'}
+                      </div>
 
-                    <div className="grid grid-cols-1 gap-2.5">
-                      {currentQuestion.options?.map((option) => {
-                        const isSelected =
-                          currentQuestion.type === 'MULTIPLE_CORRECT'
-                            ? Array.isArray(answers[currentQuestion.id]) &&
-                              answers[currentQuestion.id].includes(option.id)
-                            : answers[currentQuestion.id] === option.id;
+                      <div className="grid grid-cols-1 gap-2.5">
+                        {currentQuestion.options?.map((option, optIdx) => {
+                          const isSelected =
+                            currentQuestion.type === 'MULTIPLE_CORRECT'
+                              ? Array.isArray(answers[currentQuestion.id]) &&
+                                answers[currentQuestion.id].includes(option.id)
+                              : answers[currentQuestion.id] === option.id;
 
-                        const handleSelect = () => {
-                          if (currentQuestion.type === 'MULTIPLE_CORRECT') {
-                            const cur = Array.isArray(answers[currentQuestion.id])
-                              ? [...answers[currentQuestion.id]]
-                              : [];
-                            const next = cur.includes(option.id)
-                              ? cur.filter((x) => x !== option.id)
-                              : [...cur, option.id];
-                            setAnswers((prev) => ({
-                              ...prev,
-                              [currentQuestion.id]: next,
-                            }));
-                          } else {
-                            setAnswers((prev) => ({
-                              ...prev,
-                              [currentQuestion.id]: option.id,
-                            }));
-                          }
-                        };
+                          const handleSelect = () => {
+                            if (currentQuestion.type === 'MULTIPLE_CORRECT') {
+                              const cur = Array.isArray(answers[currentQuestion.id])
+                                ? [...answers[currentQuestion.id]]
+                                : [];
+                              const next = cur.includes(option.id)
+                                ? cur.filter((x) => x !== option.id)
+                                : [...cur, option.id];
+                              setAnswers((prev) => ({
+                                ...prev,
+                                [currentQuestion.id]: next,
+                              }));
+                            } else {
+                              setAnswers((prev) => ({
+                                ...prev,
+                                [currentQuestion.id]: option.id,
+                              }));
+                            }
+                          };
 
-                        return (
-                          <div
-                            key={option.id}
-                            onClick={handleSelect}
-                            className={`p-3 md:p-3.5 rounded-lg border cursor-pointer transition-all flex items-start gap-3 ${
-                              isSelected
-                                ? 'bg-red-950/30 border-red-600 text-white ring-1 ring-red-600 shadow-[0_0_12px_rgba(220,38,38,0.2)]'
-                                : 'bg-zinc-900/80 hover:bg-zinc-850 border-zinc-800 text-zinc-200'
-                            }`}
-                          >
+                          const optionNum = optIdx + 1;
+
+                          return (
                             <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                                isSelected
-                                  ? 'bg-red-600 text-white shadow-[0_0_8px_rgba(220,38,38,0.5)]'
-                                  : 'bg-zinc-800 text-zinc-300'
+                              key={option.id}
+                              onClick={handleSelect}
+                              className={`p-3 md:p-3.5 rounded-lg border cursor-pointer transition-all flex items-start gap-3 ${
+                                uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                                  ? isSelected
+                                    ? 'bg-[#e8f4fc] border-[#337ab7] text-slate-900 ring-2 ring-[#337ab7]/30 shadow-xs'
+                                    : 'bg-white hover:bg-[#f0f8ff] border-slate-300 text-slate-800 shadow-2xs'
+                                  : isSelected
+                                  ? 'bg-red-950/30 border-red-600 text-white ring-1 ring-red-600 shadow-[0_0_12px_rgba(220,38,38,0.2)]'
+                                  : 'bg-zinc-900/80 hover:bg-zinc-850 border-zinc-800 text-zinc-200'
                               }`}
                             >
-                              {option.id}
+                              {/* Authentic NTA Radio Button */}
+                              <div
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                                  isSelected
+                                    ? 'border-[#337ab7] bg-[#337ab7] text-white'
+                                    : 'border-slate-400 bg-white text-slate-600'
+                                }`}
+                              >
+                                {isSelected ? (
+                                  <div className="w-2 h-2 rounded-full bg-white" />
+                                ) : null}
+                              </div>
+                              <span className="font-bold text-xs pt-0.5 text-slate-500 shrink-0">
+                                ({optionNum})
+                              </span>
+                              <div className="flex-1 text-xs md:text-sm pt-0.5">
+                                <MathRenderer content={option.labelLatex} />
+                              </div>
                             </div>
-                            <div className="flex-1 text-xs md:text-sm pt-0.5">
-                              <MathRenderer content={option.labelLatex} />
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           ) : (
@@ -846,38 +1076,58 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
             </div>
           )}
 
-          {/* Action Footer Navigation Strip (Mobile Sticky & Touch Friendly) */}
+          {/* Action Footer Navigation Strip (Exact Official NTA Actions) */}
           <div
-            className="mt-6 pt-4 border-t border-zinc-800 bg-zinc-950 -mx-4 -mb-4 md:-mx-6 md:-mb-6 p-4 flex flex-wrap items-center justify-between gap-2.5"
+            className={`mt-4 pt-3 border-t -mx-3 -mb-3 md:-mx-5 md:-mb-5 p-3.5 flex flex-wrap items-center justify-between gap-2 ${
+              uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                ? 'bg-[#f5f5f5] border-slate-300 shadow-xs'
+                : 'bg-zinc-950 border-zinc-800'
+            }`}
           >
             {/* Primary actions */}
             <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
               <button
                 onClick={handleSaveAndNext}
-                className="px-3.5 md:px-4 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-md shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all uppercase tracking-wider"
+                className={`px-4 py-2 text-xs font-bold active:scale-95 rounded transition-all uppercase tracking-wider ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#28a745] hover:bg-[#218838] text-white border border-[#1e7e34] shadow-xs'
+                    : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+                }`}
               >
                 Save & Next
               </button>
 
               <button
                 onClick={handleSaveAndMarkForReview}
-                className="px-3 md:px-4 py-2.5 text-xs font-semibold text-white bg-zinc-800 hover:bg-zinc-700 active:scale-95 rounded-md border border-zinc-700 transition-all"
+                className={`px-3.5 md:px-4 py-2 text-xs font-bold active:scale-95 rounded transition-all uppercase tracking-wider ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#f0ad4e] hover:bg-[#ec971f] text-white border border-[#eea236] shadow-xs'
+                    : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700'
+                }`}
               >
-                Save & Review
+                Save & Mark for Review
               </button>
 
               <button
                 onClick={handleClearResponse}
-                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 rounded-md transition-all"
+                className={`px-3.5 py-2 text-xs font-semibold active:scale-95 rounded transition-all uppercase tracking-wider ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-400 shadow-xs'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800'
+                }`}
               >
-                Clear
+                Clear Response
               </button>
 
               <button
                 onClick={handleMarkForReviewAndNext}
-                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 rounded-md transition-all"
+                className={`px-3.5 py-2 text-xs font-bold active:scale-95 rounded transition-all uppercase tracking-wider ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#337ab7] hover:bg-[#286090] text-white border border-[#204d74] shadow-xs'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800'
+                }`}
               >
-                Review & Next
+                Mark for Review & Next
               </button>
             </div>
 
@@ -886,23 +1136,35 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
               <button
                 onClick={goToPreviousQuestion}
                 disabled={activeQuestionIndex === 0 && paper.sections[0].id === activeSectionId}
-                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-md disabled:opacity-40 transition-all flex items-center gap-1"
+                className={`px-3.5 py-2 text-xs font-semibold rounded disabled:opacity-40 transition-all flex items-center gap-1 ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#e6e6e6] hover:bg-[#d4d4d4] text-slate-800 border border-slate-300'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800'
+                }`}
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Prev</span>
+                <span>Back</span>
               </button>
 
               <button
                 onClick={goToNextQuestion}
-                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-md transition-all flex items-center gap-1"
+                className={`px-3.5 py-2 text-xs font-semibold rounded transition-all flex items-center gap-1 ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#e6e6e6] hover:bg-[#d4d4d4] text-slate-800 border border-slate-300'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800'
+                }`}
               >
-                <span className="hidden sm:inline">Next</span>
+                <span>Next</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
 
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="ml-1 px-4 md:px-5 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-md shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all uppercase tracking-wider"
+                className={`ml-1 px-5 md:px-6 py-2 text-xs font-black rounded uppercase tracking-wider transition-all active:scale-95 shadow-xs ${
+                  uiMode === 'NTA_OFFICIAL' && !isDarkMode
+                    ? 'bg-[#28a745] hover:bg-[#218838] text-white border border-[#1e7e34]'
+                    : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+                }`}
               >
                 Submit
               </button>
@@ -912,7 +1174,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
         {/* Desktop Palette (Right Column) */}
         <div
-          className="hidden lg:block w-80 border-l border-zinc-800 bg-zinc-950 overflow-y-auto"
+          className={`hidden lg:block w-80 border-l overflow-y-auto ${
+            uiMode === 'NTA_OFFICIAL' && !isDarkMode
+              ? 'bg-[#eef2f5] border-slate-300'
+              : 'bg-zinc-950 border-zinc-800'
+          }`}
         >
           {PaletteContent}
         </div>

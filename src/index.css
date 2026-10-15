@@ -17,34 +17,44 @@
 
 /* Authentic NTA Official Exam Palette Shapes */
 .nta-shape-not-visited {
+  background-color: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+.dark .nta-shape-not-visited {
   background-color: #27272a;
   color: #d4d4d8;
-  border-radius: 4px;
+  border-color: #3f3f46;
 }
 
 .nta-shape-not-answered {
   background-color: #dc2626;
   color: #ffffff;
-  clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 50% 100%, 0% 75%);
+  clip-path: polygon(0% 0%, 100% 0%, 100% 70%, 50% 100%, 0% 70%);
+  border: none;
 }
 
 .nta-shape-answered {
   background-color: #16a34a;
   color: #ffffff;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 100%, 0% 100%, 0% 25%);
+  clip-path: polygon(50% 0%, 100% 30%, 100% 100%, 0% 100%, 0% 30%);
+  border: none;
 }
 
 .nta-shape-review {
-  background-color: #52525b;
+  background-color: #7e22ce;
   color: #ffffff;
   border-radius: 9999px;
+  border: none;
 }
 
 .nta-shape-answered-review {
-  background-color: #52525b;
+  background-color: #7e22ce;
   color: #ffffff;
   border-radius: 9999px;
   position: relative;
+  border: none;
 }
 
 /* Custom smooth dark/red scrollbar */

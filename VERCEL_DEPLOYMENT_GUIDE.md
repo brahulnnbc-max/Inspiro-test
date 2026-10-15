@@ -70,7 +70,7 @@ If `hasGeminiKey` is `true`, all AI features (CBT PDF conversion, Daily Routine 
 1. **Frontend**: Vite compiles high-performance React 19 + Tailwind CSS single-page app into `dist/`.
 2. **Serverless AI Backend**: `api/index.ts` automatically runs on Vercel's Edge/Node Serverless Functions.
 3. **API Routing**: `vercel.json` rewrites all `/api/*` traffic to the serverless handler, and all page navigation to `index.html`.
-4. **Resilient AI Pipeline**: Includes automatic multi-model fallback (`gemini-3.1-flash-lite` → `gemini-flash-latest`) to eliminate 503 high-demand errors.
+4. **Resilient AI Pipeline**: Includes automatic multi-model fallback (`gemini-3.8-flash` → `gemini-flash-latest` → `gemini-3.1-flash-lite`) with backoff retries to eliminate 503 high-demand errors.
 
 ---
 

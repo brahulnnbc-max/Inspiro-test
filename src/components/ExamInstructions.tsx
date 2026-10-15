@@ -14,7 +14,7 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
   onCancel,
 }) => {
   const [agreed, setAgreed] = useState(false);
-  const [mode, setMode] = useState<UIMode>('MATHANGO');
+  const [mode, setMode] = useState<UIMode>('NTA_OFFICIAL');
   const [language, setLanguage] = useState<'English' | 'Hindi'>('English');
 
   const totalQuestions = paper.sections.reduce((acc, s) => acc + s.questions.length, 0);
@@ -163,6 +163,33 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
               <label
                 className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  mode === 'NTA_OFFICIAL'
+                    ? 'border-red-600 bg-red-950/20 shadow-[0_0_15px_rgba(220,38,38,0.25)] ring-1 ring-red-600'
+                    : 'border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="examMode"
+                  checked={mode === 'NTA_OFFICIAL'}
+                  onChange={() => setMode('NTA_OFFICIAL')}
+                  className="mt-1 text-red-600 focus:ring-red-600"
+                />
+                <div>
+                  <div className="font-bold text-white flex items-center gap-2">
+                    Official NTA CBT Mode
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">
+                      Exact Official Replica
+                    </span>
+                  </div>
+                  <div className="text-xs text-zinc-400 mt-0.5">
+                    Authentic 1:1 government testing agency interface with official candidate panel, shape-coded palette, and official action buttons.
+                  </div>
+                </div>
+              </label>
+
+              <label
+                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
                   mode === 'MATHANGO'
                     ? 'border-red-600 bg-red-950/20 shadow-[0_0_15px_rgba(220,38,38,0.25)] ring-1 ring-red-600'
                     : 'border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900'
@@ -178,34 +205,9 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
                 <div>
                   <div className="font-bold text-white flex items-center gap-2">
                     Modern MathonGo / Quizrr Mode
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-600 text-white">
-                      Recommended
-                    </span>
                   </div>
                   <div className="text-xs text-zinc-400 mt-0.5">
-                    Streamlined UI, dark-mode, numerical virtual keypad, and distraction-free test layout.
-                  </div>
-                </div>
-              </label>
-
-              <label
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
-                  mode === 'NTA_OFFICIAL'
-                    ? 'border-red-600 bg-red-950/20 shadow-[0_0_15px_rgba(220,38,38,0.25)] ring-1 ring-red-600'
-                    : 'border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="examMode"
-                  checked={mode === 'NTA_OFFICIAL'}
-                  onChange={() => setMode('NTA_OFFICIAL')}
-                  className="mt-1 text-red-600 focus:ring-red-600"
-                />
-                <div>
-                  <div className="font-bold text-white">Official NTA CBT Mode</div>
-                  <div className="text-xs text-zinc-400 mt-0.5">
-                    Authentic 1:1 government testing agency interface with official shaped question buttons and candidate panel.
+                    Streamlined dark-mode UI with distraction-free layout and numerical virtual keypad.
                   </div>
                 </div>
               </label>

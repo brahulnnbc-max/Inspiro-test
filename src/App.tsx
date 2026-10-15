@@ -29,7 +29,7 @@ type AppView = 'HUB' | 'INSTRUCTIONS' | 'CBT_ROOM' | 'ANALYTICS';
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('HUB');
   const [selectedPaper, setSelectedPaper] = useState<ExamPaper | null>(null);
-  const [selectedMode, setSelectedMode] = useState<UIMode>('MATHANGO');
+  const [selectedMode, setSelectedMode] = useState<UIMode>('NTA_OFFICIAL');
   const [activeAttempt, setActiveAttempt] = useState<StudentAttempt | null>(null);
 
   // Persistent custom papers

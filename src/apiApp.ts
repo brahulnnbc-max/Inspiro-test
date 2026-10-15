@@ -51,44 +51,70 @@ function getGeminiClient(): GoogleGenAI {
   });
 }
 
-// Resilient multi-model fallback: Ultra-fast gemini-3.1-flash-lite first (1-2s response), followed by gemini-3.8-flash and gemini-flash-latest
+// Resilient multi-model fallback: gemini-3.8-flash first (most capable for STEM, LaTeX and Vision OCR), followed by gemini-flash-latest and gemini-3.1-flash-lite
 async function generateContentWithFallback(options: {
   contents: any;
   config?: any;
+  timeoutMs?: number;
 }) {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables.');
+    throw new Error('GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your server environment variables or .env file.');
   }
 
   const ai = getGeminiClient();
-  // gemini-3.1-flash-lite is the fastest, high-throughput model and is currently operational without 503 capacity issues
-  const candidateModels = ['gemini-3.1-flash-lite', 'gemini-3.8-flash', 'gemini-flash-latest'];
+  // Standard prioritized models according to Gemini API guidance
+  const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
   let lastError: any = null;
+  const timeoutLimit = options.timeoutMs || 120000; // 120 seconds for deep multi-page STEM/LaTeX parsing
 
-  for (const model of candidateModels) {
-    try {
-      console.log(`[inspiro AI] Requesting model ${model}...`);
-      // 20 second timeout per model to prevent hanging
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout waiting for model ${model}`)), 20000)
-      );
-      const callPromise = ai.models.generateContent({
-        model,
-        contents: options.contents,
-        config: options.config,
-      });
+  for (let i = 0; i < candidateModels.length; i++) {
+    const model = candidateModels[i];
+    // Attempt up to 2 tries per model in case of momentary server overload
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        console.log(`[inspiro AI] Requesting model ${model} (attempt ${attempt}/2, timeout ${timeoutLimit}ms)...`);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout waiting for model ${model} (${timeoutLimit}ms)`)), timeoutLimit)
+        );
+        const callPromise = ai.models.generateContent({
+          model,
+          contents: options.contents,
+          config: options.config,
+        });
 
-      const response: any = await Promise.race([callPromise, timeoutPromise]);
-      console.log(`[inspiro AI] Model ${model} succeeded!`);
-      return response;
-    } catch (err: any) {
-      console.warn(`[inspiro AI] Model ${model} failed (${err.message || err}). Trying next candidate...`);
-      lastError = err;
+        const response: any = await Promise.race([callPromise, timeoutPromise]);
+        console.log(`[inspiro AI] Model ${model} succeeded on attempt ${attempt}!`);
+        return response;
+      } catch (err: any) {
+        const errStr = String(err?.message || err || '');
+        console.warn(`[inspiro AI] Model ${model} attempt ${attempt} failed: ${errStr}`);
+        lastError = err;
+
+        // If transient 503 UNAVAILABLE, 429 rate limit or ResourceExhausted, wait 2s before retry
+        const isTransient =
+          errStr.includes('UNAVAILABLE') ||
+          errStr.includes('503') ||
+          errStr.includes('429') ||
+          errStr.includes('ResourceExhausted') ||
+          errStr.includes('overloaded') ||
+          errStr.includes('try again later');
+
+        if (isTransient) {
+          console.log(`[inspiro AI] Transient capacity spike detected. Backing off 2000ms before next action...`);
+          await new Promise((r) => setTimeout(r, 2000));
+        } else {
+          // If non-transient (e.g. invalid argument or model not found), break immediately to try next model
+          break;
+        }
+      }
     }
   }
 
-  throw lastError;
+  throw new Error(
+    lastError?.message ||
+    'AI service is temporarily unavailable. If you are using your own GEMINI_API_KEY, please verify it is active at aistudio.google.com and has standard rate limits.'
+  );
 }
 
 // Stack-based auto-closer for truncated JSON responses from LLM token cutoffs
@@ -356,6 +382,7 @@ You must strictly execute every instruction specified in the user's command abov
 
     const response = await generateContentWithFallback({
       contents: { parts },
+      timeoutMs: 90000,
       config: {
         systemInstruction,
         maxOutputTokens: 16384,
