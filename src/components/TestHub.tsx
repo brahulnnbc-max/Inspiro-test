@@ -230,7 +230,7 @@ export const TestHub: React.FC<TestHubProps> = ({
       if (msg.includes('413') || msg.toLowerCase().includes('payload') || msg.toLowerCase().includes('too large')) {
         setErrorMsg('The uploaded PDF exceeds Vercel\'s 4.5MB serverless payload limit. Please compress the file or upload 5–20 page sections.');
       } else if (msg.includes('504') || msg.toLowerCase().includes('timeout')) {
-        setErrorMsg('The AI processing timed out. Try uploading a shorter excerpt or single chapter for faster processing.');
+        setErrorMsg('The inspiro AI processing timed out. Try uploading a shorter excerpt or single chapter for faster processing.');
       } else {
         setErrorMsg(
           msg ||
@@ -256,8 +256,13 @@ export const TestHub: React.FC<TestHubProps> = ({
         <header className="border-b border-zinc-800/80 pb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 select-none">
-              <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-                <Flame className="w-4 h-4 text-white fill-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
+                <img
+                  src="/src/assets/images/inspiro_logo.png"
+                  alt="inspiro logo"
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="flex items-baseline gap-1.5 font-display text-xl md:text-2xl font-black tracking-tight">
                 <span className="text-white">inspiro</span>
@@ -347,7 +352,7 @@ export const TestHub: React.FC<TestHubProps> = ({
             }`}
           >
             <Bot className="w-4 h-4 text-red-400" />
-            AI Academic Mentor
+            inspiro AI
           </button>
 
           <button
@@ -529,7 +534,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     </div>
                     <div>
                       <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        Advanced AI Director Command Console
+                        inspiro AI Command Console
                         <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
                           Gemini 3.8 Flash Vision
                         </span>
@@ -537,7 +542,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     </div>
                   </div>
                   <span className="text-[11px] text-zinc-400">
-                    Give any specific instruction to the AI
+                    Give any specific instruction to inspiro AI
                   </span>
                 </div>
 
@@ -720,7 +725,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                     className="px-6 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-4 h-4 text-white animate-pulse" />
-                    {isUploading ? 'AI is Extracting Questions...' : 'Extract Questions & Launch CBT Test'}
+                    {isUploading ? 'inspiro AI is Extracting Questions...' : 'Extract Questions & Launch CBT Test'}
                   </button>
                 </div>
               </div>

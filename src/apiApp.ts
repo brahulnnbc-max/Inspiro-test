@@ -45,7 +45,7 @@ function getGeminiClient(): GoogleGenAI {
     apiKey: apiKey || '',
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build-inspiro-live',
+        'User-Agent': 'aistudio-build',
       },
     },
   });
@@ -62,22 +62,22 @@ async function generateContentWithFallback(options: {
   }
 
   const ai = getGeminiClient();
-  // Using gemini-3.8-flash as primary for advanced STEM/LaTeX/JEE reasoning and document parsing
-  const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+  // Prioritize gemini-flash-latest for rapid, high-throughput document & math extraction, with gemini-3.8-flash and gemini-3.1-flash-lite fallbacks
+  const candidateModels = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
   let lastError: any = null;
 
   for (const model of candidateModels) {
     try {
-      console.log(`[Gemini Advanced] Requesting model ${model}...`);
+      console.log(`[inspiro AI] Requesting model ${model}...`);
       const response = await ai.models.generateContent({
         model,
         contents: options.contents,
         config: options.config,
       });
-      console.log(`[Gemini Advanced] Model ${model} succeeded!`);
+      console.log(`[inspiro AI] Model ${model} succeeded!`);
       return response;
     } catch (err: any) {
-      console.warn(`[Gemini Advanced] Model ${model} failed (${err.message || err}). Trying fallback model...`);
+      console.warn(`[inspiro AI] Model ${model} failed (${err.message || err}). Trying fallback model...`);
       lastError = err;
     }
   }
@@ -85,47 +85,122 @@ async function generateContentWithFallback(options: {
   throw lastError;
 }
 
-// Robust JSON parser with automatic fence removal, boundary detection, and trailing comma repair
+// Stack-based auto-closer for truncated JSON responses from LLM token cutoffs
+function autoCloseTruncatedJSON(str: string): string {
+  let inString = false;
+  let escaped = false;
+  const stack: string[] = [];
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (!inString) {
+      if (ch === '{' || ch === '[') {
+        stack.push(ch);
+      } else if (ch === '}' && stack[stack.length - 1] === '{') {
+        stack.pop();
+      } else if (ch === ']' && stack[stack.length - 1] === '[') {
+        stack.pop();
+      }
+    }
+  }
+
+  let result = str;
+  if (inString) {
+    result += '"';
+  }
+
+  // Remove trailing comma or dangling colon before closing
+  result = result.replace(/,\s*$/, '');
+  result = result.replace(/:\s*$/, ': null');
+  result = result.replace(/,\s*([}\]])/g, '$1');
+
+  // Close remaining open brackets and braces in LIFO order
+  while (stack.length > 0) {
+    const open = stack.pop();
+    result = result.replace(/,\s*$/, '');
+    if (open === '{') result += '}';
+    if (open === '[') result += ']';
+  }
+
+  return result;
+}
+
+// Ultra-robust JSON parser with automatic fence removal, LaTeX backslash repair, and truncated JSON completion
 function cleanAndParseJSON(rawText: string | undefined): any {
   if (!rawText) return {};
   let clean = rawText.trim();
   clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
+  // Try direct parse first
   try {
     return JSON.parse(clean);
-  } catch (err1) {
-    // Attempt to locate outermost JSON object or array
-    const firstBrace = clean.indexOf('{');
-    const lastBrace = clean.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      const candidate = clean.slice(firstBrace, lastBrace + 1);
-      try {
-        return JSON.parse(candidate);
-      } catch (err2) {
-        // Strip trailing commas before closing braces/brackets and remove invalid control characters
-        const sanitized = candidate
-          .replace(/,\s*([}\]])/g, '$1')
-          .replace(/[\u0000-\u0009\u000B\u000C\u000E-\u001F]+/g, '');
+  } catch (_err1) {
+    // Proceed to repair pipeline
+  }
+
+  // Step 1: Find outermost JSON boundary
+  const firstBrace = clean.indexOf('{');
+  const firstBracket = clean.indexOf('[');
+  let startIdx = 0;
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    startIdx = firstBrace;
+  } else if (firstBracket !== -1) {
+    startIdx = firstBracket;
+  }
+  clean = clean.slice(startIdx);
+
+  // Step 2: Sanitize unescaped LaTeX backslashes that break standard JSON.parse
+  // (e.g. \alpha, \frac, \sqrt, \vec, \Delta, \theta, \sin, \cos)
+  let sanitized = clean.replace(/\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g, '\\\\');
+
+  // Step 3: Remove problematic unescaped ASCII control codes inside strings
+  sanitized = sanitized.replace(/[\u0000-\u0009\u000B\u000C\u000E-\u001F]+/g, ' ');
+
+  // Step 4: Strip trailing commas before closing braces/brackets
+  sanitized = sanitized.replace(/,\s*([}\]])/g, '$1');
+
+  try {
+    return JSON.parse(sanitized);
+  } catch (_err2) {
+    // Step 5: Auto-close truncated JSON (e.g. if tokens ended mid-question)
+    try {
+      const repaired = autoCloseTruncatedJSON(sanitized);
+      return JSON.parse(repaired);
+    } catch (err3: any) {
+      console.warn('[cleanAndParseJSON] Repair pipeline failed. Attempting structural recovery:', err3.message);
+      // Last-ditch: extract whatever valid object can be found
+      const lastValidBrace = sanitized.lastIndexOf('}');
+      if (lastValidBrace > 0) {
         try {
-          return JSON.parse(sanitized);
-        } catch (err3) {
-          console.error('[cleanAndParseJSON] Repair failed:', err3, 'Candidate text snippet:', candidate.slice(0, 300));
-          throw err1;
-        }
+          const cut = sanitized.slice(0, lastValidBrace + 1);
+          return JSON.parse(autoCloseTruncatedJSON(cut));
+        } catch {}
       }
+      throw err3;
     }
-    throw err1;
   }
 }
 
-// Root & API status endpoint (both / and /api)
-app.get(['/', '/api'], (req, res) => {
+// Root & API status endpoint
+app.get('/api', (req, res) => {
   const apiKey = getGeminiApiKey();
   res.json({
     status: 'ok',
     appName: 'inspiro LIVE • JEE Test & Module Practice',
     hasGeminiKey: Boolean(apiKey),
-    aiEngine: 'Advanced Gemini Flash Vision & STEM Reasoner',
+    aiEngine: 'inspiro AI Flash Vision & STEM Reasoner',
     serverTime: new Date().toISOString(),
     endpoints: [
       '/api/health',
@@ -145,7 +220,7 @@ app.get(['/api/health', '/health'], (req, res) => {
     status: 'ok',
     appName: 'inspiro LIVE • JEE Test & Module Practice',
     hasGeminiKey: Boolean(apiKey),
-    aiEngine: 'Advanced Gemini 3.8 Flash Vision & STEM Reasoner',
+    aiEngine: 'inspiro AI 3.8 Flash Vision & STEM Reasoner',
     serverTime: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     platform: process.env.VERCEL ? 'vercel' : 'node',
@@ -155,19 +230,25 @@ app.get(['/api/health', '/health'], (req, res) => {
 // Advanced Question Paper & Module PDF Extraction Endpoint
 app.post(['/api/parse-exam-pdf', '/parse-exam-pdf'], async (req, res) => {
   try {
-    const {
-      fileBase64,
-      solutionFileBase64,
-      mimeType = 'application/pdf',
-      examTitle = 'JEE CBT Mock Test',
-      pattern = 'JEE_MAIN',
-      userCommand = '', // Custom directives issued by user
-      customDurationMinutes,
-      defaultPositiveMarks = 4,
-      defaultNegativeMarks = 1,
-    } = req.body;
+    const rawFileBase64 =
+      req.body.fileBase64 || req.body.pdfBase64 || req.body.questionFileBase64;
+    const rawSolutionBase64 =
+      req.body.solutionFileBase64 || req.body.solutionBase64;
+    const mimeType =
+      req.body.mimeType || req.body.pdfMimeType || 'application/pdf';
+    const examTitle =
+      req.body.examTitle ||
+      req.body.customTitle ||
+      req.body.title ||
+      'JEE CBT Mock Test';
+    const pattern = req.body.pattern || 'JEE_MAIN';
+    const userCommand = req.body.userCommand || '';
+    const customDurationMinutes =
+      req.body.customDurationMinutes || req.body.customDuration;
+    const defaultPositiveMarks = req.body.defaultPositiveMarks ?? 4;
+    const defaultNegativeMarks = req.body.defaultNegativeMarks ?? 1;
 
-    if (!fileBase64) {
+    if (!rawFileBase64) {
       return res.status(400).json({ error: 'No question paper or module PDF provided' });
     }
 
@@ -178,7 +259,7 @@ app.post(['/api/parse-exam-pdf', '/parse-exam-pdf'], async (req, res) => {
       });
     }
 
-    const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, '');
+    const cleanBase64 = rawFileBase64.replace(/^data:[^;]+;base64,/, '');
 
     const systemInstruction = `You are the World's Premier JEE (Joint Entrance Examination) Question Paper & Coaching Module Extraction AI.
 You have analyzed hundreds of thousands of test papers from Kota and Hyderabad (Allen, FIITJEE, MathonGo, Resonance, Narayana, Sri Chaitanya, PhysicsWallah, Motion, Competishun, and official NTA papers).
@@ -218,8 +299,8 @@ Your core mission:
       },
     ];
 
-    if (solutionFileBase64) {
-      const cleanSolBase64 = solutionFileBase64.replace(/^data:[^;]+;base64,/, '');
+    if (rawSolutionBase64) {
+      const cleanSolBase64 = rawSolutionBase64.replace(/^data:[^;]+;base64,/, '');
       parts.push({
         inlineData: {
           mimeType: mimeType,
@@ -245,7 +326,7 @@ ${userCommand.trim()}
 You must strictly execute every instruction specified in the user's command above.`;
     }
 
-    promptText += `\n\nEnsure that ALL questions found in the document are extracted sequentially, with accurate question numbers, proper LaTeX math formatting, all 4 options (for MCQs), correct answers, and thorough step-by-step solutions.`;
+    promptText += `\n\nEnsure that ALL questions found in the document are extracted sequentially, with accurate question numbers, proper LaTeX math formatting (with double-escaped backslashes like \\\\frac and \\\\sqrt), all 4 options (for MCQs), correct answers, and thorough step-by-step solutions.`;
 
     parts.push({ text: promptText });
 
@@ -311,28 +392,93 @@ You must strictly execute every instruction specified in the user's command abov
     const parsedData = cleanAndParseJSON(response.text);
 
     // Post-processing & Sanitization: Ensure sections and question numbering are robust
-    if (parsedData.sections && Array.isArray(parsedData.sections)) {
-      let globalQuestionIndex = 1;
-      parsedData.sections.forEach((sec: any) => {
-        if (!sec.id) sec.id = 'physics';
-        if (!sec.name) sec.name = sec.id.toUpperCase();
-        if (Array.isArray(sec.questions)) {
-          sec.questions.forEach((q: any) => {
-            if (!q.id) q.id = `q-${globalQuestionIndex}`;
-            if (!q.questionNumber) q.questionNumber = globalQuestionIndex;
-            if (!q.sectionId) q.sectionId = sec.id;
-            if (!q.type) q.type = q.options && q.options.length > 0 ? 'SINGLE_CORRECT' : 'NUMERICAL';
-            if (q.positiveMarks === undefined) q.positiveMarks = defaultPositiveMarks;
-            if (q.negativeMarks === undefined) q.negativeMarks = defaultNegativeMarks;
-            globalQuestionIndex++;
-          });
-        }
-      });
+    if (!parsedData.sections || !Array.isArray(parsedData.sections) || parsedData.sections.length === 0) {
+      parsedData.sections = [
+        {
+          id: 'physics',
+          name: 'PHYSICS',
+          questions: Array.isArray(parsedData.questions) ? parsedData.questions : [],
+        },
+      ];
     }
+
+    let globalQuestionIndex = 1;
+    let calculatedTotalMarks = 0;
+
+    parsedData.sections.forEach((sec: any) => {
+      const normId = String(sec.id || '').toLowerCase();
+      if (normId.includes('chem')) sec.id = 'chemistry';
+      else if (normId.includes('math')) sec.id = 'mathematics';
+      else if (normId.includes('phys')) sec.id = 'physics';
+      else if (!sec.id) sec.id = 'physics';
+
+      if (!sec.name) sec.name = String(sec.id).toUpperCase();
+
+      if (Array.isArray(sec.questions)) {
+        sec.questions.forEach((q: any) => {
+          if (!q.id) q.id = `q-${globalQuestionIndex}`;
+          q.questionNumber = globalQuestionIndex;
+          q.sectionId = sec.id;
+
+          // Normalize Options
+          if (Array.isArray(q.options) && q.options.length > 0) {
+            q.options = q.options.map((opt: any, optIdx: number) => {
+              const defaultId = ['A', 'B', 'C', 'D'][optIdx] || String.fromCharCode(65 + optIdx);
+              if (typeof opt === 'string') {
+                return { id: defaultId, labelLatex: opt };
+              }
+              let optId = String(opt.id || defaultId).toUpperCase().trim();
+              if (optId === '1') optId = 'A';
+              else if (optId === '2') optId = 'B';
+              else if (optId === '3') optId = 'C';
+              else if (optId === '4') optId = 'D';
+              return {
+                id: optId,
+                labelLatex: String(opt.labelLatex || opt.text || opt.label || '').trim(),
+              };
+            });
+            if (!q.type) q.type = 'SINGLE_CORRECT';
+          } else {
+            q.type = 'NUMERICAL';
+          }
+
+          // Normalize Correct Answer
+          if (q.correctAnswer !== undefined && q.correctAnswer !== null) {
+            let ca = String(q.correctAnswer).trim().toUpperCase();
+            if (ca === '1') ca = 'A';
+            else if (ca === '2') ca = 'B';
+            else if (ca === '3') ca = 'C';
+            else if (ca === '4') ca = 'D';
+            q.correctAnswer = ca;
+          } else {
+            q.correctAnswer = q.type === 'NUMERICAL' ? '0' : 'A';
+          }
+
+          if (q.positiveMarks === undefined) q.positiveMarks = defaultPositiveMarks;
+          if (q.negativeMarks === undefined) {
+            q.negativeMarks = q.type === 'NUMERICAL' && pattern === 'JEE_MAIN' ? 0 : defaultNegativeMarks;
+          }
+
+          if (!q.explanationLatex) {
+            q.explanationLatex = `Step-by-step solution for Question ${globalQuestionIndex}. Correct Answer: ${q.correctAnswer}.`;
+          }
+
+          calculatedTotalMarks += q.positiveMarks;
+          globalQuestionIndex++;
+        });
+      }
+    });
+
+    parsedData.id = parsedData.id || `custom-paper-${Date.now()}`;
+    parsedData.title = parsedData.title || examTitle;
+    parsedData.pattern = parsedData.pattern || pattern;
+    parsedData.durationMinutes = parsedData.durationMinutes || customDurationMinutes || 180;
+    parsedData.totalMarks = calculatedTotalMarks > 0 ? calculatedTotalMarks : (pattern === 'JEE_MAIN' ? 300 : 180);
 
     res.json({
       success: true,
       examPaper: parsedData,
+      data: parsedData,
     });
   } catch (error: any) {
     console.error('Error parsing exam PDF:', error);
@@ -436,10 +582,10 @@ For each question:
 });
 
 // AI-Powered Long-Term Test Series Scheduler & Syllabus Checklist Generator
-app.post(['/api/generate-test-schedule', '/generate-test-schedule'], async (req, res) => {
+app.post(['/api/generate-test-schedule', '/generate-test-schedule', '/api/generate-roadmap-schedule'], async (req, res) => {
   try {
     const {
-      prompt = 'Create an Allen Leader 6-month test schedule with 8 periodic tests on Sundays',
+      prompt = req.body.command || 'Create an Allen Leader 6-month test schedule with 8 periodic tests on Sundays',
       pattern = 'JEE_MAIN',
       numberOfTests = 8,
     } = req.body;
@@ -619,7 +765,7 @@ Follow the proven Kota coaching methodology:
 });
 
 // Interactive AI Academic Mentor Chat & Dynamic Scheduler
-app.post(['/api/ai-academic-mentor', '/ai-academic-mentor'], async (req, res) => {
+app.post(['/api/ai-academic-mentor', '/ai-academic-mentor', '/api/mentor-chat-schedule'], async (req, res) => {
   try {
     const {
       message = '',
@@ -707,7 +853,11 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
 
     res.json({
       success: true,
-      data: parsedData,
+      data: {
+        ...parsedData,
+        reply: parsedData.reply || parsedData.replyText,
+        replyText: parsedData.replyText || parsedData.reply,
+      },
     });
   } catch (error: any) {
     console.error('Error in AI Academic Mentor:', error);
@@ -719,7 +869,7 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
 });
 
 // 404 Handler for API endpoints
-app.use((req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({
     success: false,
     error: `API route not found: ${req.method} ${req.originalUrl || req.url}`,

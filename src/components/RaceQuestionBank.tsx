@@ -48,6 +48,7 @@ export const RaceQuestionBank: React.FC<RaceQuestionBankProps> = ({
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<SubjectId | 'ALL'>('ALL');
   const [drillSize, setDrillSize] = useState<number>(15);
   const [drillDuration, setDrillDuration] = useState<number>(30);
+  const [bankNotice, setBankNotice] = useState<string>('');
 
   // Filtered entries
   const filteredEntries = taggedQuestions.filter((item) => {
@@ -68,7 +69,7 @@ export const RaceQuestionBank: React.FC<RaceQuestionBankProps> = ({
   // Build a custom CBT Exam Paper from tagged questions for instant timed practice!
   const handleLaunchRaceDrill = () => {
     if (filteredEntries.length === 0) {
-      alert('No tagged questions match your current filter. Tag questions during tests or sprints first!');
+      setBankNotice('No tagged questions match your current filter. Tag questions during tests or sprints first!');
       return;
     }
 
@@ -113,7 +114,7 @@ export const RaceQuestionBank: React.FC<RaceQuestionBankProps> = ({
   // Schedule a daily 7-8 PM repetition sprint into the Daily Routine checklist
   const handleScheduleRaceDrill = () => {
     if (filteredEntries.length === 0) {
-      alert('No tagged questions available to schedule. Tag questions during tests first!');
+      setBankNotice('No tagged questions available to schedule. Tag questions during tests first!');
       return;
     }
 
@@ -157,7 +158,7 @@ export const RaceQuestionBank: React.FC<RaceQuestionBankProps> = ({
     };
 
     onScheduleRaceSession(newRoutineItem);
-    alert("RACE Daily Drill has been scheduled to Today's Live Desk (19:00 - 20:00)!");
+    setBankNotice("RACE Daily Drill has been scheduled to Today's Live Desk (19:00 - 20:00)!");
   };
 
   return (
@@ -205,11 +206,26 @@ export const RaceQuestionBank: React.FC<RaceQuestionBankProps> = ({
               className="px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-red-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
             >
               <Bot className="w-4 h-4 text-red-500" />
-              Command AI to Build Test From These
+              Command inspiro AI to Build Test From These
             </button>
           </div>
         </div>
       </div>
+
+      {bankNotice && (
+        <div className="p-3.5 rounded-xl bg-zinc-900 border border-red-500/50 text-white text-xs flex items-center justify-between gap-2.5 shadow-lg">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-red-500 shrink-0" />
+            <span>{bankNotice}</span>
+          </div>
+          <button
+            onClick={() => setBankNotice('')}
+            className="text-zinc-400 hover:text-white px-1 font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 2. STAT PILLS & DRILL CONFIGURATOR */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

@@ -131,7 +131,7 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
       }
     } catch (e: any) {
       console.error(e);
-      setGenError(e.message || 'Failed to arrange schedule with AI');
+      setGenError(e.message || 'Failed to arrange schedule with inspiro AI');
     } finally {
       setIsGenerating(false);
     }
@@ -158,13 +158,13 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-wider">
               <Sparkles className="w-4 h-4 text-red-500" />
-              AI Test Series Director & Roadmap Builder
+              inspiro AI Roadmap Builder
             </div>
             <h2 className="text-lg md:text-xl font-bold font-display text-white mt-0.5">
-              Command AI to Arrange Your 3 to 6-Month Test Schedule
+              Command inspiro AI to Arrange Your 3 to 6-Month Test Schedule
             </h2>
             <p className="text-xs text-zinc-400 mt-1">
-              Tell the AI your coaching syllabus, test frequency, or paste your Allen / FIITJEE test schedule.
+              Tell inspiro AI your coaching syllabus, test frequency, or paste your Allen / FIITJEE test schedule.
             </p>
           </div>
         </div>
@@ -186,7 +186,7 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
             className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
           >
             <Sparkles className="w-4 h-4 text-white" />
-            {isGenerating ? 'Arranging Schedule...' : 'Command AI to Build'}
+            {isGenerating ? 'Arranging Schedule...' : 'Command inspiro AI to Build'}
           </button>
         </div>
 

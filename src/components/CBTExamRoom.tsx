@@ -501,8 +501,13 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         {/* Left: Branding with inspiro LIVE Logo & Paper title */}
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-1.5 select-none shrink-0">
-            <div className="w-6 h-6 rounded-md bg-red-600 flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.5)]">
-              <Flame className="w-3.5 h-3.5 text-white fill-white" />
+            <div className="w-6 h-6 rounded-md overflow-hidden flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
+              <img
+                src="/src/assets/images/inspiro_logo.png"
+                alt="inspiro logo"
+                className="w-full h-full object-contain"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <span className="font-display font-black text-xs md:text-sm text-white">inspiro</span>
             <span className="font-display font-black text-xs md:text-sm text-red-500 font-extrabold drop-shadow-[0_0_8px_rgba(220,38,38,0.7)]">LIVE</span>

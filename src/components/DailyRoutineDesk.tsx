@@ -85,7 +85,7 @@ export const DailyRoutineDesk: React.FC<DailyRoutineDeskProps> = ({
 
       const resData = await response.json();
       if (!response.ok || !resData.success) {
-        throw new Error(resData.error || 'Failed to generate master routine');
+        throw new Error(resData.error || 'Failed to generate inspiro AI routine');
       }
 
       if (resData.success && resData.data && resData.data.items) {
@@ -206,13 +206,13 @@ export const DailyRoutineDesk: React.FC<DailyRoutineDeskProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-wider">
               <Sparkles className="w-4 h-4 text-red-500" />
-              AI Master Routine Director
+              inspiro AI
             </div>
             <h3 className="text-base md:text-lg font-bold font-display text-white mt-0.5">
-              Command AI to Arrange Your Multi-Month Module Practice & Test Schedule
+              Command inspiro AI to Arrange Your Multi-Month Module Practice & Test Schedule
             </h3>
             <p className="text-xs text-zinc-400">
-              Tell AI your daily practice slot (e.g. 7-8 PM) and test frequency to create an integrated weekly checklist.
+              Tell inspiro AI your daily practice slot (e.g. 7-8 PM) and test frequency to create an integrated weekly checklist.
             </p>
           </div>
         </div>
@@ -234,7 +234,7 @@ export const DailyRoutineDesk: React.FC<DailyRoutineDeskProps> = ({
             className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
           >
             <Sparkles className="w-4 h-4 text-white" />
-            {isGenerating ? 'Arranging Routine...' : 'Command AI to Build'}
+            {isGenerating ? 'Arranging Routine...' : 'Command inspiro AI to Build'}
           </button>
         </div>
 

@@ -42,7 +42,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
     {
       id: 'welcome',
       sender: 'mentor',
-      text: "Namaste Aspirant! I am your AI Master Academic Director (modeled after Kota's top Allen & MathonGo coaches). Tell me your target exam, upcoming coaching test dates, or the module chapters you are stuck with. You can also command me to create custom tests from your tagged Doubts, Hard & Tricky questions (Allen RACE series)! I will schedule everything into your live checklist so you can just sit down, finish today's work, and relax!",
+      text: "Namaste Aspirant! I am your inspiro AI (modeled after Kota's top Allen & MathonGo coaches). Tell me your target exam, upcoming coaching test dates, or the module chapters you are stuck with. You can also command me to create custom tests from your tagged Doubts, Hard & Tricky questions (Allen RACE series)! I will schedule everything into your live checklist so you can just sit down, finish today's work, and relax!",
       timestamp: 'Just now',
     },
   ]);
@@ -51,6 +51,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [practiceSlot, setPracticeSlot] = useState('19:00 - 20:00');
   const [testSlot, setTestSlot] = useState('09:00 - 12:00');
+  const [appliedNotice, setAppliedNotice] = useState('');
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputVal;
@@ -133,7 +134,8 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
 
   const handleApplyProposedSchedule = (items: DailyRoutineItem[]) => {
     onApplyRoutine(items);
-    alert(`Successfully applied ${items.length} scheduled practice sessions & tests to your Live Checklist!`);
+    setAppliedNotice(`Successfully applied ${items.length} scheduled practice sessions & tests to your Live Checklist!`);
+    setTimeout(() => setAppliedNotice(''), 6000);
   };
 
   return (
@@ -147,7 +149,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold font-display text-white">
-                AI Master Academic Director
+                inspiro AI
               </h3>
               <span className="px-2 py-0.5 rounded-full bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -155,7 +157,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Command AI to arrange your module sprints, create multi-month checklists, and balance tests.
+              Command inspiro AI to arrange your module sprints, create multi-month checklists, and balance tests.
             </p>
           </div>
         </div>
@@ -173,8 +175,17 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
               title="Daily practice slot"
             />
           </div>
-        </div>
       </div>
+
+      {appliedNotice && (
+        <div className="bg-green-950/80 border-b border-green-800 text-green-300 text-xs px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span>{appliedNotice}</span>
+          </div>
+          <button onClick={() => setAppliedNotice('')} className="text-green-400 hover:text-white font-bold">✕</button>
+        </div>
+      )}
 
       {/* Chat Messages Body */}
       <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-black/40">
@@ -277,7 +288,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
             <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(220,38,38,0.5)]">
               <Bot className="w-4 h-4 animate-spin" />
             </div>
-            <span>Academic Director is formulating your strategic schedule...</span>
+            <span>inspiro AI is formulating your strategic schedule...</span>
           </div>
         )}
       </div>
@@ -325,7 +336,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Command your AI Mentor (e.g. 'Schedule my Allen Physics module for next 2 weeks with a test on Sunday')..."
+          placeholder="Command inspiro AI (e.g. 'Schedule my Allen Physics module for next 2 weeks with a test on Sunday')..."
           disabled={isLoading}
           className="flex-1 px-4 py-3 text-xs md:text-sm rounded-xl border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
         />

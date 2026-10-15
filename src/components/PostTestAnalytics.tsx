@@ -362,8 +362,13 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 select-none mb-1">
-                <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.5)]">
-                  <Flame className="w-4 h-4 text-white fill-white" />
+                <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
+                  <img
+                    src="/src/assets/images/inspiro_logo.png"
+                    alt="inspiro logo"
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
                 <div className="flex items-baseline gap-1.5 font-display text-lg font-black tracking-tight">
                   <span className="text-white">inspiro</span>
@@ -781,7 +786,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                 className="px-3.5 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-lg shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5 uppercase tracking-wider"
                               >
                                 <Sparkles className="w-3.5 h-3.5 text-white" />
-                                Practice 3 Similar JEE PYQs (AI Drill)
+                                Practice 3 Similar JEE PYQs (inspiro AI Drill)
                               </button>
                             </div>
 

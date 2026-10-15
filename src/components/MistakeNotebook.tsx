@@ -303,7 +303,7 @@ export const MistakeNotebook: React.FC<MistakeNotebookProps> = ({
                     className="px-4 py-2 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-lg shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-white" />
-                    Practice 3 Similar JEE PYQs (AI Drill)
+                    Practice 3 Similar JEE PYQs (inspiro AI Drill)
                   </button>
                 </div>
               </div>

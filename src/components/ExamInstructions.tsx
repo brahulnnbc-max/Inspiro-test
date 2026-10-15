@@ -26,8 +26,13 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
         <div className="bg-black text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2 select-none">
-              <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.5)]">
-                <Flame className="w-4 h-4 text-white fill-white" />
+              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
+                <img
+                  src="/src/assets/images/inspiro_logo.png"
+                  alt="inspiro logo"
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="flex items-baseline gap-1.5 font-display text-lg font-black tracking-tight">
                 <span className="text-white">inspiro</span>

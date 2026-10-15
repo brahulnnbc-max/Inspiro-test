@@ -60,7 +60,7 @@ export const RemedialPracticeModal: React.FC<RemedialPracticeModalProps> = ({
             </div>
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">
-                AI Remedial Practice • Real JEE PYQ Standards
+                inspiro AI Remedial Practice • Real JEE PYQ Standards
               </div>
               <h2 className="text-base font-bold text-white">
                 {isLoading ? 'Researching High-Yield JEE PYQs...' : pack?.topicName}

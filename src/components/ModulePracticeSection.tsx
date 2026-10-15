@@ -50,6 +50,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [successNotice, setSuccessNotice] = useState('');
   const [moduleTitle, setModuleTitle] = useState('');
   const [moduleSubject, setModuleSubject] = useState<SubjectId>('physics');
   const [sprintDuration, setSprintDuration] = useState<number>(50);
@@ -249,7 +250,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
         throw new Error(resData.error || 'Failed to parse module PDF');
       }
 
-      const generatedPaper: ExamPaper = resData.data;
+      const generatedPaper: ExamPaper = resData.data || resData.examPaper;
       onAddCustomPaper(generatedPaper);
 
       // Create a daily routine item scheduled for today
@@ -274,7 +275,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       setQuestionFile(null);
       setSolutionFile(null);
       setModuleTitle('');
-      alert(`Success! "${title}" has been converted into a CBT Practice Room and scheduled on Today's Live Desk.`);
+      setSuccessNotice(`Success! "${title}" has been converted into a CBT Practice Room and scheduled on Today's Live Desk.`);
     } catch (err: any) {
       console.error(err);
       setUploadError(err.message || 'Failed to process module PDF.');
@@ -304,7 +305,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
     };
 
     onAddRoutineItems([newItem]);
-    alert(`"${mod.title}" has been scheduled into Today's Live Desk (19:00 - 20:00). You can just sit down at 7 PM and practice!`);
+    setSuccessNotice(`"${mod.title}" has been scheduled into Today's Live Desk (19:00 - 20:00). You can just sit down at 7 PM and practice!`);
   };
 
   return (
@@ -323,7 +324,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
           </h2>
 
           <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
-            Stop passively staring at 200-question Allen / FIITJEE module PDFs on paper. Upload your module or pick a curated exercise below—the AI splits it into daily 50-minute CBT sprints so you finish every exercise on time with zero backlog!
+            Stop passively staring at 200-question Allen / FIITJEE module PDFs on paper. Upload your module or pick a curated exercise below—inspiro AI splits it into daily 50-minute CBT sprints so you finish every exercise on time with zero backlog!
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-zinc-300">
@@ -354,9 +355,24 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             Upload Your Coaching Module (Allen / Resonance / FIITJEE)
           </h3>
           <p className="text-xs text-zinc-400">
-            Gemini AI will extract all questions, formulas, and diagrams, and package them as an authentic CBT practice test.
+            inspiro AI will extract all questions, formulas, and diagrams, and package them as an authentic CBT practice test.
           </p>
         </div>
+
+        {successNotice && (
+          <div className="p-3.5 rounded-xl bg-green-950/40 border border-green-800/80 text-green-300 text-xs flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-green-500" />
+              <span>{successNotice}</span>
+            </div>
+            <button
+              onClick={() => setSuccessNotice('')}
+              className="text-green-400 hover:text-white font-bold px-1"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {uploadError && (
           <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-800/80 text-red-300 text-xs flex items-center gap-2.5">
@@ -413,7 +429,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-red-500" />
-              AI Director Custom Command (Optional)
+              inspiro AI Custom Command (Optional)
             </span>
             <span className="text-[10px] text-zinc-400">Gemini 3.8 Flash Vision</span>
           </div>
