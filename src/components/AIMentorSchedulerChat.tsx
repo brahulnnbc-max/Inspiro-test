@@ -64,68 +64,68 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    setInputVal('');
+    if (!textToSend) setInputVal('');
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/ai-academic-mentor', {
+      const response = await fetch('/api/mentor-chat-schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          practiceSlot,
-          testSlot,
+          history: messages.map((m) => ({ role: m.sender, text: m.text })),
+          preferredSlot: practiceSlot,
+          testSlot: testSlot,
         }),
       });
 
       const resData = await response.json();
       if (!response.ok || !resData.success) {
-        throw new Error(resData.error || 'Failed to consult AI Mentor');
+        throw new Error(resData.error || 'Academic Director is temporarily unavailable');
       }
-      const mentorData = resData.data;
 
-      let mappedItems: DailyRoutineItem[] | undefined = undefined;
-      if (mentorData.proposedRoutine && mentorData.proposedRoutine.items) {
-        mappedItems = mentorData.proposedRoutine.items.map((item: any, idx: number) => ({
-          id: `mentor-rout-${Date.now()}-${idx}`,
-          type: item.type as RoutineType,
-          title: item.title,
-          chapterOrTopic: item.chapterOrTopic,
-          subject: item.subject,
-          scheduledDate: item.scheduledDate,
-          scheduledSlot: item.scheduledSlot,
-          durationMinutes: item.durationMinutes || 50,
-          questionCount: item.questionCount || 25,
-          weekNumber: item.weekNumber || 1,
-          dayName: item.dayName || 'Day',
-          isCompleted: false,
-        }));
-      }
+      const mentorReply = resData.data.reply;
+      const proposed = resData.data.proposedRoutine;
 
       const mentorMsg: ChatMessage = {
         id: `mentor-${Date.now()}`,
         sender: 'mentor',
-        text: mentorData.replyText || "Here is your strategic study roadmap:",
+        text: mentorReply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        proposedRoutine: mappedItems
+        proposedRoutine: proposed
           ? {
-              routineTitle: mentorData.proposedRoutine.routineTitle || 'Personalized Coaching Schedule',
-              summary: mentorData.proposedRoutine.summary || 'Coaching routine created',
-              items: mappedItems,
+              routineTitle: proposed.title || 'Personalized Coaching Schedule',
+              summary: proposed.summary || '',
+              items: (proposed.items || []).map((it: any, idx: number) => ({
+                id: `rout-mentor-${Date.now()}-${idx}`,
+                type: (it.type as RoutineType) || 'MODULE_PRACTICE',
+                title: it.title,
+                chapterOrTopic: it.chapterOrTopic || it.title,
+                subject: it.subject || 'physics',
+                scheduledDate: it.scheduledDate || new Date().toISOString().split('T')[0],
+                scheduledSlot: it.scheduledSlot || practiceSlot,
+                durationMinutes: it.durationMinutes || 50,
+                questionCount: it.questionCount || 25,
+                weekNumber: it.weekNumber || 1,
+                dayName: it.dayName || 'Day',
+                isCompleted: false,
+              })),
             }
           : undefined,
       };
 
       setMessages((prev) => [...prev, mentorMsg]);
-    } catch (e: any) {
-      console.error('Mentor error:', e);
-      const errorMsg: ChatMessage = {
-        id: `mentor-err-${Date.now()}`,
-        sender: 'mentor',
-        text: `I encountered a momentary delay: "${e.message || 'Connection timeout'}". Please try resending or tap one of the quick command buttons below!`,
-        timestamp: 'Just now',
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+    } catch (err: any) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          sender: 'mentor',
+          text: `⚠️ Error formulating schedule: ${err.message || 'Please check Gemini API key configuration.'}`,
+          timestamp: 'Now',
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -137,23 +137,24 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[700px]">
+    <div className="bg-zinc-950 rounded-3xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col h-[700px] text-white">
       {/* Mentor Header */}
-      <div className="p-4 md:p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-4 md:p-6 border-b border-zinc-800 bg-black flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.5)] shrink-0">
             <Bot className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold font-display text-slate-900 dark:text-white">
+              <h3 className="text-base font-bold font-display text-white">
                 AI Master Academic Director
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
-                Online
+              <span className="px-2 py-0.5 rounded-full bg-red-600/20 text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                Live Coach
               </span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-zinc-400">
               Command AI to arrange your module sprints, create multi-month checklists, and balance tests.
             </p>
           </div>
@@ -161,14 +162,14 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
 
         {/* Slot Controls */}
         <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-            <Clock className="w-3.5 h-3.5 text-indigo-500" />
-            <span className="text-slate-500">Daily Slot:</span>
+          <div className="flex items-center gap-1.5 bg-zinc-900 px-3 py-1.5 rounded-xl border border-zinc-800">
+            <Clock className="w-3.5 h-3.5 text-red-500" />
+            <span className="text-zinc-400">Daily Slot:</span>
             <input
               type="text"
               value={practiceSlot}
               onChange={(e) => setPracticeSlot(e.target.value)}
-              className="w-24 font-mono font-bold text-slate-900 dark:text-white bg-transparent focus:outline-hidden"
+              className="w-24 font-mono font-bold text-white bg-transparent focus:outline-hidden"
               title="Daily practice slot"
             />
           </div>
@@ -176,14 +177,14 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
       </div>
 
       {/* Chat Messages Body */}
-      <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4">
+      <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-black/40">
         {messages.map((m) => (
           <div
             key={m.id}
             className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {m.sender === 'mentor' && (
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-1 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-red-500 flex items-center justify-center shrink-0 mt-1 shadow-xs">
                 <Bot className="w-4 h-4" />
               </div>
             )}
@@ -191,30 +192,30 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
             <div
               className={`max-w-2xl rounded-2xl p-4 text-xs md:text-sm space-y-3 leading-relaxed ${
                 m.sender === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800'
+                  ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.35)]'
+                  : 'bg-zinc-900 text-zinc-200 border border-zinc-800'
               }`}
             >
               <div>{m.text}</div>
 
               {/* Proposed Routine Box */}
               {m.proposedRoutine && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-indigo-200 dark:border-indigo-900/60 space-y-3 text-slate-900 dark:text-white">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2">
+                <div className="bg-black rounded-xl p-4 border border-red-600/70 shadow-[0_0_15px_rgba(220,38,38,0.2)] space-y-3 text-white">
+                  <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-red-500">
                         Generated Coaching Roadmap
                       </div>
-                      <div className="text-sm font-bold font-display">
+                      <div className="text-sm font-bold font-display text-white">
                         {m.proposedRoutine.routineTitle}
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-red-950 text-red-400 border border-red-800">
                       {m.proposedRoutine.items.length} Sessions
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-zinc-400">
                     {m.proposedRoutine.summary}
                   </p>
 
@@ -223,20 +224,20 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
                     {m.proposedRoutine.items.map((it, idx) => (
                       <div
                         key={idx}
-                        className="p-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs"
+                        className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-between text-xs"
                       >
                         <div className="flex items-center gap-2">
                           <span
                             className={`w-2 h-2 rounded-full ${
-                              it.type === 'REAL_TEST' ? 'bg-rose-500' : 'bg-emerald-500'
+                              it.type === 'REAL_TEST' ? 'bg-red-500 shadow-[0_0_6px_#ef4444]' : 'bg-zinc-400'
                             }`}
                           />
-                          <span className="font-bold">{it.dayName}:</span>
-                          <span className="text-slate-600 dark:text-slate-400 truncate max-w-[200px]">
+                          <span className="font-bold text-white">{it.dayName}:</span>
+                          <span className="text-zinc-300 truncate max-w-[200px]">
                             {it.title}
                           </span>
                         </div>
-                        <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                        <span className="text-[10px] font-mono text-zinc-500 shrink-0">
                           {it.scheduledSlot}
                         </span>
                       </div>
@@ -246,9 +247,9 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
                   {/* Apply Button */}
                   <button
                     onClick={() => handleApplyProposedSchedule(m.proposedRoutine!.items)}
-                    className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2"
+                    className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black uppercase tracking-wider text-xs transition-all shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center justify-center gap-2"
                   >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                    <CheckCircle2 className="w-4 h-4 text-white" />
                     Apply This Routine Directly to My Live Checklist
                   </button>
                 </div>
@@ -256,7 +257,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
 
               <div
                 className={`text-[10px] text-right font-mono ${
-                  m.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'
+                  m.sender === 'user' ? 'text-red-200' : 'text-zinc-500'
                 }`}
               >
                 {m.timestamp}
@@ -264,7 +265,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
             </div>
 
             {m.sender === 'user' && (
-              <div className="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center shrink-0 mt-1">
+              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-white flex items-center justify-center shrink-0 mt-1">
                 <User className="w-4 h-4" />
               </div>
             )}
@@ -272,8 +273,8 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
         ))}
 
         {isLoading && (
-          <div className="flex gap-3 items-center text-xs text-slate-500 italic">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+          <div className="flex gap-3 items-center text-xs text-zinc-400 italic">
+            <div className="w-8 h-8 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(220,38,38,0.5)]">
               <Bot className="w-4 h-4 animate-spin" />
             </div>
             <span>Academic Director is formulating your strategic schedule...</span>
@@ -282,15 +283,15 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
       </div>
 
       {/* Quick Prompts Suggestions */}
-      <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 overflow-x-auto text-xs">
-        <span className="text-slate-400 font-medium text-[11px] shrink-0">Suggestions:</span>
+      <div className="p-3 bg-zinc-950 border-t border-zinc-800 flex items-center gap-2 overflow-x-auto text-xs">
+        <span className="text-zinc-500 font-medium text-[11px] shrink-0">Suggestions:</span>
         <button
           onClick={() =>
             handleSendMessage(
               "Schedule an Allen Leader 6-Month routine: Mon-Fri daily 1-hour module practice at 7 PM and alternate Sunday 3-hour tests."
             )
           }
-          className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shrink-0 text-xs transition-colors"
+          className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white hover:border-red-600 shrink-0 text-xs transition-colors"
         >
           Kota Leader 6-Month Routine
         </button>
@@ -300,7 +301,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
               "I have 80 questions in Kinematics and 60 in Mole Concept. Break them into 5 daily 50-minute practice sprints and schedule a test on Sunday."
             )
           }
-          className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shrink-0 text-xs transition-colors"
+          className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white hover:border-red-600 shrink-0 text-xs transition-colors"
         >
           Kinematics + Mole Concept Sprints
         </button>
@@ -310,15 +311,15 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
               "Schedule a daily 45-minute Allen RACE test slot at 7 PM for the next 7 days, pulling my tagged Doubt, Hard, and Tricky questions so I can repeat them until 100% mastered."
             )
           }
-          className="px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 shrink-0 text-xs font-semibold transition-colors flex items-center gap-1"
+          className="px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 border border-red-800/80 text-red-300 shrink-0 text-xs font-semibold transition-colors flex items-center gap-1"
         >
-          <Award className="w-3.5 h-3.5 text-purple-500" />
+          <Award className="w-3.5 h-3.5 text-red-400" />
           Schedule Daily RACE Repeat Tests
         </button>
       </div>
 
       {/* Input Bar */}
-      <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+      <div className="p-4 bg-black border-t border-zinc-800 flex gap-2">
         <input
           type="text"
           value={inputVal}
@@ -326,12 +327,12 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
           placeholder="Command your AI Mentor (e.g. 'Schedule my Allen Physics module for next 2 weeks with a test on Sunday')..."
           disabled={isLoading}
-          className="flex-1 px-4 py-3 text-xs md:text-sm rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 px-4 py-3 text-xs md:text-sm rounded-xl border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
         />
         <button
           onClick={() => handleSendMessage()}
           disabled={!inputVal.trim() || isLoading}
-          className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md"
+          className="px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black uppercase tracking-wider text-xs transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-[0_0_15px_rgba(220,38,38,0.5)]"
         >
           <Send className="w-4 h-4" />
           <span>Send</span>

@@ -32,10 +32,10 @@ export const NumericalKeypad: React.FC<NumericalKeypadProps> = ({
   };
 
   return (
-    <div className="w-full max-w-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+    <div className="w-full max-w-xs bg-zinc-950 border border-zinc-800 rounded-xl p-4 shadow-xl text-white">
       {/* Value Display / Direct Input */}
       <div className="mb-3">
-        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+        <label className="block text-xs font-semibold text-zinc-400 mb-1">
           Enter Numerical Value:
         </label>
         <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export const NumericalKeypad: React.FC<NumericalKeypadProps> = ({
             }}
             placeholder="e.g. 25 or 12.5"
             disabled={disabled}
-            className="w-full px-3 py-2 text-base font-mono font-bold tracking-wider text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 text-base font-mono font-bold tracking-wider text-white bg-black border border-zinc-800 rounded-lg focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
           />
         </div>
       </div>
@@ -62,7 +62,7 @@ export const NumericalKeypad: React.FC<NumericalKeypadProps> = ({
             type="button"
             onClick={() => handleDigit(digit)}
             disabled={disabled}
-            className="h-10 text-base font-semibold font-mono bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded-md shadow-xs active:scale-95 transition-all"
+            className="h-10 text-base font-bold font-mono bg-zinc-900 hover:bg-zinc-800 active:bg-red-600 active:text-white text-white border border-zinc-800 rounded-lg shadow-xs transition-all"
           >
             {digit}
           </button>
@@ -71,7 +71,7 @@ export const NumericalKeypad: React.FC<NumericalKeypadProps> = ({
           type="button"
           onClick={() => handleDigit('.')}
           disabled={disabled}
-          className="h-10 text-lg font-bold font-mono bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded-md shadow-xs active:scale-95 transition-all"
+          className="h-10 text-lg font-bold font-mono bg-zinc-900 hover:bg-zinc-800 active:bg-red-600 active:text-white text-white border border-zinc-800 rounded-lg shadow-xs transition-all"
         >
           .
         </button>
@@ -79,7 +79,7 @@ export const NumericalKeypad: React.FC<NumericalKeypadProps> = ({
           type="button"
           onClick={() => handleDigit('0')}
           disabled={disabled}
-          className="h-10 text-base font-semibold font-mono bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded-md shadow-xs active:scale-95 transition-all"
+          className="h-10 text-base font-bold font-mono bg-zinc-900 hover:bg-zinc-800 active:bg-red-600 active:text-white text-white border border-zinc-800 rounded-lg shadow-xs transition-all"
         >
           0
         </button>
@@ -87,28 +87,28 @@ export const NumericalKeypad: React.FC<NumericalKeypadProps> = ({
           type="button"
           onClick={() => handleDigit('-')}
           disabled={disabled}
-          className="h-10 text-base font-bold font-mono bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 rounded-md shadow-xs active:scale-95 transition-all"
+          className="h-10 text-base font-bold font-mono bg-zinc-900 hover:bg-zinc-800 active:bg-red-600 active:text-white text-white border border-zinc-800 rounded-lg shadow-xs transition-all"
         >
           -
         </button>
       </div>
 
       {/* Actions: Backspace & Clear */}
-      <div className="grid grid-cols-2 gap-2 mt-2">
+      <div className="grid grid-cols-2 gap-2 mt-2.5">
         <button
           type="button"
           onClick={handleBackspace}
           disabled={disabled || !value}
-          className="h-9 text-xs font-medium flex items-center justify-center gap-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-md active:scale-95 transition-all disabled:opacity-50"
+          className="h-9 text-xs font-bold flex items-center justify-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg border border-zinc-800 active:scale-95 transition-all disabled:opacity-40"
         >
-          <Delete className="w-3.5 h-3.5" />
+          <Delete className="w-3.5 h-3.5 text-zinc-400" />
           Backspace
         </button>
         <button
           type="button"
           onClick={handleClear}
           disabled={disabled || !value}
-          className="h-9 text-xs font-medium flex items-center justify-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 rounded-md active:scale-95 transition-all disabled:opacity-50"
+          className="h-9 text-xs font-bold flex items-center justify-center gap-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/80 rounded-lg active:scale-95 transition-all disabled:opacity-40"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           Clear

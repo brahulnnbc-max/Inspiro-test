@@ -85,7 +85,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       id: 'mod-nlm',
       title: 'Laws of Motion, Pulley Systems & Friction Sprint',
       subject: 'physics',
-      chapter: 'Newton\'s Laws of Motion',
+      chapter: "Newton's Laws of Motion",
       totalQuestions: 60,
       solvedQuestions: 20,
       sprintDurationMinutes: 50,
@@ -99,153 +99,160 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       },
     },
     {
-      id: 'mod-mole',
-      title: 'Mole Concept, Stoichiometry & Equivalent Weight Sheet',
-      subject: 'chemistry',
-      chapter: 'Physical Chemistry: Mole Concept',
-      totalQuestions: 50,
-      solvedQuestions: 30,
-      sprintDurationMinutes: 45,
-      sprintQuestionCount: 25,
-      difficulty: 'Allen Leader Ex-1',
-      paper: {
-        ...SAMPLE_JEE_MAIN_MOCK,
-        id: 'mod-paper-mole',
-        title: 'Mole Concept Practice Sprint',
-        durationMinutes: 45,
-      },
-    },
-    {
-      id: 'mod-bonding',
-      title: 'Chemical Bonding, MOT & Hybridization Exercise 1',
-      subject: 'chemistry',
-      chapter: 'Inorganic Chemistry: Chemical Bonding',
-      totalQuestions: 65,
-      solvedQuestions: 15,
-      sprintDurationMinutes: 45,
-      sprintQuestionCount: 25,
-      difficulty: 'JEE Main',
-      paper: {
-        ...SAMPLE_JEE_MAIN_MOCK,
-        id: 'mod-paper-bonding',
-        title: 'Chemical Bonding Module Practice Sprint',
-        durationMinutes: 45,
-      },
-    },
-    {
-      id: 'mod-quadratic',
-      title: 'Quadratic Equations, Location of Roots & Modulus',
-      subject: 'mathematics',
-      chapter: 'Algebra: Quadratic Equations',
-      totalQuestions: 55,
-      solvedQuestions: 25,
-      sprintDurationMinutes: 50,
-      sprintQuestionCount: 25,
-      difficulty: 'JEE Main',
-      paper: {
-        ...SAMPLE_JEE_MAIN_MOCK,
-        id: 'mod-paper-quadratic',
-        title: 'Quadratic Equations Module Sprint',
-        durationMinutes: 50,
-      },
-    },
-    {
-      id: 'mod-seq-series',
-      title: 'Sequence & Series (AP, GP, AGP & Special Sums)',
-      subject: 'mathematics',
-      chapter: 'Algebra: Sequence & Series',
-      totalQuestions: 60,
-      solvedQuestions: 10,
+      id: 'mod-thermo',
+      title: 'Thermodynamics & Heat Transfer Masterclass',
+      subject: 'physics',
+      chapter: 'Thermodynamics',
+      totalQuestions: 70,
+      solvedQuestions: 45,
       sprintDurationMinutes: 50,
       sprintQuestionCount: 25,
       difficulty: 'JEE Advanced',
       paper: {
         ...SAMPLE_JEE_MAIN_MOCK,
-        id: 'mod-paper-seq',
-        title: 'Sequence & Series Module Practice Sprint',
+        id: 'mod-paper-thermo',
+        title: 'Thermodynamics CBT Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-goc',
+      title: 'General Organic Chemistry (GOC) & Isomerism Exercises',
+      subject: 'chemistry',
+      chapter: 'General Organic Chemistry',
+      totalQuestions: 80,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'Allen Leader Ex-1',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-goc',
+        title: 'GOC Module Timed Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-chemical-bonding',
+      title: 'Chemical Bonding, Molecular Orbital Theory & Dipole Moments',
+      subject: 'chemistry',
+      chapter: 'Chemical Bonding',
+      totalQuestions: 65,
+      solvedQuestions: 30,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'JEE Main',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-bonding',
+        title: 'Chemical Bonding Module Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-calculus',
+      title: 'Definite Integration & Area Under Curves Problem Set',
+      subject: 'mathematics',
+      chapter: 'Definite Integration',
+      totalQuestions: 90,
+      solvedQuestions: 25,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 20,
+      difficulty: 'JEE Advanced',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-calculus',
+        title: 'Definite Integration CBT Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-coordinate',
+      title: 'Conic Sections: Parabola, Ellipse & Hyperbola Drills',
+      subject: 'mathematics',
+      chapter: 'Coordinate Geometry',
+      totalQuestions: 75,
+      solvedQuestions: 40,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 20,
+      difficulty: 'JEE Main',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-conics',
+        title: 'Conic Sections Practice Sprint',
         durationMinutes: 50,
       },
     },
   ];
 
-  const filteredModules =
-    selectedSubject === 'ALL'
-      ? defaultModules
-      : defaultModules.filter((m) => m.subject === selectedSubject);
+  const filteredModules = defaultModules.filter(
+    (m) => selectedSubject === 'ALL' || m.subject === selectedSubject
+  );
 
-  // Upload and parse Module PDF
+  // Helper: Convert File to Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const res = reader.result as string;
+        const base64Data = res.split(',')[1] || '';
+        resolve(base64Data);
+      };
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Upload and process module PDF
   const handleUploadModule = async () => {
     if (!questionFile) {
-      setUploadError('Please select your Coaching Module PDF');
+      setUploadError('Please select a Module Questions PDF first');
       return;
     }
 
     setIsUploading(true);
     setUploadError('');
-    setUploadProgress('Reading Module PDF...');
+    setUploadProgress('Extracting questions with Gemini Vision...');
 
     try {
-      const readBase64 = (file: File): Promise<string> =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+      const qBase64 = await fileToBase64(questionFile);
+      let solBase64: string | undefined;
 
-      const fileBase64 = await readBase64(questionFile);
-      let solutionFileBase64 = '';
       if (solutionFile) {
-        setUploadProgress('Reading Module Solution PDF...');
-        solutionFileBase64 = await readBase64(solutionFile);
+        solBase64 = await fileToBase64(solutionFile);
       }
 
       const title =
         moduleTitle.trim() ||
-        questionFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') ||
-        'Coaching Module Practice Sprint';
-
-      setUploadProgress('Gemini Vision is extracting module questions & LaTeX formulas...');
+        questionFile.name.replace(/\.[^/.]+$/, '') ||
+        'Coaching Module Sprint';
 
       const response = await fetch('/api/parse-exam-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileBase64,
-          solutionFileBase64: solutionFileBase64 || undefined,
-          mimeType: questionFile.type || 'application/pdf',
-          examTitle: title,
+          pdfBase64: qBase64,
+          pdfMimeType: questionFile.type || 'application/pdf',
+          solutionBase64: solBase64,
+          solutionMimeType: solutionFile?.type || 'application/pdf',
           pattern: 'JEE_MAIN',
-          userCommand: moduleUserCommand.trim() || undefined,
-          customDurationMinutes: sprintDuration,
+          customTitle: title,
+          userCommand:
+            moduleUserCommand ||
+            'Extract all exercise questions sequentially. Split into a clean CBT sprint with proper LaTeX formulas.',
+          customDuration: sprintDuration,
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server status ${response.status}`);
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || 'Failed to parse module PDF');
       }
 
-      setUploadProgress('Chunking module into timed CBT practice sprints...');
-      const data = await response.json();
-
-      if (!data.success || !data.examPaper) {
-        throw new Error(data.error || 'Failed to parse module questions');
-      }
-
-      const generatedPaper: ExamPaper = {
-        id: `module-paper-${Date.now()}`,
-        title: `${title} (Sprint)`,
-        pattern: 'JEE_MAIN',
-        durationMinutes: sprintDuration,
-        totalMarks: 100,
-        sections: data.examPaper.sections || [],
-        createdAt: new Date().toISOString(),
-      };
-
+      const generatedPaper: ExamPaper = resData.data;
       onAddCustomPaper(generatedPaper);
 
-      // Auto-schedule sprint into daily routine checklist
+      // Create a daily routine item scheduled for today
       const newRoutineItem: DailyRoutineItem = {
         id: `rout-mod-${Date.now()}`,
         type: 'MODULE_PRACTICE',
@@ -301,11 +308,12 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
   };
 
   return (
-    <div className="space-y-8">
-      {/* 1. HERO BANNER: The Coaching Module Solution */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 md:p-8 border border-emerald-800/60 shadow-xl relative overflow-hidden">
+    <div className="space-y-8 text-white">
+      {/* 1. HERO BANNER */}
+      <div className="bg-zinc-950 text-white rounded-3xl p-6 md:p-8 border-2 border-red-600/80 shadow-[0_0_30px_rgba(220,38,38,0.25)] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.5)] text-xs font-black uppercase tracking-wider">
             <BookOpen className="w-3.5 h-3.5" />
             Dedicated Module Practice Section
           </div>
@@ -314,21 +322,21 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             Solve Massive Coaching Modules Under Real CBT Timer Pressure
           </h2>
 
-          <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+          <p className="text-xs md:text-sm text-zinc-300 leading-relaxed">
             Stop passively staring at 200-question Allen / FIITJEE module PDFs on paper. Upload your module or pick a curated exercise below—the AI splits it into daily 50-minute CBT sprints so you finish every exercise on time with zero backlog!
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-slate-300">
-            <span className="flex items-center gap-1.5 font-medium">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="flex flex-wrap items-center gap-4 pt-2 text-xs text-zinc-300">
+            <span className="flex items-center gap-1.5 font-bold">
+              <CheckCircle2 className="w-4 h-4 text-red-500" />
               Auto-Split into 25-Q Sprints
             </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <Clock className="w-4 h-4 text-amber-400" />
+            <span className="flex items-center gap-1.5 font-bold">
+              <Clock className="w-4 h-4 text-red-500" />
               Strict 50-Min CBT Timer
             </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <Flame className="w-4 h-4 text-rose-400" />
+            <span className="flex items-center gap-1.5 font-bold">
+              <Flame className="w-4 h-4 text-red-500 fill-red-500" />
               Scheduled Live into Daily Checklist
             </span>
           </div>
@@ -336,30 +344,30 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       </div>
 
       {/* 2. UPLOAD MODULE PDF & AUTO-CHUNK TOOL */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8 space-y-6">
-        <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+      <div className="bg-zinc-950 rounded-2xl shadow-xl border border-zinc-800 p-6 md:p-8 space-y-6">
+        <div className="border-b border-zinc-800 pb-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-wider">
             <UploadCloud className="w-4 h-4" />
             Module PDF Ingestion & Sprint Generator
           </div>
-          <h3 className="text-base md:text-lg font-bold font-display text-slate-900 dark:text-white mt-1">
+          <h3 className="text-base md:text-lg font-bold font-display text-white mt-1">
             Upload Your Coaching Module (Allen / Resonance / FIITJEE)
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-zinc-400">
             Gemini AI will extract all questions, formulas, and diagrams, and package them as an authentic CBT practice test.
           </p>
         </div>
 
         {uploadError && (
-          <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-800/80 text-red-300 text-xs flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
             <span>{uploadError}</span>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <label className="text-xs font-bold text-zinc-300">
               Module / Chapter Title
             </label>
             <input
@@ -367,18 +375,18 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
               value={moduleTitle}
               onChange={(e) => setModuleTitle(e.target.value)}
               placeholder="e.g. Allen Mechanics Exercise 1 (Q1-Q50)"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <label className="text-xs font-bold text-zinc-300">
               Subject
             </label>
             <select
               value={moduleSubject}
               onChange={(e) => setModuleSubject(e.target.value as SubjectId)}
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 font-semibold"
+              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-zinc-800 bg-black text-white focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600 font-semibold"
             >
               <option value="physics">Physics</option>
               <option value="chemistry">Chemistry</option>
@@ -387,7 +395,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <label className="text-xs font-bold text-zinc-300">
               Sprint Time Slot
             </label>
             <input
@@ -395,26 +403,26 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
               value={scheduledSlot}
               onChange={(e) => setScheduledSlot(e.target.value)}
               placeholder="e.g. 19:00 - 20:00 (7 PM - 8 PM)"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
             />
           </div>
         </div>
 
         {/* AI Director Command Box for Module */}
-        <div className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-2">
+        <div className="p-3.5 rounded-xl border border-zinc-800 bg-black/60 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="text-xs font-bold text-white flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-red-500" />
               AI Director Custom Command (Optional)
             </span>
-            <span className="text-[10px] text-slate-500">Gemini 3.8 Flash Vision</span>
+            <span className="text-[10px] text-zinc-400">Gemini 3.8 Flash Vision</span>
           </div>
           <input
             type="text"
             value={moduleUserCommand}
             onChange={(e) => setModuleUserCommand(e.target.value)}
             placeholder='e.g. "Extract all 40 questions from Exercise 1. Answer key is on the last page. Format formulas in LaTeX."'
-            className="w-full px-3 py-2 text-xs rounded-lg border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500"
+            className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
           />
         </div>
 
@@ -424,8 +432,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             onClick={() => qFileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
               questionFile
-                ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20'
-                : 'border-slate-300 dark:border-slate-600 hover:border-emerald-500 bg-slate-50 dark:bg-slate-900/50'
+                ? 'border-red-600 bg-red-950/20 text-white'
+                : 'border-zinc-800 hover:border-red-600/70 bg-black/40 hover:bg-zinc-900/50'
             }`}
           >
             <input
@@ -435,11 +443,11 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
               className="hidden"
               onChange={(e) => setQuestionFile(e.target.files?.[0] || null)}
             />
-            <FileText className="w-6 h-6 mx-auto text-emerald-500 mb-1" />
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            <FileText className="w-6 h-6 mx-auto text-red-500 mb-1" />
+            <div className="text-xs font-bold text-white">
               {questionFile ? questionFile.name : 'Select Module Questions PDF'}
             </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
+            <div className="text-[10px] text-zinc-400 mt-0.5">
               {questionFile ? `${Math.round(questionFile.size / 1024)} KB` : 'Click to choose module file'}
             </div>
           </div>
@@ -448,8 +456,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             onClick={() => solInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all ${
               solutionFile
-                ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20'
-                : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500 bg-slate-50 dark:bg-slate-900/50'
+                ? 'border-red-600 bg-red-950/20 text-white'
+                : 'border-zinc-800 hover:border-red-600/70 bg-black/40 hover:bg-zinc-900/50'
             }`}
           >
             <input
@@ -459,11 +467,11 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
               className="hidden"
               onChange={(e) => setSolutionFile(e.target.files?.[0] || null)}
             />
-            <FileText className="w-6 h-6 mx-auto text-indigo-500 mb-1" />
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+            <FileText className="w-6 h-6 mx-auto text-zinc-400 mb-1" />
+            <div className="text-xs font-bold text-white">
               {solutionFile ? solutionFile.name : 'Optional Module Solutions / Answer Key'}
             </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
+            <div className="text-[10px] text-zinc-400 mt-0.5">
               {solutionFile ? `${Math.round(solutionFile.size / 1024)} KB` : 'Pair solutions for post-practice review'}
             </div>
           </div>
@@ -471,16 +479,16 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
 
         {/* Action Button */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-          <div className="text-xs text-slate-500">
-            Sprint Specs: <span className="font-bold text-slate-700 dark:text-slate-300">{questionsPerSprint} Questions</span> • <span className="font-bold text-slate-700 dark:text-slate-300">{sprintDuration} mins CBT timer</span>
+          <div className="text-xs text-zinc-400">
+            Sprint Specs: <span className="font-bold text-white">{questionsPerSprint} Questions</span> • <span className="font-bold text-white">{sprintDuration} mins CBT timer</span>
           </div>
 
           <button
             onClick={handleUploadModule}
             disabled={!questionFile || isUploading}
-            className="w-full sm:w-auto px-6 py-3 text-xs md:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <Sparkles className="w-4 h-4 text-amber-300" />
+            <Sparkles className="w-4 h-4 text-white" />
             {isUploading ? (uploadProgress || 'Converting Module...') : 'Convert to CBT Sprints & Schedule'}
           </button>
         </div>
@@ -490,25 +498,25 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-base md:text-lg font-bold font-display text-slate-900 dark:text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-indigo-500" />
+            <h3 className="text-base md:text-lg font-bold font-display text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-red-500" />
               Standard Kota Coaching Module Sprints (Instant Practice)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-zinc-400">
               Choose any topic to launch an authentic 50-minute timed CBT sprint immediately or schedule it into today's slot.
             </p>
           </div>
 
           {/* Subject Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+          <div className="flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
             {(['ALL', 'physics', 'chemistry', 'mathematics'] as const).map((sub) => (
               <button
                 key={sub}
                 onClick={() => setSelectedSubject(sub)}
                 className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-colors ${
                   selectedSubject === sub
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 {sub === 'ALL' ? 'All Subjects' : sub}
@@ -524,37 +532,37 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             return (
               <div
                 key={mod.id}
-                className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-xs hover:border-indigo-400 transition-all flex flex-col justify-between gap-4 group"
+                className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800 hover:border-red-600/70 shadow-xl hover:shadow-[0_0_20px_rgba(220,38,38,0.2)] transition-all flex flex-col justify-between gap-4 group"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-red-950/60 text-red-400 border border-red-800/80">
                       {mod.subject}
                     </span>
-                    <span className="text-[10px] font-semibold text-slate-500 font-mono">
+                    <span className="text-[10px] font-semibold text-zinc-400 font-mono">
                       {mod.difficulty}
                     </span>
                   </div>
 
-                  <h4 className="text-sm font-bold font-display text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  <h4 className="text-sm font-bold font-display text-white group-hover:text-red-400 transition-colors">
                     {mod.title}
                   </h4>
 
-                  <p className="text-xs text-slate-500">
-                    Chapter: <span className="font-medium text-slate-700 dark:text-slate-300">{mod.chapter}</span>
+                  <p className="text-xs text-zinc-400">
+                    Chapter: <span className="font-medium text-zinc-200">{mod.chapter}</span>
                   </p>
 
                   {/* Progress bar */}
                   <div className="space-y-1 pt-1">
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                    <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
                       <span>Module Progress:</span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                      <span className="font-bold text-white">
                         {mod.solvedQuestions} / {mod.totalQuestions} Qs ({progress}%)
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-emerald-500 rounded-full transition-all"
+                        className="h-full bg-red-600 rounded-full transition-all shadow-[0_0_8px_#dc2626]"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -562,13 +570,13 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
                 </div>
 
                 {/* Sprints Details & Action Buttons */}
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-700 space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
+                <div className="pt-3 border-t border-zinc-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs text-zinc-400">
                     <span className="flex items-center gap-1 font-mono">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-red-400" />
                       {mod.sprintDurationMinutes} mins
                     </span>
-                    <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <span className="font-mono font-semibold text-zinc-200">
                       {mod.sprintQuestionCount} Questions / Sprint
                     </span>
                   </div>
@@ -576,7 +584,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       onClick={() => handleScheduleCuratedSprint(mod)}
-                      className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      className="px-3 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
                     >
                       <Calendar className="w-3.5 h-3.5" />
                       Schedule
@@ -584,7 +592,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
 
                     <button
                       onClick={() => onStartExam(mod.paper)}
-                      className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                      className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(220,38,38,0.4)]"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       Practice Now

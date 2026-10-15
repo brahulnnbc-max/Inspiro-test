@@ -467,10 +467,10 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         </div>
       </div>
 
-      <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+      <div className="space-y-2 pt-3 border-t border-zinc-800">
         <button
           onClick={() => setIsInstructionsModalOpen(true)}
-          className="w-full py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded flex items-center justify-center gap-1.5 transition-colors"
+          className="w-full py-2 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded flex items-center justify-center gap-1.5 transition-colors"
         >
           <HelpCircle className="w-3.5 h-3.5" />
           Instructions
@@ -478,7 +478,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
         <button
           onClick={() => setIsSubmitModalOpen(true)}
-          className="w-full py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded shadow-xs uppercase tracking-wider transition-colors"
+          className="w-full py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 rounded shadow-[0_0_15px_rgba(220,38,38,0.4)] uppercase tracking-wider transition-colors"
         >
           Submit Examination
         </button>
@@ -488,30 +488,30 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
   return (
     <div
-      className={`min-h-screen flex flex-col select-none ${isDarkMode ? 'dark' : ''} ${
-        uiMode === 'NTA_OFFICIAL'
-          ? isDarkMode
-            ? 'bg-slate-950 text-slate-100 font-sans'
-            : 'bg-[#eaedf1] text-slate-900 font-sans'
-          : isDarkMode
-          ? 'bg-slate-950 text-slate-100 font-sans'
-          : 'bg-slate-50 text-slate-900 font-sans'
-      }`}
+      className={`min-h-screen flex flex-col select-none bg-black text-zinc-100 font-sans`}
     >
       {/* 1. TOP BAR */}
       <header
         className={`px-3 md:px-4 py-2 md:py-2.5 flex items-center justify-between border-b ${
           uiMode === 'NTA_OFFICIAL'
-            ? 'bg-[#1b5e20] text-white border-green-800 shadow-xs'
-            : 'bg-slate-950 text-white border-slate-800'
+            ? 'bg-zinc-950 text-white border-zinc-800 shadow-xs'
+            : 'bg-black text-white border-zinc-800'
         }`}
       >
-        {/* Left: Branding & Paper title */}
+        {/* Left: Branding with inspiro LIVE Logo & Paper title */}
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="bg-white/10 px-2 py-0.5 rounded text-[10px] md:text-xs font-bold uppercase tracking-wider shrink-0">
+          <div className="flex items-center gap-1.5 select-none shrink-0">
+            <div className="w-6 h-6 rounded-md bg-red-600 flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+              <Flame className="w-3.5 h-3.5 text-white fill-white" />
+            </div>
+            <span className="font-display font-black text-xs md:text-sm text-white">inspiro</span>
+            <span className="font-display font-black text-xs md:text-sm text-red-500 font-extrabold drop-shadow-[0_0_8px_rgba(220,38,38,0.7)]">LIVE</span>
+          </div>
+          <div className="h-3 w-px bg-zinc-800 hidden sm:block" />
+          <div className="bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded text-[10px] md:text-xs font-bold uppercase tracking-wider shrink-0">
             {uiMode === 'NTA_OFFICIAL' ? 'NTA CBT' : 'MATHANGO'}
           </div>
-          <span className="font-bold text-xs md:text-sm truncate max-w-[130px] sm:max-w-xs md:max-w-md">
+          <span className="font-bold text-xs md:text-sm truncate max-w-[130px] sm:max-w-xs md:max-w-md text-white">
             {paper.title}
           </span>
         </div>
@@ -520,13 +520,13 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         <div
           className={`flex items-center gap-1.5 px-2.5 md:px-4 py-1 md:py-1.5 rounded-lg border font-mono font-bold text-xs md:text-base shrink-0 ${
             secondsRemaining < 300
-              ? 'bg-rose-600/30 text-rose-300 border-rose-500 animate-pulse'
+              ? 'bg-red-600/30 text-red-300 border-red-500 animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.4)]'
               : secondsRemaining < 900
-              ? 'bg-amber-600/30 text-amber-300 border-amber-500'
-              : 'bg-white/10 border-white/20 text-white'
+              ? 'bg-red-950/40 text-red-400 border-red-800'
+              : 'bg-zinc-900 border-zinc-800 text-white'
           }`}
         >
-          <Clock className="w-3.5 h-3.5 md:w-4 h-4" />
+          <Clock className="w-3.5 h-3.5 md:w-4 h-4 text-red-500" />
           <span>{formattedTimer}</span>
         </div>
 
@@ -610,16 +610,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
               <button
                 key={section.id}
                 onClick={() => navigateToQuestion(section.id, 0)}
-                className={`px-2.5 md:px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 shrink-0 ${
+                className={`px-3 md:px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
                   isActive
-                    ? uiMode === 'NTA_OFFICIAL'
-                      ? 'bg-[#1b5e20] text-white shadow-xs'
-                      : 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                    ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.45)]'
+                    : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800'
                 }`}
               >
                 <span>{section.name}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20 text-white">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/40 text-white font-mono">
                   {answeredInSec}/{section.questions.length}
                 </span>
               </button>
@@ -628,15 +626,15 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         </div>
 
         {/* Candidate Identifier badge */}
-        <div className="flex items-center gap-2 text-xs text-slate-500 shrink-0">
-          <div className="w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200">
+        <div className="flex items-center gap-2 text-xs text-zinc-400 shrink-0">
+          <div className="w-6 h-6 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center font-bold text-red-400">
             <User className="w-3.5 h-3.5" />
           </div>
           <div className="hidden sm:block leading-tight text-right">
-            <div className="font-semibold text-slate-800 dark:text-slate-200">
+            <div className="font-bold text-white">
               JEE Aspirant
             </div>
-            <div className="text-[10px] text-slate-500">Roll: 240310084920</div>
+            <div className="text-[10px] text-zinc-500 font-mono">Roll: 240310084920</div>
           </div>
         </div>
       </div>
@@ -659,28 +657,26 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
             <div className="max-w-4xl w-full mx-auto space-y-5">
               {/* Question Header with In-Session Tagging Bar */}
               <div
-                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b ${
-                  isDarkMode ? 'border-slate-800' : 'border-slate-200'
-                }`}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800"
               >
                 <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-                  <span className="font-bold text-sm md:text-base text-indigo-600 dark:text-indigo-400">
+                  <span className="font-bold text-sm md:text-base text-red-500">
                     Question No. {currentQuestion.questionNumber}
                   </span>
-                  <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-zinc-900 text-zinc-300 border border-zinc-800">
                     {currentQuestion.type === 'SINGLE_CORRECT' && 'MCQ (+4, -1)'}
                     {currentQuestion.type === 'MULTIPLE_CORRECT' && 'Multi (+4, -2)'}
                     {currentQuestion.type === 'NUMERICAL' && 'Numerical (+4, 0)'}
                     {currentQuestion.type === 'MATRIX_MATCH' && 'Match (+4, -1)'}
                   </span>
-                  <span className="text-xs text-slate-500 hidden md:inline">
-                    Section: <strong>{currentSection.name}</strong>
+                  <span className="text-xs text-zinc-400 hidden md:inline">
+                    Section: <strong className="text-white">{currentSection.name}</strong>
                   </span>
                 </div>
 
                 {/* Quick Question Tagging Bar (Doubt, Hard, Tricky, RACE Star) */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 mr-1">
+                  <span className="text-[10px] uppercase font-bold text-zinc-500 mr-1">
                     Tag:
                   </span>
                   <button
@@ -688,12 +684,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                     onClick={() => handleToggleTag('DOUBT')}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
                       (questionTags[currentQuestion.id] || []).includes('DOUBT')
-                        ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
                     }`}
                     title="Mark as Doubt / Unclear concept"
                   >
-                    <HelpCircle className="w-3 h-3" />
+                    <HelpCircle className="w-3 h-3 text-red-400" />
                     <span>Doubt</span>
                   </button>
 
@@ -702,12 +698,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                     onClick={() => handleToggleTag('HARD')}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
                       (questionTags[currentQuestion.id] || []).includes('HARD')
-                        ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
                     }`}
                     title="Mark as Hard / Difficult question"
                   >
-                    <Flame className="w-3 h-3" />
+                    <Flame className="w-3 h-3 text-red-400 fill-current" />
                     <span>Hard</span>
                   </button>
 
@@ -716,12 +712,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                     onClick={() => handleToggleTag('TRICKY')}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
                       (questionTags[currentQuestion.id] || []).includes('TRICKY')
-                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
                     }`}
                     title="Mark as Tricky / Trap question"
                   >
-                    <Zap className="w-3 h-3" />
+                    <Zap className="w-3 h-3 text-red-400" />
                     <span>Tricky</span>
                   </button>
 
@@ -730,12 +726,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                     onClick={() => handleToggleTag('RACE_STAR')}
                     className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border flex items-center gap-1 transition-all ${
                       (questionTags[currentQuestion.id] || []).includes('RACE_STAR')
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                        : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-800'
                     }`}
                     title="Save to Allen RACE (Daily Repeat & Consolidate Drill)"
                   >
-                    <Star className="w-3 h-3 fill-current" />
+                    <Star className="w-3 h-3 text-red-400 fill-current" />
                     <span>RACE Star</span>
                   </button>
                 </div>
@@ -815,17 +811,15 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                             onClick={handleSelect}
                             className={`p-3 md:p-3.5 rounded-lg border cursor-pointer transition-all flex items-start gap-3 ${
                               isSelected
-                                ? 'bg-indigo-950/30 border-indigo-500 text-indigo-900 dark:text-white ring-1 ring-indigo-500'
-                                : isDarkMode
-                                ? 'bg-slate-800/70 hover:bg-slate-800 border-slate-700 text-slate-200'
-                                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
+                                ? 'bg-red-950/30 border-red-600 text-white ring-1 ring-red-600 shadow-[0_0_12px_rgba(220,38,38,0.2)]'
+                                : 'bg-zinc-900/80 hover:bg-zinc-850 border-zinc-800 text-zinc-200'
                             }`}
                           >
                             <div
                               className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
                                 isSelected
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                                  ? 'bg-red-600 text-white shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                                  : 'bg-zinc-800 text-zinc-300'
                               }`}
                             >
                               {option.id}
@@ -842,45 +836,41 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-400">
+            <div className="flex items-center justify-center h-full text-zinc-400">
               Select a question to begin.
             </div>
           )}
 
           {/* Action Footer Navigation Strip (Mobile Sticky & Touch Friendly) */}
           <div
-            className={`mt-6 pt-4 border-t flex flex-wrap items-center justify-between gap-2.5 ${
-              isDarkMode
-                ? 'border-slate-800 bg-slate-950 -mx-4 -mb-4 md:-mx-6 md:-mb-6 p-4'
-                : 'border-slate-300 bg-slate-50 -mx-4 -mb-4 md:-mx-6 md:-mb-6 p-4'
-            }`}
+            className="mt-6 pt-4 border-t border-zinc-800 bg-zinc-950 -mx-4 -mb-4 md:-mx-6 md:-mb-6 p-4 flex flex-wrap items-center justify-between gap-2.5"
           >
             {/* Primary actions */}
             <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
               <button
                 onClick={handleSaveAndNext}
-                className="px-3.5 md:px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-md shadow-xs transition-all uppercase tracking-wider"
+                className="px-3.5 md:px-4 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-md shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all uppercase tracking-wider"
               >
                 Save & Next
               </button>
 
               <button
                 onClick={handleSaveAndMarkForReview}
-                className="px-3 md:px-4 py-2.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-md shadow-xs transition-all"
+                className="px-3 md:px-4 py-2.5 text-xs font-semibold text-white bg-zinc-800 hover:bg-zinc-700 active:scale-95 rounded-md border border-zinc-700 transition-all"
               >
                 Save & Review
               </button>
 
               <button
                 onClick={handleClearResponse}
-                className="px-3 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 active:scale-95 rounded-md transition-all"
+                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 rounded-md transition-all"
               >
                 Clear
               </button>
 
               <button
                 onClick={handleMarkForReviewAndNext}
-                className="px-3 py-2.5 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800 active:scale-95 rounded-md transition-all"
+                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 active:scale-95 rounded-md transition-all"
               >
                 Review & Next
               </button>
@@ -891,7 +881,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
               <button
                 onClick={goToPreviousQuestion}
                 disabled={activeQuestionIndex === 0 && paper.sections[0].id === activeSectionId}
-                className="px-3 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md disabled:opacity-40 transition-all flex items-center gap-1"
+                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-md disabled:opacity-40 transition-all flex items-center gap-1"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Prev</span>
@@ -899,7 +889,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
               <button
                 onClick={goToNextQuestion}
-                className="px-3 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md transition-all flex items-center gap-1"
+                className="px-3 py-2.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-md transition-all flex items-center gap-1"
               >
                 <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -907,7 +897,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="ml-1 px-4 md:px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-md shadow-xs transition-all uppercase tracking-wider"
+                className="ml-1 px-4 md:px-5 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-md shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all uppercase tracking-wider"
               >
                 Submit
               </button>
@@ -917,15 +907,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
         {/* Desktop Palette (Right Column) */}
         <div
-          className={`hidden lg:block w-80 border-l overflow-y-auto ${
-            uiMode === 'NTA_OFFICIAL'
-              ? isDarkMode
-                ? 'bg-slate-950 border-slate-800'
-                : 'bg-[#f8f9fa] border-slate-300'
-              : isDarkMode
-              ? 'bg-slate-950 border-slate-800'
-              : 'bg-slate-50 border-slate-200'
-          }`}
+          className="hidden lg:block w-80 border-l border-zinc-800 bg-zinc-950 overflow-y-auto"
         >
           {PaletteContent}
         </div>
@@ -966,27 +948,27 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       />
 
       {isInstructionsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
-          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 border border-slate-300 dark:border-slate-700">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-base">Examination Instructions</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+          <div className="w-full max-w-2xl bg-zinc-950 rounded-2xl shadow-2xl p-6 border border-zinc-800 text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <h3 className="font-bold text-base text-white">Examination Instructions</h3>
               <button
                 onClick={() => setIsInstructionsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="text-zinc-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="py-4 space-y-3 text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+            <div className="py-4 space-y-3 text-xs leading-relaxed text-zinc-300">
               <p>• Correct answer: +4 marks.</p>
               <p>• Incorrect answer in MCQs: -1 mark (or -2 in JEE Advanced multiple correct).</p>
               <p>• Numerical questions: +4 marks, 0 negative marks.</p>
-              <p>• To save your answer, click <strong>Save & Next</strong>.</p>
+              <p>• To save your answer, click <strong className="text-white">Save & Next</strong>.</p>
               <p>• Questions marked as "Answered and Marked for Review" WILL be considered for evaluation.</p>
             </div>
             <button
               onClick={() => setIsInstructionsModalOpen(false)}
-              className="w-full py-2 bg-indigo-600 text-white rounded text-xs font-semibold"
+              className="w-full py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-[0_0_15px_rgba(220,38,38,0.4)]"
             >
               Back To Test
             </button>
@@ -996,30 +978,30 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
       {/* Submit Test Confirmation Modal */}
       {isSubmitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-300 dark:border-slate-700 overflow-hidden">
-            <div className="px-6 py-4 bg-slate-900 text-white font-bold text-sm flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg bg-zinc-950 rounded-2xl shadow-2xl border border-zinc-800 overflow-hidden text-white">
+            <div className="px-6 py-4 bg-black text-white font-bold text-sm flex items-center gap-2 border-b border-zinc-800">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
               Submit Examination Confirmation
             </div>
 
-            <div className="p-6 space-y-4 text-xs text-slate-700 dark:text-slate-300">
-              <p className="font-medium text-sm text-slate-900 dark:text-white">
-                Exam Summary Before Submission:
+            <div className="p-6 space-y-4 text-xs text-zinc-300">
+              <p className="font-bold text-sm text-white">
+                Exam Summary Before Final Submission:
               </p>
 
               <div className="overflow-x-auto">
-                <table className="w-full border border-slate-200 dark:border-slate-800 text-center">
-                  <thead className="bg-slate-100 dark:bg-slate-800 font-semibold text-slate-600 dark:text-slate-300">
+                <table className="w-full border border-zinc-800 text-center">
+                  <thead className="bg-zinc-900 font-semibold text-zinc-300">
                     <tr>
-                      <th className="p-2 border-b">Section</th>
-                      <th className="p-2 border-b">Total</th>
-                      <th className="p-2 border-b text-emerald-600">Answered</th>
-                      <th className="p-2 border-b text-rose-500">Not Answered</th>
-                      <th className="p-2 border-b text-purple-600">Review</th>
+                      <th className="p-2 border-b border-zinc-800">Section</th>
+                      <th className="p-2 border-b border-zinc-800">Total</th>
+                      <th className="p-2 border-b border-zinc-800 text-white">Answered</th>
+                      <th className="p-2 border-b border-zinc-800 text-red-400">Not Answered</th>
+                      <th className="p-2 border-b border-zinc-800 text-zinc-400">Review</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  <tbody className="divide-y divide-zinc-800/80 font-mono">
                     {paper.sections.map((sec) => {
                       const totalSec = sec.questions.length;
                       const ansSec = sec.questions.filter(
@@ -1037,12 +1019,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                       ).length;
 
                       return (
-                        <tr key={sec.id}>
-                          <td className="p-2 text-left font-medium">{sec.name}</td>
-                          <td className="p-2">{totalSec}</td>
-                          <td className="p-2 text-emerald-600 font-bold">{ansSec}</td>
-                          <td className="p-2 text-rose-500">{notAnsSec}</td>
-                          <td className="p-2 text-purple-600">{revSec}</td>
+                        <tr key={sec.id} className="hover:bg-zinc-900/40">
+                          <td className="p-2 text-left font-sans font-medium text-white">{sec.name}</td>
+                          <td className="p-2 text-zinc-300">{totalSec}</td>
+                          <td className="p-2 text-white font-bold">{ansSec}</td>
+                          <td className="p-2 text-red-400 font-bold">{notAnsSec}</td>
+                          <td className="p-2 text-zinc-400">{revSec}</td>
                         </tr>
                       );
                     })}
@@ -1050,21 +1032,21 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                 </table>
               </div>
 
-              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-200">
+              <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-800/80 text-red-200">
                 Are you sure you want to submit? You will not be able to change your responses once submitted.
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-black border-t border-zinc-800 flex items-center justify-end gap-3">
               <button
                 onClick={() => setIsSubmitModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition-colors"
               >
                 Resume Test
               </button>
               <button
                 onClick={handleFinalSubmit}
-                className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded uppercase tracking-wider shadow-xs transition-colors"
+                className="px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all active:scale-95"
               >
                 Yes, Submit Final
               </button>

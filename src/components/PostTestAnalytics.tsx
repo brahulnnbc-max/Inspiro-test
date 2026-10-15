@@ -336,13 +336,13 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-4 md:p-8">
+    <div className="min-h-screen bg-black text-zinc-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Navigation */}
         <div className="flex items-center justify-between">
           <button
             onClick={onBackToHub}
-            className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Test Hub
@@ -350,7 +350,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
           <button
             onClick={onRetake}
-            className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+            className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5 active:scale-95"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Re-attempt Test
@@ -358,59 +358,67 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
         </div>
 
         {/* 1. HERO ANALYTICS SCORECARD */}
-        <div className="bg-slate-900 text-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
+        <div className="bg-zinc-950 text-white rounded-2xl p-6 md:p-8 shadow-2xl border border-zinc-800 relative overflow-hidden">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-indigo-400 uppercase">
-                <Trophy className="w-4 h-4 text-amber-400" />
-                MathonGo CBT Performance Analysis
+              <div className="flex items-center gap-2 select-none mb-1">
+                <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.5)]">
+                  <Flame className="w-4 h-4 text-white fill-white" />
+                </div>
+                <div className="flex items-baseline gap-1.5 font-display text-lg font-black tracking-tight">
+                  <span className="text-white">inspiro</span>
+                  <span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.6)]">LIVE</span>
+                </div>
+                <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider px-2 py-0.5 rounded bg-red-600/10 border border-red-500/20 ml-1">
+                  Performance Analysis
+                </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold font-display mt-1">
+              <h1 className="text-2xl md:text-3xl font-bold font-display mt-1 text-white">
                 {paper.title}
               </h1>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-zinc-400 mt-1">
                 Submitted on {new Date(attempt.submittedAt).toLocaleDateString()}
               </p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-xl border border-white/20 text-center shrink-0">
-              <div className="text-xs text-slate-300 uppercase font-medium tracking-wider">
+            <div className="bg-black/80 px-6 py-4 rounded-xl border border-zinc-800 text-center shrink-0 shadow-lg">
+              <div className="text-xs text-zinc-400 uppercase font-medium tracking-wider">
                 Total Score
               </div>
-              <div className="text-3xl md:text-4xl font-extrabold font-mono text-emerald-400 mt-0.5">
-                {analytics.totalScore}{' '}
-                <span className="text-lg font-normal text-slate-400">
+              <div className="text-3xl md:text-4xl font-black font-mono text-white mt-0.5">
+                <span className="text-red-500 font-black">{analytics.totalScore}</span>{' '}
+                <span className="text-lg font-normal text-zinc-500">
                   / {paper.totalMarks}
                 </span>
               </div>
-              <div className="text-[11px] text-amber-300 mt-1 font-semibold">
+              <div className="text-[11px] text-red-400 mt-1 font-semibold">
                 Est. Percentile: {analytics.estimatedPercentile}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-slate-800 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-zinc-800 text-xs">
             <div>
-              <span className="text-slate-400 block">Accuracy</span>
+              <span className="text-zinc-400 block">Accuracy</span>
               <span className="text-xl font-bold font-mono text-white">
                 {analytics.accuracy}%
               </span>
             </div>
             <div>
-              <span className="text-slate-400 block">Questions Attempted</span>
+              <span className="text-zinc-400 block">Questions Attempted</span>
               <span className="text-xl font-bold font-mono text-white">
                 {analytics.totalAttempted} / {evaluatedQuestions.length}
               </span>
             </div>
             <div>
-              <span className="text-slate-400 block">Correct / Incorrect</span>
+              <span className="text-zinc-400 block">Correct / Incorrect</span>
               <span className="text-xl font-bold font-mono text-white">
-                <span className="text-emerald-400">{analytics.correctCount}</span> /{' '}
-                <span className="text-rose-400">{analytics.incorrectCount}</span>
+                <span className="text-white font-black">{analytics.correctCount}</span> /{' '}
+                <span className="text-red-500 font-black">{analytics.incorrectCount}</span>
               </span>
             </div>
             <div>
-              <span className="text-slate-400 block">Total Time Spent</span>
+              <span className="text-zinc-400 block">Total Time Spent</span>
               <span className="text-xl font-bold font-mono text-white">
                 {analytics.timeSpentMins}m / {paper.durationMinutes}m
               </span>
@@ -420,28 +428,28 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
         {/* 2. TIME TRAP & NEGATIVE MARKING RADAR */}
         {(analytics.timeTraps.length > 0 || analytics.rushedErrors.length > 0) && (
-          <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-5 md:p-6 space-y-4">
-            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-bold text-sm">
-              <Zap className="w-4 h-4 text-amber-600" />
+          <div className="bg-zinc-950 border border-red-900/60 rounded-2xl p-5 md:p-6 space-y-4">
+            <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
+              <Zap className="w-4 h-4 text-red-500" />
               Exam Temperament & Time Trap Radar:
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               {/* Severe Time Sinks */}
               {analytics.timeTraps.length > 0 && (
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-900/40 space-y-2">
-                  <span className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
+                  <span className="font-bold text-red-400 flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5" />
                     Time Sinks ({analytics.timeTraps.length} Questions)
                   </span>
-                  <p className="text-slate-600 dark:text-slate-300">
+                  <p className="text-zinc-300">
                     Questions where you spent more than 3.5 minutes and either received -1 or left them unattempted:
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {analytics.timeTraps.map((tt) => (
                       <span
                         key={tt.q.id}
-                        className="px-2.5 py-1 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-mono text-[11px] border border-rose-200 dark:border-rose-800"
+                        className="px-2.5 py-1 rounded-md bg-red-950/60 text-red-300 font-mono text-[11px] border border-red-800/80"
                       >
                         Q.{tt.q.questionNumber} ({Math.round(tt.timeSpent / 60)}m {tt.timeSpent % 60}s)
                       </span>
@@ -452,19 +460,19 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
               {/* Rushed Errors */}
               {analytics.rushedErrors.length > 0 && (
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-900/40 space-y-2">
-                  <span className="font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5" />
+                <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
+                  <span className="font-bold text-zinc-300 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-red-500" />
                     Rushed Silly Mistakes ({analytics.rushedErrors.length} Questions)
                   </span>
-                  <p className="text-slate-600 dark:text-slate-300">
+                  <p className="text-zinc-300">
                     Questions answered in less than 35 seconds and gotten wrong. Slowing down by 15s could have saved +5 marks (+4 instead of -1):
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {analytics.rushedErrors.map((re) => (
                       <span
                         key={re.q.id}
-                        className="px-2.5 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-mono text-[11px] border border-amber-200 dark:border-amber-800"
+                        className="px-2.5 py-1 rounded-md bg-zinc-900 text-zinc-300 font-mono text-[11px] border border-zinc-800"
                       >
                         Q.{re.q.questionNumber} ({re.timeSpent}s)
                       </span>
@@ -478,9 +486,12 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
         {/* 3. SUBJECT-WISE SCORE CARD */}
         <div className="space-y-3">
-          <h2 className="text-lg font-bold font-display text-slate-900 dark:text-white">
-            Subject-Wise Score Card
-          </h2>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.7)]" />
+            <h2 className="text-lg font-bold font-display text-white">
+              Subject-Wise Score Card
+            </h2>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Object.entries(analytics.subjectBreakdown).map(([secId, secData]) => {
@@ -494,41 +505,42 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
               return (
                 <div
                   key={secId}
-                  className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-xs flex flex-col justify-between"
+                  className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800 shadow-xl flex flex-col justify-between hover:border-zinc-700 transition-all"
                 >
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
-                    <span className="font-bold text-sm text-slate-900 dark:text-white">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                    <span className="font-bold text-sm text-white flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-500" />
                       {secData.name}
                     </span>
-                    <span className="text-lg font-extrabold font-mono text-indigo-600 dark:text-indigo-400">
-                      {secData.score} Marks
+                    <span className="text-lg font-black font-mono text-red-500">
+                      {secData.score} <span className="text-xs text-zinc-500 font-normal">/ {secData.maxMarks}</span>
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs my-4 py-2 bg-slate-50 dark:bg-slate-900/60 rounded-lg">
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs my-4 py-2.5 bg-black rounded-xl border border-zinc-900">
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Correct</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-zinc-500 block text-[10px] uppercase font-bold tracking-wider">Correct</span>
+                      <span className="font-bold text-white text-base">
                         {secData.correct}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Wrong</span>
-                      <span className="font-bold text-rose-500">
+                      <span className="text-zinc-500 block text-[10px] uppercase font-bold tracking-wider">Wrong</span>
+                      <span className="font-bold text-red-500 text-base">
                         {secData.incorrect}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Left</span>
-                      <span className="font-bold text-slate-500">
+                      <span className="text-zinc-500 block text-[10px] uppercase font-bold tracking-wider">Left</span>
+                      <span className="font-bold text-zinc-400 text-base">
                         {secData.unattempted}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-700">
-                    <span>Accuracy: {secAccuracy}%</span>
-                    <span>Time: {Math.round(secData.timeSpent / 60)} mins</span>
+                  <div className="flex items-center justify-between text-xs text-zinc-400 pt-2 border-t border-zinc-800/80">
+                    <span>Accuracy: <strong className="text-white">{secAccuracy}%</strong></span>
+                    <span>Time: <strong className="text-white">{Math.round(secData.timeSpent / 60)}m</strong></span>
                   </div>
                 </div>
               );
@@ -539,48 +551,51 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
         {/* 4. QUESTION-BY-QUESTION DETAILED REVIEW */}
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-bold font-display text-slate-900 dark:text-white">
-              Question-by-Question Detailed Review
-            </h2>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.7)]" />
+              <h2 className="text-lg font-bold font-display text-white">
+                Question-by-Question Detailed Review
+              </h2>
+            </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-200 dark:bg-slate-800 rounded-lg text-xs font-semibold">
+            <div className="flex items-center gap-1.5 p-1 bg-zinc-950 border border-zinc-800 rounded-xl text-xs font-semibold">
               <button
                 onClick={() => setFilter('ALL')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${
+                className={`px-3 py-1.5 rounded-lg transition-colors ${
                   filter === 'ALL'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    ? 'bg-zinc-800 text-white shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 All ({evaluatedQuestions.length})
               </button>
               <button
                 onClick={() => setFilter('CORRECT')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${
+                className={`px-3 py-1.5 rounded-lg transition-colors ${
                   filter === 'CORRECT'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                    ? 'bg-white text-black font-bold shadow-xs'
+                    : 'text-zinc-300 hover:text-white'
                 }`}
               >
                 Correct ({analytics.correctCount})
               </button>
               <button
                 onClick={() => setFilter('INCORRECT')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${
+                className={`px-3 py-1.5 rounded-lg transition-colors ${
                   filter === 'INCORRECT'
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                    ? 'bg-red-600 text-white font-bold shadow-[0_0_12px_rgba(220,38,38,0.5)]'
+                    : 'text-red-400 hover:bg-red-950/40'
                 }`}
               >
                 Incorrect ({analytics.incorrectCount})
               </button>
               <button
                 onClick={() => setFilter('UNATTEMPTED')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${
+                className={`px-3 py-1.5 rounded-lg transition-colors ${
                   filter === 'UNATTEMPTED'
-                    ? 'bg-slate-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    ? 'bg-zinc-800 text-zinc-300 shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 Unattempted ({analytics.unattemptedCount})
@@ -598,73 +613,73 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                 return (
                   <div
                     key={q.id}
-                    className={`bg-white dark:bg-slate-800 rounded-xl border transition-all ${
+                    className={`bg-zinc-950 rounded-2xl border transition-all ${
                       status === 'CORRECT'
-                        ? 'border-emerald-200 dark:border-emerald-900/40'
+                        ? 'border-zinc-800 hover:border-zinc-700'
                         : status === 'INCORRECT'
-                        ? 'border-rose-200 dark:border-rose-900/40'
-                        : 'border-slate-200 dark:border-slate-700'
+                        ? 'border-red-900/60 shadow-[0_0_15px_rgba(220,38,38,0.1)]'
+                        : 'border-zinc-900 hover:border-zinc-800'
                     }`}
                   >
                     {/* Summary Bar */}
                     <div
                       onClick={() => toggleQuestionExpand(q.id)}
-                      className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-750 rounded-xl transition-colors"
+                      className="p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-900/40 rounded-2xl transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <span
-                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0 ${
+                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                             status === 'CORRECT'
-                              ? 'bg-emerald-600'
+                              ? 'bg-white text-black font-black'
                               : status === 'INCORRECT'
-                              ? 'bg-rose-500'
-                              : 'bg-slate-400'
+                              ? 'bg-red-600 text-white font-black shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                              : 'bg-zinc-800 text-zinc-400'
                           }`}
                         >
                           {q.questionNumber}
                         </span>
 
                         <div>
-                          <div className="text-xs font-semibold text-slate-500 uppercase">
+                          <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
                             {q.sectionId} • {q.type.replace('_', ' ')}
                           </div>
-                          <div className="text-xs font-medium text-slate-800 dark:text-slate-200 line-clamp-1 mt-0.5">
+                          <div className="text-xs font-medium text-zinc-300 line-clamp-1 mt-0.5">
                             {q.promptLatex.slice(0, 100)}...
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3 md:gap-4 text-xs font-mono">
-                        <span className="text-slate-500 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
+                        <span className="text-zinc-500 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-zinc-500" />
                           {timeSpent}s
                         </span>
 
                         <span
-                          className={`px-2.5 py-1 rounded font-bold uppercase text-[10px] ${
+                          className={`px-2.5 py-1 rounded-md font-bold uppercase text-[10px] tracking-wider ${
                             status === 'CORRECT'
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              ? 'bg-zinc-800 text-white border border-zinc-700'
                               : status === 'INCORRECT'
-                              ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
-                              : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                              ? 'bg-red-600/20 text-red-400 border border-red-500/40'
+                              : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
                           }`}
                         >
                           {status}
                         </span>
 
                         {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-slate-400" />
+                          <ChevronUp className="w-4 h-4 text-zinc-400" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-400" />
+                          <ChevronDown className="w-4 h-4 text-zinc-400" />
                         )}
                       </div>
                     </div>
 
                     {/* Expanded details */}
                     {isExpanded && (
-                      <div className="p-5 border-t border-slate-100 dark:border-slate-700 space-y-4 text-sm bg-slate-50/50 dark:bg-slate-900/30">
+                      <div className="p-5 border-t border-zinc-800 space-y-4 text-sm bg-black/60 rounded-b-2xl">
                         {/* Prompt */}
-                        <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div className="p-4 bg-zinc-950 rounded-xl border border-zinc-800 text-zinc-200">
                           <MathRenderer content={q.promptLatex} />
                         </div>
 
@@ -683,15 +698,17 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                               return (
                                 <div
                                   key={opt.id}
-                                  className={`p-2.5 rounded-lg border flex items-center gap-2 ${
+                                  className={`p-3 rounded-xl border flex items-center gap-2.5 ${
                                     isCorrectChoice
-                                      ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-400 text-emerald-900 dark:text-emerald-200 font-semibold'
+                                      ? 'bg-zinc-900 border-white text-white font-bold ring-1 ring-white/20'
                                       : isUserChoice
-                                      ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-400 text-rose-900 dark:text-rose-200'
-                                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                                      ? 'bg-red-950/40 border-red-600 text-red-300 font-semibold'
+                                      : 'bg-zinc-950 border-zinc-800 text-zinc-400'
                                   }`}
                                 >
-                                  <span className="font-bold">{opt.id}.</span>
+                                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                                    isCorrectChoice ? 'bg-white text-black' : isUserChoice ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                                  }`}>{opt.id}</span>
                                   <MathRenderer content={opt.labelLatex} />
                                 </div>
                               );
@@ -700,12 +717,12 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                         )}
 
                         {/* Comparison */}
-                        <div className="flex flex-wrap items-center gap-4 text-xs font-mono bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <div className="flex flex-wrap items-center gap-4 text-xs font-mono bg-zinc-950 p-3.5 rounded-xl border border-zinc-800">
                           <div>
-                            <span className="text-slate-500">Your Answer: </span>
+                            <span className="text-zinc-500">Your Answer: </span>
                             <strong
                               className={
-                                isCorrect ? 'text-emerald-600' : 'text-rose-600'
+                                isCorrect ? 'text-white' : 'text-red-400'
                               }
                             >
                               {userAnswer
@@ -714,14 +731,14 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                             </strong>
                           </div>
                           <div>
-                            <span className="text-slate-500">Correct: </span>
-                            <strong className="text-emerald-600">
+                            <span className="text-zinc-500">Correct: </span>
+                            <strong className="text-white">
                               {q.correctAnswer || 'Not Specified'}
                             </strong>
                           </div>
                           <div>
-                            <span className="text-slate-500">Marks: </span>
-                            <strong>
+                            <span className="text-zinc-500">Marks: </span>
+                            <strong className="text-white">
                               {status === 'CORRECT'
                                 ? `+${q.positiveMarks}`
                                 : status === 'INCORRECT'
@@ -733,12 +750,12 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
                         {/* Step-by-Step Solution */}
                         {q.explanationLatex && (
-                          <div className="p-4 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 text-xs">
-                            <div className="font-bold text-indigo-900 dark:text-indigo-200 mb-1.5 flex items-center gap-1.5">
-                              <Flame className="w-3.5 h-3.5 text-indigo-600" />
+                          <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs">
+                            <div className="font-bold text-red-400 mb-1.5 flex items-center gap-1.5">
+                              <Flame className="w-3.5 h-3.5 text-red-500 fill-current" />
                               Official Step-by-Step Solution:
                             </div>
-                            <div className="leading-relaxed text-slate-800 dark:text-slate-200">
+                            <div className="leading-relaxed text-zinc-300">
                               <MathRenderer content={q.explanationLatex} />
                             </div>
                           </div>
@@ -746,10 +763,10 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
                         {/* Root-Cause Classification & AI Remedial Practice */}
                         {status !== 'CORRECT' && (
-                          <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-3">
+                          <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                <BookmarkPlus className="w-3.5 h-3.5 text-indigo-500" />
+                              <div className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                                <BookmarkPlus className="w-3.5 h-3.5 text-red-500" />
                                 Add to Mistake Book (Select Root Cause):
                               </div>
 
@@ -761,9 +778,9 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                     selectedReason || 'CONCEPT_GAP'
                                   )
                                 }
-                                className="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-lg shadow-xs transition-all flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-lg shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5 uppercase tracking-wider"
                               >
-                                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                                <Sparkles className="w-3.5 h-3.5 text-white" />
                                 Practice 3 Similar JEE PYQs (AI Drill)
                               </button>
                             </div>
@@ -780,8 +797,8 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                 }
                                 className={`p-2 text-xs font-medium rounded-lg border text-left transition-all ${
                                   selectedReason === 'CALCULATION_ERROR'
-                                    ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold dark:bg-amber-950/60 dark:text-amber-200'
-                                    : 'bg-slate-50 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 hover:bg-slate-100'
+                                    ? 'bg-red-600 text-white font-bold border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                                    : 'bg-black text-zinc-300 border-zinc-800 hover:border-zinc-700'
                                 }`}
                               >
                                 🔴 Silly / Calc Error
@@ -798,8 +815,8 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                 }
                                 className={`p-2 text-xs font-medium rounded-lg border text-left transition-all ${
                                   selectedReason === 'CONCEPT_GAP'
-                                    ? 'bg-rose-100 border-rose-400 text-rose-900 font-bold dark:bg-rose-950/60 dark:text-rose-200'
-                                    : 'bg-slate-50 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 hover:bg-slate-100'
+                                    ? 'bg-red-600 text-white font-bold border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                                    : 'bg-black text-zinc-300 border-zinc-800 hover:border-zinc-700'
                                 }`}
                               >
                                 🟡 Concept Gap / Formula
@@ -816,8 +833,8 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                 }
                                 className={`p-2 text-xs font-medium rounded-lg border text-left transition-all ${
                                   selectedReason === 'MISREAD_QUESTION'
-                                    ? 'bg-purple-100 border-purple-400 text-purple-900 font-bold dark:bg-purple-950/60 dark:text-purple-200'
-                                    : 'bg-slate-50 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 hover:bg-slate-100'
+                                    ? 'bg-red-600 text-white font-bold border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                                    : 'bg-black text-zinc-300 border-zinc-800 hover:border-zinc-700'
                                 }`}
                               >
                                 🟣 Misread Question
@@ -834,8 +851,8 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                 }
                                 className={`p-2 text-xs font-medium rounded-lg border text-left transition-all ${
                                   selectedReason === 'TIME_PRESSURE'
-                                    ? 'bg-blue-100 border-blue-400 text-blue-900 font-bold dark:bg-blue-950/60 dark:text-blue-200'
-                                    : 'bg-slate-50 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 hover:bg-slate-100'
+                                    ? 'bg-red-600 text-white font-bold border-red-500 shadow-[0_0_8px_rgba(220,38,38,0.5)]'
+                                    : 'bg-black text-zinc-300 border-zinc-800 hover:border-zinc-700'
                                 }`}
                               >
                                 🔵 Time Pressure / Guess
@@ -865,3 +882,4 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
     </div>
   );
 };
+

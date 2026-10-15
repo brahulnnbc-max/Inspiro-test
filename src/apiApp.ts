@@ -6,11 +6,7 @@ dotenv.config();
 
 const app = express();
 
-// High limit for handling multi-page PDF base64 payloads
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// CORS & Preflight headers for cross-origin or Vercel routing
+// 1. CORS & Preflight headers for cross-origin or Vercel routing
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -19,6 +15,24 @@ app.use((req, res, next) => {
     return res.status(200).end();
   }
   next();
+});
+
+// 2. High limit body parsers with guard against Vercel pre-parsed bodies (prevents hanging stream reads)
+const jsonParser = express.json({ limit: '50mb' });
+const urlencodedParser = express.urlencoded({ extended: true, limit: '50mb' });
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    return next();
+  }
+  jsonParser(req, res, next);
+});
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    return next();
+  }
+  urlencodedParser(req, res, next);
 });
 
 function getGeminiApiKey(): string | undefined {
@@ -103,6 +117,26 @@ function cleanAndParseJSON(rawText: string | undefined): any {
     throw err1;
   }
 }
+
+// Root & API status endpoint (both / and /api)
+app.get(['/', '/api'], (req, res) => {
+  const apiKey = getGeminiApiKey();
+  res.json({
+    status: 'ok',
+    appName: 'inspiro LIVE • JEE Test & Module Practice',
+    hasGeminiKey: Boolean(apiKey),
+    aiEngine: 'Advanced Gemini Flash Vision & STEM Reasoner',
+    serverTime: new Date().toISOString(),
+    endpoints: [
+      '/api/health',
+      '/api/parse-exam-pdf',
+      '/api/generate-remedial-pyqs',
+      '/api/generate-test-schedule',
+      '/api/generate-full-routine',
+      '/api/ai-academic-mentor',
+    ],
+  });
+});
 
 // Health check endpoint (both /api/health and /health)
 app.get(['/api/health', '/health'], (req, res) => {
@@ -682,6 +716,32 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
       error: error.message || 'Failed to consult AI Academic Mentor',
     });
   }
+});
+
+// 404 Handler for API endpoints
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `API route not found: ${req.method} ${req.originalUrl || req.url}`,
+  });
+});
+
+// Global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[API Error]', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    return res.status(413).json({
+      success: false,
+      error: 'Payload too large. On Vercel, requests are limited to 4.5MB. Please upload a smaller or compressed PDF.',
+    });
+  }
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.message || 'Internal Server Error',
+  });
 });
 
 export default app;
