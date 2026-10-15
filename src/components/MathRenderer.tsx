@@ -51,6 +51,18 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
         }
       });
 
+      // Match standalone un-delimited LaTeX expressions if any remain (e.g. \frac{1}{2}, \sqrt{3}, \alpha, \vec{v})
+      parsed = parsed.replace(/\\(frac|sqrt|vec|int|sum|alpha|beta|gamma|delta|theta|lambda|mu|pi|sigma|omega|Delta|Omega|times|div|pm|approx|neq|leq|geq|infty|rightarrow|leftarrow)(?:\{[^{}]*\}|\[[^\[\]]*\]|[a-zA-Z0-9\^_\+\-\*\/= ])+/g, (matched) => {
+        try {
+          return katex.renderToString(matched.trim(), {
+            displayMode: false,
+            throwOnError: false,
+          });
+        } catch {
+          return matched;
+        }
+      });
+
       // Format linebreaks
       parsed = parsed.replace(/\n/g, '<br/>');
 

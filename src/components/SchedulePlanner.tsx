@@ -5,6 +5,7 @@ import {
   ExamPaper,
   SubjectId,
 } from '../types/exam';
+import { SAMPLE_JEE_MAIN_MOCK, SAMPLE_JEE_ADVANCED_MOCK } from '../data/samplePapers';
 import {
   Calendar,
   Clock,
@@ -22,6 +23,9 @@ import {
   ChevronUp,
   Flame,
   Award,
+  Paperclip,
+  X,
+  FileText,
 } from 'lucide-react';
 
 interface SchedulePlannerProps {
@@ -32,6 +36,8 @@ interface SchedulePlannerProps {
   onAddCustomSchedule: (newTests: ScheduledTest[]) => void;
   onDeleteTest: (testId: string) => void;
   onSelectExamDirectly: (paper: ExamPaper) => void;
+  savedCustomPapers?: ExamPaper[];
+  onSaveCustomPaper?: (paper: ExamPaper) => void;
 }
 
 export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
@@ -42,6 +48,8 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
   onAddCustomSchedule,
   onDeleteTest,
   onSelectExamDirectly,
+  savedCustomPapers = [],
+  onSaveCustomPaper,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'UPCOMING' | 'LIVE' | 'COMPLETED'>('ALL');
   const [commandText, setCommandText] = useState('');
@@ -49,6 +57,73 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
   const [genError, setGenError] = useState('');
   const [expandedTestIds, setExpandedTestIds] = useState<Record<string, boolean>>({});
   const [earlyUnlockOverrides, setEarlyUnlockOverrides] = useState<Record<string, boolean>>({});
+
+  // Attach paper modal state
+  const [attachingTestId, setAttachingTestId] = useState<string | null>(null);
+  const [isModalUploading, setIsModalUploading] = useState(false);
+  const [modalUploadError, setModalUploadError] = useState('');
+  const [modalUploadProgress, setModalUploadProgress] = useState('');
+  const modalFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleModalUploadPaper = async (file: File) => {
+    if (!attachingTestId) return;
+    setIsModalUploading(true);
+    setModalUploadError('');
+    setModalUploadProgress('Reading & encoding test paper...');
+
+    try {
+      const readBase64 = (f: File): Promise<string> =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(f);
+        });
+
+      const base64 = await readBase64(file);
+      setModalUploadProgress('Gemini 3.8 Flash Vision is extracting questions with LaTeX...');
+
+      const targetTest = scheduledTests.find((t) => t.id === attachingTestId);
+      const title = targetTest?.title || file.name.replace(/\.[^/.]+$/, '');
+
+      const response = await fetch('/api/parse-exam-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileBase64: base64,
+          mimeType: file.type || 'application/pdf',
+          examTitle: title,
+          pattern: targetTest?.pattern || 'JEE_MAIN',
+          customDurationMinutes: targetTest?.durationMinutes || 180,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success || !data.examPaper) {
+        throw new Error(data.error || 'Failed to extract questions from PDF');
+      }
+
+      const generatedPaper: ExamPaper = {
+        id: `custom-paper-${Date.now()}`,
+        title: data.examPaper.title || title,
+        pattern: data.examPaper.pattern || 'JEE_MAIN',
+        durationMinutes: data.examPaper.durationMinutes || 180,
+        totalMarks: data.examPaper.totalMarks || 300,
+        sections: data.examPaper.sections || [],
+        createdAt: new Date().toISOString(),
+      };
+
+      onSaveCustomPaper?.(generatedPaper);
+      onAttachPaper(attachingTestId, generatedPaper);
+      setAttachingTestId(null);
+    } catch (err: any) {
+      console.error(err);
+      setModalUploadError(err.message || 'Failed to process PDF.');
+    } finally {
+      setIsModalUploading(false);
+      setModalUploadProgress('');
+    }
+  };
 
   // Active target test (the first upcoming or live test)
   const nextTargetTest = useMemo(() => {
@@ -357,17 +432,35 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
 
           {/* Action Row */}
           <div className="relative z-10 pt-4 border-t border-zinc-800 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-xs text-zinc-400">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
               {nextTargetTest.paper ? (
-                <span className="flex items-center gap-1.5 text-red-400 font-medium">
-                  <FileCheck className="w-4 h-4" />
-                  Question Paper Loaded ({nextTargetTest.paper.title})
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 text-red-400 font-medium">
+                    <FileCheck className="w-4 h-4 text-red-500" />
+                    Paper: {nextTargetTest.paper.title}
+                  </span>
+                  <button
+                    onClick={() => setAttachingTestId(nextTargetTest.id)}
+                    className="text-[11px] text-zinc-400 hover:text-white underline flex items-center gap-1"
+                  >
+                    <Paperclip className="w-3 h-3 text-red-400" />
+                    Change Paper
+                  </button>
+                </div>
               ) : (
-                <span className="flex items-center gap-1.5 text-zinc-400">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
-                  No paper attached yet (Using Sample Mock Paper)
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 text-zinc-400">
+                    <AlertCircle className="w-4 h-4 text-amber-500" />
+                    No custom paper attached
+                  </span>
+                  <button
+                    onClick={() => setAttachingTestId(nextTargetTest.id)}
+                    className="px-2.5 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 text-xs font-bold flex items-center gap-1 transition-all"
+                  >
+                    <Paperclip className="w-3.5 h-3.5 text-red-400" />
+                    Attach PDF Paper
+                  </button>
+                </div>
               )}
 
               {/* Early access unlock toggle */}
@@ -493,12 +586,30 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
                       {test.title}
                     </h4>
 
-                    <div className="flex items-center gap-4 text-xs text-zinc-400 font-mono">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 font-mono">
                       <span>Date: {test.scheduledDate}</span>
                       <span>Window: {test.startTime} - {test.endTime}</span>
                       <span>
                         Syllabus: {completedTopics}/{test.syllabus.length} Revised
                       </span>
+                    </div>
+
+                    <div className="pt-1 flex items-center gap-2 text-xs">
+                      {test.paper ? (
+                        <span className="text-red-400 font-semibold flex items-center gap-1">
+                          <FileCheck className="w-3.5 h-3.5" />
+                          {test.paper.title}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-500 italic">No paper attached</span>
+                      )}
+                      <button
+                        onClick={() => setAttachingTestId(test.id)}
+                        className="text-[11px] text-zinc-400 hover:text-white underline flex items-center gap-1"
+                      >
+                        <Paperclip className="w-3 h-3 text-red-400" />
+                        {test.paper ? 'Change Paper' : 'Attach PDF Paper'}
+                      </button>
                     </div>
                   </div>
 
@@ -575,6 +686,147 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
           })}
         </div>
       </div>
+
+      {/* 4. ATTACH PAPER MODAL */}
+      {attachingTestId && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Paperclip className="w-4 h-4 text-red-500" />
+                  Attach Question Paper to Test
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {scheduledTests.find((t) => t.id === attachingTestId)?.title}
+                </p>
+              </div>
+              <button
+                onClick={() => setAttachingTestId(null)}
+                className="p-1 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Upload PDF right inside modal */}
+            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <UploadCloud className="w-4 h-4 text-red-500" />
+                  Upload & Extract New PDF for this Test
+                </span>
+                <span className="text-[10px] text-zinc-400">Gemini 3.8 Flash</span>
+              </div>
+              <input
+                ref={modalFileInputRef}
+                type="file"
+                accept=".pdf,image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    handleModalUploadPaper(e.target.files[0]);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => modalFileInputRef.current?.click()}
+                disabled={isModalUploading}
+                className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-zinc-800 hover:border-red-600 bg-black text-center text-xs font-semibold text-zinc-300 hover:text-white transition-all flex flex-col items-center justify-center gap-1"
+              >
+                <FileText className="w-5 h-5 text-red-400" />
+                <span>Select Question Paper PDF or Image</span>
+                <span className="text-[10px] text-zinc-500">Auto-extracts questions & verified answers</span>
+              </button>
+
+              {isModalUploading && (
+                <div className="flex items-center gap-2 text-xs text-red-400 font-semibold animate-pulse">
+                  <div className="w-4 h-4 rounded-full border-2 border-red-500 border-t-transparent animate-spin" />
+                  <span>{modalUploadProgress || 'Processing PDF...'}</span>
+                </div>
+              )}
+
+              {modalUploadError && (
+                <div className="p-2 rounded-lg bg-red-950/40 border border-red-800 text-xs text-red-300">
+                  {modalUploadError}
+                </div>
+              )}
+            </div>
+
+            {/* Previously Extracted Custom Papers */}
+            {savedCustomPapers.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                  Your Uploaded / Extracted Papers ({savedCustomPapers.length})
+                </div>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {savedCustomPapers.map((paper) => {
+                    const qCount = paper.sections.reduce((acc, s) => acc + s.questions.length, 0);
+                    return (
+                      <div
+                        key={paper.id}
+                        className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-red-600 flex items-center justify-between text-xs transition-all"
+                      >
+                        <div>
+                          <div className="font-bold text-white">{paper.title}</div>
+                          <div className="text-[11px] text-zinc-400 font-mono">
+                            {qCount} Questions • {paper.durationMinutes} Mins • {paper.pattern}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (attachingTestId) {
+                              onAttachPaper(attachingTestId, paper);
+                              setAttachingTestId(null);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs"
+                        >
+                          Attach
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Standard Preset Sample Papers */}
+            <div className="space-y-2">
+              <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                Or Use Verified Practice Mocks
+              </div>
+              <div className="space-y-2">
+                {[SAMPLE_JEE_MAIN_MOCK, SAMPLE_JEE_ADVANCED_MOCK].map((sample) => (
+                  <div
+                    key={sample.id}
+                    className="p-3 rounded-xl bg-black border border-zinc-800 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-white">{sample.title}</div>
+                      <div className="text-[11px] text-zinc-400 font-mono">
+                        {sample.sections.reduce((acc, s) => acc + s.questions.length, 0)} Questions • {sample.pattern}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (attachingTestId) {
+                          onAttachPaper(attachingTestId, sample);
+                          setAttachingTestId(null);
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs"
+                    >
+                      Attach
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

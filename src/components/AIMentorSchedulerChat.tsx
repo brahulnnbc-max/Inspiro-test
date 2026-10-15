@@ -69,24 +69,54 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/mentor-chat-schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: messages.map((m) => ({ role: m.sender, text: m.text })),
-          preferredSlot: practiceSlot,
-          testSlot: testSlot,
-        }),
-      });
+      let response: Response;
+      try {
+        response = await fetch('/api/mentor-chat-schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: messages.map((m) => ({ role: m.sender, text: m.text })),
+            preferredSlot: practiceSlot,
+            testSlot: testSlot,
+          }),
+        });
+      } catch (_fetchErr) {
+        response = await fetch('/api/ai-academic-mentor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: messages.map((m) => ({ role: m.sender, text: m.text })),
+            preferredSlot: practiceSlot,
+            testSlot: testSlot,
+          }),
+        });
+      }
 
-      const resData = await response.json();
+      if (!response.ok) {
+        // Try fallback endpoint if first returned 404
+        if (response.status === 404) {
+          response = await fetch('/api/ai-academic-mentor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: text,
+              history: messages.map((m) => ({ role: m.sender, text: m.text })),
+              preferredSlot: practiceSlot,
+              testSlot: testSlot,
+            }),
+          });
+        }
+      }
+
+      const resData = await response.json().catch(() => ({}));
       if (!response.ok || !resData.success) {
         throw new Error(resData.error || 'Academic Director is temporarily unavailable');
       }
 
-      const mentorReply = resData.data.reply;
-      const proposed = resData.data.proposedRoutine;
+      const mentorReply = resData.data?.reply || resData.data?.replyText || 'I am ready to help you plan your JEE preparation roadmap.';
+      const proposed = resData.data?.proposedRoutine;
 
       const mentorMsg: ChatMessage = {
         id: `mentor-${Date.now()}`,
@@ -95,7 +125,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         proposedRoutine: proposed
           ? {
-              routineTitle: proposed.title || 'Personalized Coaching Schedule',
+              routineTitle: proposed.title || proposed.routineTitle || 'Personalized Coaching Schedule',
               summary: proposed.summary || '',
               items: (proposed.items || []).map((it: any, idx: number) => ({
                 id: `rout-mentor-${Date.now()}-${idx}`,
@@ -123,7 +153,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
         {
           id: `err-${Date.now()}`,
           sender: 'mentor',
-          text: `⚠️ Error formulating schedule: ${err.message || 'Please check Gemini API key configuration.'}`,
+          text: `⚠️ ${err.message || 'Error formulating schedule. Please try again.'}`,
           timestamp: 'Now',
         },
       ]);
@@ -175,6 +205,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
               title="Daily practice slot"
             />
           </div>
+        </div>
       </div>
 
       {appliedNotice && (

@@ -253,29 +253,89 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       const generatedPaper: ExamPaper = resData.data || resData.examPaper;
       onAddCustomPaper(generatedPaper);
 
-      // Create a daily routine item scheduled for today
-      const newRoutineItem: DailyRoutineItem = {
-        id: `rout-mod-${Date.now()}`,
-        type: 'MODULE_PRACTICE',
-        title: `${title} • Sprint 01`,
-        chapterOrTopic: title,
-        subject: moduleSubject,
-        scheduledDate: new Date().toISOString().split('T')[0],
-        scheduledSlot: scheduledSlot,
-        durationMinutes: sprintDuration,
-        questionCount: questionsPerSprint,
-        paperId: generatedPaper.id,
-        paper: generatedPaper,
-        isCompleted: false,
-        weekNumber: 1,
-        dayName: 'Today',
-      };
+      const allQuestions = (generatedPaper.sections || []).flatMap((s) => s.questions || []);
+      const totalQCount = allQuestions.length;
+      const routineItemsToAdd: DailyRoutineItem[] = [];
 
-      onAddRoutineItems([newRoutineItem]);
+      if (totalQCount > questionsPerSprint) {
+        const totalSprints = Math.ceil(totalQCount / questionsPerSprint);
+        for (let sIdx = 0; sIdx < totalSprints; sIdx++) {
+          const sliceStart = sIdx * questionsPerSprint;
+          const sliceEnd = Math.min(sliceStart + questionsPerSprint, totalQCount);
+          const sprintQuestions = allQuestions.slice(sliceStart, sliceEnd);
+
+          const sprintPaper: ExamPaper = {
+            id: `${generatedPaper.id}-sprint-${sIdx + 1}`,
+            title: `${title} • Sprint 0${sIdx + 1} (Q${sliceStart + 1}–Q${sliceEnd})`,
+            pattern: 'JEE_MAIN',
+            durationMinutes: sprintDuration,
+            totalMarks: sprintQuestions.reduce((acc, q) => acc + (q.positiveMarks || 4), 0) || (sprintQuestions.length * 4),
+            sections: [
+              {
+                id: moduleSubject,
+                name: moduleSubject.toUpperCase(),
+                questions: sprintQuestions.map((q, qIdx) => ({
+                  ...q,
+                  questionNumber: qIdx + 1,
+                  sectionId: moduleSubject,
+                })),
+              },
+            ],
+            createdAt: new Date().toISOString(),
+          };
+
+          onAddCustomPaper(sprintPaper);
+
+          const schedDate = new Date();
+          schedDate.setDate(schedDate.getDate() + sIdx);
+          const dateStr = schedDate.toISOString().split('T')[0];
+          const dayName = sIdx === 0 ? 'Today' : schedDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+          routineItemsToAdd.push({
+            id: `rout-mod-${Date.now()}-${sIdx}`,
+            type: 'MODULE_PRACTICE',
+            title: sprintPaper.title,
+            chapterOrTopic: title,
+            subject: moduleSubject,
+            scheduledDate: dateStr,
+            scheduledSlot: scheduledSlot,
+            durationMinutes: sprintDuration,
+            questionCount: sprintQuestions.length,
+            paperId: sprintPaper.id,
+            paper: sprintPaper,
+            isCompleted: false,
+            weekNumber: Math.floor(sIdx / 7) + 1,
+            dayName: dayName,
+          });
+        }
+      } else {
+        routineItemsToAdd.push({
+          id: `rout-mod-${Date.now()}`,
+          type: 'MODULE_PRACTICE',
+          title: `${title} • Sprint 01`,
+          chapterOrTopic: title,
+          subject: moduleSubject,
+          scheduledDate: new Date().toISOString().split('T')[0],
+          scheduledSlot: scheduledSlot,
+          durationMinutes: sprintDuration,
+          questionCount: totalQCount || questionsPerSprint,
+          paperId: generatedPaper.id,
+          paper: generatedPaper,
+          isCompleted: false,
+          weekNumber: 1,
+          dayName: 'Today',
+        });
+      }
+
+      onAddRoutineItems(routineItemsToAdd);
       setQuestionFile(null);
       setSolutionFile(null);
       setModuleTitle('');
-      setSuccessNotice(`Success! "${title}" has been converted into a CBT Practice Room and scheduled on Today's Live Desk.`);
+      setSuccessNotice(
+        routineItemsToAdd.length > 1
+          ? `Success! "${title}" (${totalQCount} Qs) has been auto-split into ${routineItemsToAdd.length} daily timed sprints and scheduled into your Live Desk!`
+          : `Success! "${title}" has been converted into a CBT Practice Room and scheduled on Today's Live Desk.`
+      );
     } catch (err: any) {
       console.error(err);
       setUploadError(err.message || 'Failed to process module PDF.');
@@ -455,16 +515,16 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             <input
               type="file"
               ref={qFileInputRef}
-              accept=".pdf,application/pdf"
+              accept=".pdf,application/pdf,image/png,image/jpeg,image/webp"
               className="hidden"
               onChange={(e) => setQuestionFile(e.target.files?.[0] || null)}
             />
             <FileText className="w-6 h-6 mx-auto text-red-500 mb-1" />
             <div className="text-xs font-bold text-white">
-              {questionFile ? questionFile.name : 'Select Module Questions PDF'}
+              {questionFile ? questionFile.name : 'Select Module Questions PDF or Image'}
             </div>
             <div className="text-[10px] text-zinc-400 mt-0.5">
-              {questionFile ? `${Math.round(questionFile.size / 1024)} KB` : 'Click to choose module file'}
+              {questionFile ? `${Math.round(questionFile.size / 1024)} KB` : 'PDF or images of questions / DPP'}
             </div>
           </div>
 
@@ -479,7 +539,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             <input
               type="file"
               ref={solInputRef}
-              accept=".pdf,application/pdf"
+              accept=".pdf,application/pdf,image/png,image/jpeg,image/webp"
               className="hidden"
               onChange={(e) => setSolutionFile(e.target.files?.[0] || null)}
             />

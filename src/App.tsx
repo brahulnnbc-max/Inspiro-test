@@ -275,12 +275,14 @@ export default function App() {
   };
 
   const handleEnterLiveTest = (test: ScheduledTest) => {
-    // If paper is attached, use it; otherwise use sample mock with test's title
-    const paperToUse: ExamPaper = test.paper || {
-      ...SAMPLE_JEE_MAIN_MOCK,
-      id: `live-${test.id}`,
-      title: test.title,
-    };
+    // If paper is attached, use it; otherwise look up in customPapers by paperId or use mock with test's title
+    const paperToUse: ExamPaper =
+      test.paper ||
+      customPapers.find((p) => p.id === test.paperId) || {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: `live-${test.id}`,
+        title: test.title,
+      };
 
     setSelectedPaper(paperToUse);
     setCurrentView('INSTRUCTIONS');
@@ -302,12 +304,14 @@ export default function App() {
 
   // Routine Handlers
   const handleStartRoutineTask = (item: DailyRoutineItem) => {
-    const paperToUse: ExamPaper = item.paper || {
-      ...SAMPLE_JEE_MAIN_MOCK,
-      id: `rout-${item.id}`,
-      title: item.title,
-      durationMinutes: item.durationMinutes || 50,
-    };
+    const paperToUse: ExamPaper =
+      item.paper ||
+      customPapers.find((p) => p.id === item.paperId) || {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: `rout-${item.id}`,
+        title: item.title,
+        durationMinutes: item.durationMinutes || 50,
+      };
     setSelectedPaper(paperToUse);
     setCurrentView('INSTRUCTIONS');
   };

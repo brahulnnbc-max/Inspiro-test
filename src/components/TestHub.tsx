@@ -114,6 +114,8 @@ export const TestHub: React.FC<TestHubProps> = ({
   }, [isDarkMode]);
 
   // Upload & Advanced AI Extraction State
+  const [ingestionType, setIngestionType] = useState<'FILE' | 'TEXT'>('FILE');
+  const [pastedQuestionText, setPastedQuestionText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [activeStageIndex, setActiveStageIndex] = useState<number>(0);
   const [uploadProgress, setUploadProgress] = useState<string>('');
@@ -124,6 +126,8 @@ export const TestHub: React.FC<TestHubProps> = ({
   const [customDuration, setCustomDuration] = useState<number>(180);
   const [extractedPaperResult, setExtractedPaperResult] = useState<ExamPaper | null>(null);
   const [showPreviewQuestions, setShowPreviewQuestions] = useState<boolean>(false);
+  const [showAttachToScheduleModal, setShowAttachToScheduleModal] = useState(false);
+  const [paperScheduledNotice, setPaperScheduledNotice] = useState('');
 
   // Dual file refs & states
   const [questionFile, setQuestionFile] = useState<File | null>(null);
@@ -133,15 +137,23 @@ export const TestHub: React.FC<TestHubProps> = ({
 
   // Convert files using Advanced Gemini 3.8 Flash Vision Engine
   const handleStartConversion = async () => {
-    if (!questionFile) {
-      setErrorMsg('Please select a Question Paper or Module Exercise PDF first');
+    if (ingestionType === 'FILE' && !questionFile) {
+      setErrorMsg('Please select a Question Paper or Module Exercise PDF / Image first');
+      return;
+    }
+    if (ingestionType === 'TEXT' && !pastedQuestionText.trim()) {
+      setErrorMsg('Please paste question paper or DPP text to extract questions');
       return;
     }
 
-    const totalBytes = questionFile.size + (solutionFile ? solutionFile.size : 0);
-    if (totalBytes > 3.5 * 1024 * 1024) {
+    const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+    const totalBytes = (questionFile ? questionFile.size : 0) + (solutionFile ? solutionFile.size : 0);
+    const maxLimit = isVercel ? 4 * 1024 * 1024 : 28 * 1024 * 1024;
+    if (ingestionType === 'FILE' && totalBytes > maxLimit) {
       setErrorMsg(
-        `Selected PDF size (${(totalBytes / (1024 * 1024)).toFixed(1)}MB) is too large for Vercel's 4.5MB serverless limit. Please compress your PDF or select fewer pages (e.g. 5–20 pages) for instant processing.`
+        isVercel
+          ? `Selected PDF size (${(totalBytes / (1024 * 1024)).toFixed(1)}MB) exceeds Vercel's 4.5MB serverless limit. Please compress your PDF or upload 5–20 page sections.`
+          : `Selected file size (${(totalBytes / (1024 * 1024)).toFixed(1)}MB) exceeds the 28MB limit. Please upload a smaller excerpt.`
       );
       return;
     }
@@ -150,7 +162,11 @@ export const TestHub: React.FC<TestHubProps> = ({
     setErrorMsg('');
     setExtractedPaperResult(null);
     setActiveStageIndex(0);
-    setUploadProgress('Reading & encoding PDF documents with OCR pre-processor...');
+    setUploadProgress(
+      ingestionType === 'FILE'
+        ? 'Reading & encoding PDF documents with OCR pre-processor...'
+        : 'Parsing and structuring pasted question paper text...'
+    );
 
     try {
       const readBase64 = (file: File): Promise<string> =>
@@ -161,7 +177,10 @@ export const TestHub: React.FC<TestHubProps> = ({
           reader.readAsDataURL(file);
         });
 
-      const fileBase64 = await readBase64(questionFile);
+      let fileBase64 = '';
+      if (ingestionType === 'FILE' && questionFile) {
+        fileBase64 = await readBase64(questionFile);
+      }
       let solutionFileBase64 = '';
       if (solutionFile) {
         setUploadProgress('Reading Solution / Answer Key PDF...');
@@ -177,16 +196,17 @@ export const TestHub: React.FC<TestHubProps> = ({
 
       const examTitle =
         customTitle.trim() ||
-        questionFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') ||
+        (questionFile ? questionFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') : '') ||
         'Custom Module Practice Sprint';
 
       const response = await fetch('/api/parse-exam-pdf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileBase64,
+          fileBase64: fileBase64 || undefined,
+          textQuestions: ingestionType === 'TEXT' ? pastedQuestionText.trim() : undefined,
           solutionFileBase64: solutionFileBase64 || undefined,
-          mimeType: questionFile.type || 'application/pdf',
+          mimeType: questionFile?.type || 'application/pdf',
           examTitle,
           pattern: selectedPattern,
           userCommand: userCommand.trim() || undefined,
@@ -431,6 +451,8 @@ export const TestHub: React.FC<TestHubProps> = ({
             onAddCustomSchedule={onAddCustomSchedule}
             onDeleteTest={onDeleteScheduledTest}
             onSelectExamDirectly={onSelectExam}
+            savedCustomPapers={savedCustomPapers}
+            onSaveCustomPaper={onSaveCustomPaper}
           />
         )}
 
@@ -607,111 +629,176 @@ export const TestHub: React.FC<TestHubProps> = ({
                   </div>
                 </div>
               </div>
-              {/* Dual File Picker Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* 1. Question Paper / Module PDF Picker */}
-                <div
-                  onClick={() => qFileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                    questionFile
-                      ? 'border-red-600 bg-red-950/20 text-white'
-                      : 'border-zinc-800 hover:border-red-600/70 hover:bg-zinc-900/60 bg-zinc-900/30'
+              {/* Ingestion Mode Selector */}
+              <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+                <span className="text-xs font-semibold text-zinc-400">Ingestion Mode:</span>
+                <button
+                  type="button"
+                  onClick={() => setIngestionType('FILE')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    ingestionType === 'FILE'
+                      ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
                   }`}
                 >
-                  <input
-                    ref={qFileInputRef}
-                    type="file"
-                    accept=".pdf,image/png,image/jpeg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setQuestionFile(e.target.files[0]);
-                      }
-                    }}
-                    className="hidden"
-                  />
-                  <div className="space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-red-600/20 text-red-500 border border-red-600/30 flex items-center justify-center mx-auto shadow-xs">
-                      {questionFile ? (
-                        <FileCheck className="w-5 h-5 text-red-400" />
-                      ) : (
-                        <UploadCloud className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div className="font-semibold text-xs text-white">
-                      {questionFile
-                        ? questionFile.name
-                        : 'Select Module / Question Paper PDF (Required)'}
-                    </div>
-                    <div className="text-[11px] text-zinc-400">
-                      {questionFile
-                        ? `${(questionFile.size / (1024 * 1024)).toFixed(1)} MB • Click to replace`
-                        : 'Physics, Chem & Math questions or chapter exercises'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Optional Solution / Answer Key PDF Picker */}
-                <div
-                  onClick={() => solFileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                    solutionFile
-                      ? 'border-red-600 bg-red-950/20 text-white'
-                      : 'border-zinc-800 hover:border-red-600/70 hover:bg-zinc-900/60 bg-zinc-900/30'
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  Upload PDF / Images
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIngestionType('TEXT')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    ingestionType === 'TEXT'
+                      ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                      : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
                   }`}
                 >
-                  <input
-                    ref={solFileInputRef}
-                    type="file"
-                    accept=".pdf,image/png,image/jpeg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setSolutionFile(e.target.files[0]);
-                      }
-                    }}
-                    className="hidden"
-                  />
-                  <div className="space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 flex items-center justify-center mx-auto shadow-xs">
-                      {solutionFile ? (
-                        <FileCheck className="w-5 h-5 text-red-400" />
-                      ) : (
-                        <Plus className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div className="font-semibold text-xs text-white">
-                      {solutionFile
-                        ? solutionFile.name
-                        : 'Attach Answer Key / Solution PDF (Optional)'}
-                    </div>
-                    <div className="text-[11px] text-zinc-400">
-                      {solutionFile
-                        ? `${(solutionFile.size / (1024 * 1024)).toFixed(1)} MB • Click to replace`
-                        : 'If omitted, Gemini 3.8 Flash solves questions automatically'}
-                    </div>
-                  </div>
-                </div>
+                  <FileText className="w-3.5 h-3.5" />
+                  Paste Question Paper Text
+                </button>
               </div>
+
+              {/* Ingestion Type: FILE (Dual File Picker Grid) */}
+              {ingestionType === 'FILE' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* 1. Question Paper / Module PDF Picker */}
+                  <div
+                    onClick={() => qFileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      questionFile
+                        ? 'border-red-600 bg-red-950/20 text-white'
+                        : 'border-zinc-800 hover:border-red-600/70 hover:bg-zinc-900/60 bg-zinc-900/30'
+                    }`}
+                  >
+                    <input
+                      ref={qFileInputRef}
+                      type="file"
+                      accept=".pdf,image/png,image/jpeg,image/webp"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setQuestionFile(e.target.files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-red-600/20 text-red-500 border border-red-600/30 flex items-center justify-center mx-auto shadow-xs">
+                        {questionFile ? (
+                          <FileCheck className="w-5 h-5 text-red-400" />
+                        ) : (
+                          <UploadCloud className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="font-semibold text-xs text-white">
+                        {questionFile
+                          ? questionFile.name
+                          : 'Select Question Paper PDF or Image (Required)'}
+                      </div>
+                      <div className="text-[11px] text-zinc-400">
+                        {questionFile
+                          ? `${(questionFile.size / (1024 * 1024)).toFixed(1)} MB • Click to replace`
+                          : 'PDF, PNG, JPG, or WebP of test paper / coaching module'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Optional Solution / Answer Key PDF Picker */}
+                  <div
+                    onClick={() => solFileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                      solutionFile
+                        ? 'border-red-600 bg-red-950/20 text-white'
+                        : 'border-zinc-800 hover:border-red-600/70 hover:bg-zinc-900/60 bg-zinc-900/30'
+                    }`}
+                  >
+                    <input
+                      ref={solFileInputRef}
+                      type="file"
+                      accept=".pdf,image/png,image/jpeg,image/webp"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSolutionFile(e.target.files[0]);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <div className="space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700 flex items-center justify-center mx-auto shadow-xs">
+                        {solutionFile ? (
+                          <FileCheck className="w-5 h-5 text-red-400" />
+                        ) : (
+                          <Plus className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="font-semibold text-xs text-white">
+                        {solutionFile
+                          ? solutionFile.name
+                          : 'Attach Answer Key / Solution PDF (Optional)'}
+                      </div>
+                      <div className="text-[11px] text-zinc-400">
+                        {solutionFile
+                          ? `${(solutionFile.size / (1024 * 1024)).toFixed(1)} MB • Click to replace`
+                          : 'If omitted, Gemini 3.8 Flash solves questions automatically'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Ingestion Type: TEXT (Direct Question Paste Area) */
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                    <span>Paste Test Questions / OCR Text / DPP:</span>
+                    <span className="text-[11px] text-zinc-500">Supports LaTeX formulas, MCQs & Numerical questions</span>
+                  </label>
+                  <textarea
+                    rows={6}
+                    value={pastedQuestionText}
+                    onChange={(e) => setPastedQuestionText(e.target.value)}
+                    placeholder="Paste question text here... e.g.:
+1. A particle of mass m moves under the action of a force F = -kx. The time period is:
+(A) 2\pi \sqrt{m/k}
+(B) \pi \sqrt{m/k}
+(C) 2\pi \sqrt{k/m}
+(D) \sqrt{k/m}
+Answer: (A)
+
+2. Find the integer value of \int_0^2 x^3 dx.
+Answer: 4"
+                    className="w-full px-4 py-3 text-xs font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                  />
+                </div>
+              )}
 
               {/* Start Conversion Trigger */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
                 <div className="text-xs text-zinc-400">
-                  {questionFile ? (
+                  {ingestionType === 'FILE' ? (
+                    questionFile ? (
+                      <span className="text-red-400 font-semibold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-red-500" />
+                        Ready to execute with Gemini 3.8 Flash Vision Engine
+                      </span>
+                    ) : (
+                      <span>Select your PDF or Image file above to begin</span>
+                    )
+                  ) : pastedQuestionText.trim() ? (
                     <span className="text-red-400 font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-red-500" />
-                      Ready to execute with Gemini 3.8 Flash Vision Engine
+                      Ready to structure {pastedQuestionText.split('\n').length} lines of question text
                     </span>
                   ) : (
-                    <span>Select your PDF file above to begin</span>
+                    <span>Paste your question paper text above to begin</span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {(questionFile || solutionFile) && (
+                  {(questionFile || solutionFile || pastedQuestionText) && (
                     <button
                       type="button"
                       onClick={() => {
                         setQuestionFile(null);
                         setSolutionFile(null);
+                        setPastedQuestionText('');
                         setExtractedPaperResult(null);
                       }}
                       className="px-3 py-2 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-xl transition-all"
@@ -721,7 +808,7 @@ export const TestHub: React.FC<TestHubProps> = ({
                   )}
                   <button
                     onClick={handleStartConversion}
-                    disabled={!questionFile || isUploading}
+                    disabled={(ingestionType === 'FILE' && !questionFile) || (ingestionType === 'TEXT' && !pastedQuestionText.trim()) || isUploading}
                     className="px-6 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-4 h-4 text-white animate-pulse" />
@@ -801,16 +888,59 @@ export const TestHub: React.FC<TestHubProps> = ({
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         onClick={() => onSelectExam(extractedPaperResult)}
-                        className="px-5 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex items-center gap-2 shrink-0"
+                        className="px-4 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all flex items-center gap-1.5 shrink-0"
                       >
                         <Play className="w-4 h-4 fill-white" />
                         Launch CBT Test Room
                       </button>
+
+                      <button
+                        onClick={() => setShowAttachToScheduleModal(true)}
+                        className="px-3.5 py-2.5 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-xl transition-all flex items-center gap-1.5 shrink-0"
+                      >
+                        <Calendar className="w-4 h-4 text-red-500" />
+                        Attach to Roadmap Test
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const newRoutineItem: DailyRoutineItem = {
+                            id: `rout-extracted-${Date.now()}`,
+                            type: 'REAL_TEST',
+                            title: extractedPaperResult.title,
+                            chapterOrTopic: extractedPaperResult.title,
+                            subject: 'physics',
+                            scheduledDate: new Date().toISOString().split('T')[0],
+                            scheduledSlot: '19:00 - 22:00',
+                            durationMinutes: extractedPaperResult.durationMinutes,
+                            questionCount: extractedPaperResult.sections.reduce((acc, s) => acc + s.questions.length, 0),
+                            paperId: extractedPaperResult.id,
+                            paper: extractedPaperResult,
+                            isCompleted: false,
+                            weekNumber: 1,
+                            dayName: 'Today',
+                          };
+                          onAddCustomRoutine([newRoutineItem]);
+                          setPaperScheduledNotice(`"${extractedPaperResult.title}" has been scheduled into Today's Live Desk!`);
+                          setTimeout(() => setPaperScheduledNotice(''), 6000);
+                        }}
+                        className="px-3.5 py-2.5 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-xl transition-all flex items-center gap-1.5 shrink-0"
+                      >
+                        <Zap className="w-4 h-4 text-amber-400" />
+                        Schedule on Today's Desk
+                      </button>
                     </div>
                   </div>
+
+                  {paperScheduledNotice && (
+                    <div className="p-3 rounded-xl bg-green-950/50 border border-green-800 text-green-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                      <span>{paperScheduledNotice}</span>
+                    </div>
+                  )}
 
                   {/* Extracted Stats Breakdown */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
@@ -1065,6 +1195,69 @@ export const TestHub: React.FC<TestHubProps> = ({
             onUpdateMistakeReason={onUpdateMistakeReason}
             onPracticeSimilar={onPracticeSimilar}
           />
+        )}
+
+        {/* Attach Extracted Paper to Scheduled Test Modal */}
+        {showAttachToScheduleModal && extractedPaperResult && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-red-500" />
+                    Attach Paper to Test Roadmap
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Select a scheduled test to assign "{extractedPaperResult.title}" to:
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAttachToScheduleModal(false)}
+                  className="p-1 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {scheduledTests.map((test, idx) => (
+                  <div
+                    key={test.id}
+                    className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-red-600 flex items-center justify-between gap-3 transition-all"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300">
+                          #{idx + 1}
+                        </span>
+                        <span className="font-bold text-xs text-white">{test.title}</span>
+                      </div>
+                      <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                        Date: {test.scheduledDate} • Shift: {test.startTime}-{test.endTime}
+                      </div>
+                      {test.paper && (
+                        <div className="text-[10px] text-red-400 mt-0.5 font-medium">
+                          Currently: {test.paper.title}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        onAttachPaper(test.id, extractedPaperResult);
+                        setShowAttachToScheduleModal(false);
+                        setPaperScheduledNotice(`"${extractedPaperResult.title}" attached to "${test.title}"!`);
+                        setTimeout(() => setPaperScheduledNotice(''), 6000);
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs shrink-0 shadow-xs active:scale-95 transition-all"
+                    >
+                      {test.paper ? 'Replace' : 'Attach'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

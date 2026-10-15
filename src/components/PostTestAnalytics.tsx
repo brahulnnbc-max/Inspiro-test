@@ -133,28 +133,31 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
         // Evaluation
         let isCorrect = false;
-        if (q.correctAnswer) {
+        if (q.correctAnswer !== undefined && q.correctAnswer !== null) {
+          const strCorrect = String(q.correctAnswer).trim();
+          const strUser = userAnswer !== undefined && userAnswer !== null ? String(userAnswer).trim() : '';
+
           if (q.type === 'MULTIPLE_CORRECT') {
-            const correctSet = q.correctAnswer
+            const correctSet = strCorrect
               .split(',')
-              .map((s) => s.trim())
+              .map((s) => s.trim().toUpperCase())
               .sort();
             const userSet = Array.isArray(userAnswer)
-              ? [...userAnswer].sort()
-              : [userAnswer];
+              ? [...userAnswer].map((s) => String(s).trim().toUpperCase()).sort()
+              : strUser
+              ? strUser.split(',').map((s) => s.trim().toUpperCase()).sort()
+              : [];
             isCorrect = JSON.stringify(correctSet) === JSON.stringify(userSet);
           } else if (q.type === 'NUMERICAL') {
-            const userNum = parseFloat(userAnswer);
-            const correctNum = parseFloat(q.correctAnswer);
+            const userNum = parseFloat(strUser);
+            const correctNum = parseFloat(strCorrect);
             if (!isNaN(userNum) && !isNaN(correctNum)) {
               isCorrect = Math.abs(userNum - correctNum) < 0.05;
             } else {
-              isCorrect = userAnswer.toString().trim() === q.correctAnswer.trim();
+              isCorrect = strUser === strCorrect;
             }
           } else {
-            isCorrect =
-              userAnswer.toString().trim().toUpperCase() ===
-              q.correctAnswer.trim().toUpperCase();
+            isCorrect = strUser.toUpperCase() === strCorrect.toUpperCase();
           }
         }
 
@@ -697,8 +700,12 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                                   ? userAnswer.includes(opt.id)
                                   : userAnswer === opt.id;
                               const isCorrectChoice =
-                                q.correctAnswer &&
-                                q.correctAnswer.split(',').includes(opt.id);
+                                q.correctAnswer !== undefined &&
+                                q.correctAnswer !== null &&
+                                String(q.correctAnswer)
+                                  .split(',')
+                                  .map((s) => s.trim().toUpperCase())
+                                  .includes(opt.id);
 
                               return (
                                 <div
