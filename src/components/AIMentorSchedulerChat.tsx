@@ -241,7 +241,7 @@ export const AIMentorSchedulerChat: React.FC<AIMentorSchedulerChatProps> = ({
               <div>{m.text}</div>
 
               {/* Proposed Routine Box */}
-              {m.proposedRoutine && (
+              {m.proposedRoutine && Array.isArray(m.proposedRoutine.items) && m.proposedRoutine.items.length > 0 && (
                 <div className="bg-black rounded-xl p-4 border border-red-600/70 shadow-[0_0_15px_rgba(220,38,38,0.2)] space-y-3 text-white">
                   <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                     <div>

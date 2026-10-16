@@ -67,11 +67,10 @@ async function generateContentWithFallback(options: {
   const ai = getGeminiClient();
   // Models with high availability and low latency for STEM, LaTeX, and vision tasks
   const candidateModels = [
-    'gemini-3.5-flash',
-    'gemini-3.6-flash',
     'gemini-3.8-flash',
-    'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
   ];
   let lastError: any = null;
   const isVercel = Boolean(process.env.VERCEL);
@@ -175,9 +174,15 @@ function autoCloseTruncatedJSON(str: string): string {
 
 // Ultra-robust JSON parser with automatic fence removal, LaTeX backslash repair, and truncated JSON completion
 function cleanAndParseJSON(rawText: string | undefined): any {
-  if (!rawText) return {};
+  if (!rawText || !rawText.trim()) throw new Error('Empty response from model');
   let clean = rawText.trim();
-  clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+  // Strip markdown fences
+  clean = clean
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/, '')
+    .trim();
 
   // Try direct parse first
   try {
@@ -197,29 +202,30 @@ function cleanAndParseJSON(rawText: string | undefined): any {
   }
   clean = clean.slice(startIdx);
 
-  // Step 2: Sanitize unescaped LaTeX backslashes that break standard JSON.parse
-  // (e.g. \frac, \beta, \theta, \nabla, \right, \times, \tan, \text, \tau, \alpha, \sqrt, \vec, \Delta)
-  // 1. If \ is followed by [bfnrt] AND an ASCII letter, it's a LaTeX keyword (e.g. \frac, \theta, \beta) -> escape to \\
-  let sanitized = clean.replace(/\\([bfnrt][a-zA-Z])/g, '\\\\$1');
-  // 2. Any other backslash that isn't a valid JSON escape (["\\/bfnrt]|u[0-9a-fA-F]{4}) -> escape to \\
-  sanitized = sanitized.replace(/\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g, '\\\\');
+  // Step 2: Protect LaTeX keywords that collide with JSON escapes (\frac, \beta, \theta, \nabla, \right, \times, \tan, \tau)
+  // so that \frac doesn't turn into form-feed + rac, \beta doesn't turn into backspace + eta, etc.
+  let preprocessed = clean.replace(/\\([bfnrt][a-zA-Z])/g, '\\\\$1');
 
-  // Step 3: Remove problematic unescaped ASCII control codes inside strings (except real newlines/tabs outside quotes)
-  sanitized = sanitized.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]+/g, ' ');
+  // Step 3: Double-escape unescaped LaTeX backslashes inside JSON string literals
+  const repaired = preprocessed.replace(
+    /"((?:[^"\\]|\\.)*)"/gs,
+    (match) => match.replace(/\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})/g, '\\\\')
+  );
 
-  // Step 4: Strip trailing commas before closing braces/brackets
-  sanitized = sanitized.replace(/,\s*([}\]])/g, '$1');
+  // Step 4: Remove problematic unescaped ASCII control codes inside strings (except newlines/tabs outside quotes)
+  const sanitized = repaired
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]+/g, ' ')
+    .replace(/,\s*([}\]])/g, '$1');
 
   try {
     return JSON.parse(sanitized);
   } catch (_err2) {
     // Step 5: Auto-close truncated JSON (e.g. if tokens ended mid-question)
     try {
-      const repaired = autoCloseTruncatedJSON(sanitized);
-      return JSON.parse(repaired);
+      const closed = autoCloseTruncatedJSON(sanitized);
+      return JSON.parse(closed);
     } catch (err3: any) {
       console.warn('[cleanAndParseJSON] Repair pipeline failed. Attempting structural recovery:', err3.message);
-      // Last-ditch: extract whatever valid object can be found
       const lastValidBrace = sanitized.lastIndexOf('}');
       if (lastValidBrace > 0) {
         try {
@@ -455,7 +461,7 @@ You must strictly execute every instruction specified in the user's command abov
                           positiveMarks: { type: Type.NUMBER },
                           negativeMarks: { type: Type.NUMBER },
                         },
-                        required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex'],
+                        required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex', 'options', 'correctAnswer'],
                       },
                     },
                   },
@@ -471,7 +477,7 @@ You must strictly execute every instruction specified in the user's command abov
       parsedData = cleanAndParseJSON(response.text);
     } catch (aiError: any) {
       console.warn('[inspiro AI] Primary AI generation caught error:', aiError?.message);
-      // Auto fallback if text was provided!
+      // Auto fallback if multi-question text was provided
       if (textQuestions && textQuestions.trim()) {
         console.log('[inspiro AI] Auto-falling back to deterministic parser for text input...');
         const fallbackRes = parsePastedQuestionsInstant(
@@ -480,7 +486,7 @@ You must strictly execute every instruction specified in the user's command abov
           pattern,
           customDurationMinutes || 180
         );
-        if (fallbackRes.success && fallbackRes.paper) {
+        if (fallbackRes.success && fallbackRes.paper && (fallbackRes.questionCount > 1 || (fallbackRes.paper.sections?.[0]?.questions?.length ?? 0) > 1)) {
           return res.json({
             success: true,
             mode: 'FALLBACK_INSTANT_PARSER',
@@ -539,9 +545,25 @@ You must strictly execute every instruction specified in the user's command abov
                 labelLatex: String(opt.labelLatex || opt.text || opt.label || '').trim(),
               };
             });
-            if (!q.type) q.type = 'SINGLE_CORRECT';
+            if (!q.type || q.type === 'NUMERICAL') {
+              q.type = 'SINGLE_CORRECT';
+            }
           } else {
-            q.type = 'NUMERICAL';
+            // Attempt to extract options if embedded in prompt text
+            const optMatches = [...(q.promptLatex || '').matchAll(/(?:\(([A-D1-4])\)|([A-D1-4])[\.\)\:\-])\s*([^\n\(\)]+)/gi)];
+            if (optMatches.length >= 2) {
+              q.options = optMatches.slice(0, 4).map((m: any, mIdx: number) => {
+                let optId = (m[1] || m[2]).toUpperCase();
+                if (optId === '1') optId = 'A';
+                else if (optId === '2') optId = 'B';
+                else if (optId === '3') optId = 'C';
+                else if (optId === '4') optId = 'D';
+                return { id: optId, labelLatex: m[3].trim() };
+              });
+              q.type = 'SINGLE_CORRECT';
+            } else {
+              q.type = 'NUMERICAL';
+            }
           }
 
           // Normalize Correct Answer
@@ -707,19 +729,29 @@ app.all(['/api/generate-test-schedule', '/generate-test-schedule', '/api/generat
       });
     }
 
+    const today = new Date();
+    const currentIso = today.toISOString().split('T')[0];
+    const currentYear = today.getFullYear();
+    const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+    const nextSunday = new Date(today.getTime() + daysUntilSunday * 86400000).toISOString().split('T')[0];
+
     const systemInstruction = `You are the Master Academic Director for premier JEE coaching institutes (Allen Career Institute, FIITJEE, MathonGo).
 Your job is to generate a comprehensive, realistic, and highly organized 3 to 6 month Computer-Based Test (CBT) schedule for JEE Main / Advanced aspirants.
 Follow strict coaching norms:
 1. Space tests regularly (e.g. alternate Sundays or every 2-3 weeks).
 2. Distribute the syllabus systematically from Class 11th fundamentals to advanced Class 12th topics, concluding with Full Syllabus / All India Mocks.
-3. For EVERY scheduled test:
+3. CRITICAL CALENDAR REQUIREMENT:
+   - Today's date is ${currentIso} (${currentYear}).
+   - The upcoming Sunday is ${nextSunday}.
+   - Every single test scheduledDate MUST be on or after ${nextSunday} in the year ${currentYear} (e.g. consecutive alternate Sundays).
+   - NEVER generate stale past dates from 2023 or 2024!
+4. For EVERY scheduled test:
    - Provide an authentic coaching title (e.g. "Allen Leader Minor Test 01 - Mechanics & Physical Chem").
    - Set standard NTA live test time windows: "09:00" to "12:00" (Morning Shift) or "14:00" to "17:00" (Afternoon Shift).
-   - Set scheduled dates starting from current upcoming Sunday onwards.
    - For EACH of the 3 subjects (Physics, Chemistry, Mathematics), provide specific chapter & topic checklists so the student can track their revision before the test!`;
 
     const response = await generateContentWithFallback({
-      contents: `Generate a structured test series schedule based on user instructions: "${prompt}". Number of tests: ${numberOfTests}. Pattern: ${pattern}.`,
+      contents: `Generate a structured test series schedule based on user instructions: "${prompt}". Number of tests: ${numberOfTests}. Pattern: ${pattern}. Current date is ${currentIso} (${currentYear}).`,
       config: {
         systemInstruction,
         responseMimeType: 'application/json',
@@ -761,6 +793,23 @@ Follow strict coaching norms:
     });
 
     const parsedData = cleanAndParseJSON(response.text);
+
+    // Post-processing safety: Verify dates are strictly present and in current or future calendar
+    if (parsedData.tests && Array.isArray(parsedData.tests)) {
+      parsedData.tests.forEach((t: any, idx: number) => {
+        const isStale =
+          !t.scheduledDate ||
+          t.scheduledDate < currentIso ||
+          t.scheduledDate.startsWith('2023') ||
+          t.scheduledDate.startsWith('2024') ||
+          t.scheduledDate.startsWith('2025');
+
+        if (isStale) {
+          const testDate = new Date(today.getTime() + (daysUntilSunday + idx * 14) * 86400000);
+          t.scheduledDate = testDate.toISOString().split('T')[0];
+        }
+      });
+    }
 
     res.json({
       success: true,
@@ -1029,10 +1078,11 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
                         ],
                       },
                     },
+                    required: ['routineTitle', 'summary', 'items'],
                   },
                 },
               },
-              required: ['replyText'],
+              required: ['replyText', 'proposedRoutine'],
             },
           },
         });
@@ -1040,6 +1090,11 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
         parsedData = cleanAndParseJSON(response.text);
       } catch (genErr: any) {
         console.warn('AI generation had an issue, falling back to structured mentor plan:', genErr.message);
+        const today = new Date();
+        const currentIso = today.toISOString().split('T')[0];
+        const tomorrowIso = new Date(today.getTime() + 86400000).toISOString().split('T')[0];
+        const nextSunday = new Date(today.getTime() + ((7 - today.getDay()) % 7 || 7) * 86400000).toISOString().split('T')[0];
+
         parsedData = {
           replyText: `Great target! For "${message}", I recommend focusing on 25-question timed sprints in your ${practiceSlot} slot. Testing yourself under time constraints is what separates top rankers from the rest. Here is your structured study plan:`,
           proposedRoutine: {
@@ -1052,7 +1107,7 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
                 title: `${message.slice(0, 25)}: Core Concepts Drill`,
                 chapterOrTopic: message,
                 subject: 'physics',
-                scheduledDate: new Date().toISOString().split('T')[0],
+                scheduledDate: currentIso,
                 scheduledSlot: practiceSlot,
                 durationMinutes: 50,
                 questionCount: 25,
@@ -1064,17 +1119,87 @@ Respond thoughtfully as their JEE Academic Director. If this involves scheduling
                 type: 'MODULE_PRACTICE',
                 title: `${message.slice(0, 25)}: Advanced Problem Sprint`,
                 chapterOrTopic: message,
-                subject: 'mathematics',
-                scheduledDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                subject: 'chemistry',
+                scheduledDate: tomorrowIso,
                 scheduledSlot: practiceSlot,
                 durationMinutes: 50,
                 questionCount: 25,
                 weekNumber: 1,
                 dayName: 'Tomorrow',
               },
+              {
+                id: `rout-mentor-${Date.now()}-3`,
+                type: 'REAL_TEST',
+                title: `${message.slice(0, 25)}: Comprehensive Mock Test`,
+                chapterOrTopic: message,
+                subject: 'mathematics',
+                scheduledDate: nextSunday,
+                scheduledSlot: testSlot,
+                durationMinutes: 180,
+                questionCount: 75,
+                weekNumber: 1,
+                dayName: 'Sunday Mock',
+              },
             ],
           },
         };
+      }
+
+      // Safeguard: Ensure proposedRoutine and items are ALWAYS defined and non-empty
+      if (!parsedData.proposedRoutine) {
+        parsedData.proposedRoutine = {
+          routineTitle: `${message.slice(0, 30)} Strategic Plan`,
+          summary: `Daily targeted practice in ${practiceSlot} and comprehensive testing in ${testSlot}`,
+          items: [],
+        };
+      }
+      if (!Array.isArray(parsedData.proposedRoutine.items) || parsedData.proposedRoutine.items.length === 0) {
+        const today = new Date();
+        const currentIso = today.toISOString().split('T')[0];
+        const tomorrowIso = new Date(today.getTime() + 86400000).toISOString().split('T')[0];
+        const nextSunday = new Date(today.getTime() + ((7 - today.getDay()) % 7 || 7) * 86400000).toISOString().split('T')[0];
+
+        parsedData.proposedRoutine.items = [
+          {
+            id: `rout-mentor-${Date.now()}-1`,
+            type: 'MODULE_PRACTICE',
+            title: `${message.slice(0, 25)}: Daily Module Sprint 01`,
+            chapterOrTopic: message,
+            subject: 'physics',
+            scheduledDate: currentIso,
+            scheduledSlot: practiceSlot,
+            durationMinutes: 50,
+            questionCount: 25,
+            weekNumber: 1,
+            dayName: 'Today',
+          },
+          {
+            id: `rout-mentor-${Date.now()}-2`,
+            type: 'MODULE_PRACTICE',
+            title: `${message.slice(0, 25)}: Daily Module Sprint 02`,
+            chapterOrTopic: message,
+            subject: 'chemistry',
+            scheduledDate: tomorrowIso,
+            scheduledSlot: practiceSlot,
+            durationMinutes: 50,
+            questionCount: 25,
+            weekNumber: 1,
+            dayName: 'Tomorrow',
+          },
+          {
+            id: `rout-mentor-${Date.now()}-3`,
+            type: 'REAL_TEST',
+            title: `${message.slice(0, 25)}: Weekend Real Test`,
+            chapterOrTopic: message,
+            subject: 'mathematics',
+            scheduledDate: nextSunday,
+            scheduledSlot: testSlot,
+            durationMinutes: 180,
+            questionCount: 75,
+            weekNumber: 1,
+            dayName: 'Weekend',
+          },
+        ];
       }
 
       res.json({

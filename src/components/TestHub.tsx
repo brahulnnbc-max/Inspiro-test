@@ -20,6 +20,7 @@ import { RaceQuestionBank } from './RaceQuestionBank';
 import { MathRenderer } from './MathRenderer';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import { InspiroLogo } from './InspiroLogo';
+import { DiagnosisWorkbench } from './DiagnosisWorkbench';
 import {
   UploadCloud,
   FileText,
@@ -28,6 +29,7 @@ import {
   Sparkles,
   AlertCircle,
   History,
+  Activity,
   BookOpen,
   Calendar,
   Sun,
@@ -104,8 +106,8 @@ export const TestHub: React.FC<TestHubProps> = ({
   onToggleTagOnQuestion = () => {},
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'ROUTINE' | 'MODULES' | 'RACE' | 'SCHEDULE' | 'MENTOR' | 'TESTS' | 'MISTAKES'
-  >('ROUTINE');
+    'DIAGNOSIS' | 'ROUTINE' | 'MODULES' | 'RACE' | 'SCHEDULE' | 'MENTOR' | 'TESTS' | 'MISTAKES'
+  >('DIAGNOSIS');
   const [mentorInitialPrompt, setMentorInitialPrompt] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
@@ -430,6 +432,14 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
               </span>
             )}
 
+            <button
+              onClick={() => setActiveTab('DIAGNOSIS')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-red-950/60 border border-red-600/50 text-red-300 hover:bg-red-900/60 transition-all cursor-pointer shadow-[0_0_10px_rgba(220,38,38,0.3)]"
+            >
+              <Activity className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+              <span>🩺 Render Diagnosis</span>
+            </button>
+
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-zinc-900 border border-zinc-800 text-zinc-300">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
               <span className="text-white">NTA & MathonGo</span>
@@ -438,8 +448,20 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
           </div>
         </header>
 
-        {/* 7 Primary Navigation Tabs */}
+        {/* Primary Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-1 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('DIAGNOSIS')}
+            className={`px-3.5 py-2.5 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
+              activeTab === 'DIAGNOSIS'
+                ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+                : 'text-red-300 hover:text-white hover:bg-zinc-900 border border-red-900/50'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-red-400 animate-pulse" />
+            🩺 Root-Cause Diagnosis
+          </button>
+
           <button
             onClick={() => setActiveTab('ROUTINE')}
             className={`px-3.5 py-2.5 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
@@ -537,6 +559,14 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
             )}
           </button>
         </div>
+
+        {/* TAB 0: ROOT-CAUSE DIAGNOSIS WORKBENCH */}
+        {activeTab === 'DIAGNOSIS' && (
+          <DiagnosisWorkbench
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+            onLaunchSampleTest={() => onSelectExam(SAMPLE_JEE_MAIN_MOCK)}
+          />
+        )}
 
         {/* TAB 1: TODAY'S LIVE DESK & MASTER COACHING ROUTINE */}
         {activeTab === 'ROUTINE' && (
