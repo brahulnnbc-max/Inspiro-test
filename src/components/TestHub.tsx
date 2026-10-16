@@ -18,6 +18,8 @@ import { ModulePracticeSection } from './ModulePracticeSection';
 import { AIMentorSchedulerChat } from './AIMentorSchedulerChat';
 import { RaceQuestionBank } from './RaceQuestionBank';
 import { MathRenderer } from './MathRenderer';
+import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
+import { InspiroLogo } from './InspiroLogo';
 import {
   UploadCloud,
   FileText,
@@ -44,6 +46,8 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 interface TestHubProps {
@@ -156,6 +160,75 @@ export const TestHub: React.FC<TestHubProps> = ({
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
   const qFileInputRef = useRef<HTMLInputElement | null>(null);
   const solFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+
+  // 1-Click prompt copy for ChatGPT / Claude / DeepSeek
+  const handleCopyExtractionPrompt = () => {
+    const prompt = `Please extract all questions from this document into clean, structured text in this exact format so I can paste it into my JEE CBT simulator:
+
+1. [Question text with standard LaTeX math equations, e.g. $E = mc^2$, $\\frac{a}{b}$, or vectors $\\vec{F}$]
+(A) [Option A text]
+(B) [Option B text]
+(C) [Option C text]
+(D) [Option D text]
+Answer: [Correct Option, e.g. A, B, C, or D, or integer/decimal for numericals]
+Solution: [Step-by-step masterclass solution]
+
+2. [Next question in the same format...]`;
+
+    navigator.clipboard.writeText(prompt);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 3000);
+  };
+
+  // 1-Click fill high-yield sample questions to test immediately
+  const handleFillSampleQuestions = () => {
+    setPastedQuestionText(`1. A particle of mass $m$ moves along the x-axis under the action of a restoring force $F = -kx$. If its displacement is $x(t) = A \\cos(\\omega t + \\phi)$, what is the time period of oscillation?
+(A) $2\\pi \\sqrt{\\frac{m}{k}}$
+(B) $\\pi \\sqrt{\\frac{m}{k}}$
+(C) $2\\pi \\sqrt{\\frac{k}{m}}$
+(D) $\\frac{1}{2\\pi} \\sqrt{\\frac{k}{m}}$
+Answer: (A)
+Solution: Standard simple harmonic motion equation gives $\\omega = \\sqrt{k/m}$, hence $T = \\frac{2\\pi}{\\omega} = 2\\pi \\sqrt{\\frac{m}{k}}$.
+
+2. Which of the following molecules has a non-zero dipole moment?
+(A) $CO_2$
+(B) $BF_3$
+(C) $NH_3$
+(D) $CH_4$
+Answer: (C)
+Solution: In $NH_3$, the molecule is trigonal pyramidal and the lone pair dipole reinforces the bond dipoles. In $CO_2$ (linear), $BF_3$ (trigonal planar), and $CH_4$ (tetrahedral), the bond moments cancel by molecular symmetry.
+
+3. Calculate the definite integral: $\\int_0^1 (3x^2 + 2x) dx$.
+Answer: 2
+Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
+  };
+
+  // Instant Deterministic Parser (0.05s, 100% offline, zero API / rate limit dependencies)
+  const handleInstantConvert = () => {
+    if (!pastedQuestionText.trim()) {
+      setErrorMsg('Please paste your questions in the text box first');
+      return;
+    }
+    setErrorMsg('');
+    const examTitle =
+      customTitle.trim() || 'Instant CBT Practice Test';
+    const result = parsePastedQuestionsInstant(
+      pastedQuestionText,
+      examTitle,
+      selectedPattern,
+      customDuration
+    );
+    if (!result.success || !result.paper) {
+      setErrorMsg(
+        result.error ||
+          'Could not identify question numbers. Ensure questions start with numbers like "1. ", "Q1.", or "(A)" options.'
+      );
+      return;
+    }
+    onSaveCustomPaper(result.paper);
+    setExtractedPaperResult(result.paper);
+  };
 
   // Convert files using Advanced Gemini 3.8 Flash Vision Engine
   const handleStartConversion = async () => {
@@ -268,15 +341,36 @@ export const TestHub: React.FC<TestHubProps> = ({
       setExtractedPaperResult(generatedPaper);
     } catch (err: any) {
       console.error('Error during PDF conversion:', err);
+      // Auto-fallback for text input: parse immediately with deterministic parser!
+      if (ingestionType === 'TEXT' && pastedQuestionText.trim()) {
+        const examTitle =
+          customTitle.trim() || 'Instant CBT Practice Test';
+        const instantResult = parsePastedQuestionsInstant(
+          pastedQuestionText,
+          examTitle,
+          selectedPattern,
+          customDuration
+        );
+        if (instantResult.success && instantResult.paper) {
+          onSaveCustomPaper(instantResult.paper);
+          setExtractedPaperResult(instantResult.paper);
+          setIsUploading(false);
+          setUploadProgress('');
+          return;
+        }
+      }
+
       const msg = err.message || '';
       if (msg.includes('413') || msg.toLowerCase().includes('payload') || msg.toLowerCase().includes('too large')) {
-        setErrorMsg('The uploaded PDF exceeds Vercel\'s 4.5MB serverless payload limit. Please compress the file or upload 5–20 page sections.');
+        setErrorMsg('The uploaded PDF exceeds Vercel\'s 4.5MB serverless payload limit. Please compress the file or upload 5–20 page sections, or paste questions into "Paste Question Paper Text".');
+      } else if (msg.includes('503') || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('unavailable')) {
+        setErrorMsg('Google Gemini experienced a temporary high-demand spike. Tip: Switch to "Paste Question Paper Text" and click "⚡ Instant CBT Convert" for 0-second offline conversion!');
       } else if (msg.includes('504') || msg.toLowerCase().includes('timeout')) {
-        setErrorMsg('The inspiro AI processing timed out. Try uploading a shorter excerpt or single chapter for faster processing.');
+        setErrorMsg('The inspiro AI processing timed out on Vercel. Try uploading a shorter PDF (5–15 pages) or paste questions into the text tab.');
       } else {
         setErrorMsg(
           msg ||
-            'Failed to convert PDF. Ensure GEMINI_API_KEY is configured in your Vercel Project Settings > Environment Variables.'
+            'Failed to convert PDF. Ensure GEMINI_API_KEY is configured in your Vercel Project Settings > Environment Variables, or paste questions directly.'
         );
       }
     } finally {
@@ -297,20 +391,7 @@ export const TestHub: React.FC<TestHubProps> = ({
         {/* inspiro LIVE Brand App Header */}
         <header className="border-b border-zinc-800/80 pb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 select-none">
-              <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-[0_0_15px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
-                <img
-                  src="/src/assets/images/inspiro_logo.png"
-                  alt="inspiro logo"
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="flex items-baseline gap-1.5 font-display text-xl md:text-2xl font-black tracking-tight">
-                <span className="text-white">inspiro</span>
-                <span className="text-red-600 drop-shadow-[0_0_12px_rgba(220,38,38,0.6)]">LIVE</span>
-              </div>
-            </div>
+            <InspiroLogo size="md" showText />
             <div className="hidden sm:block h-4 w-px bg-zinc-800" />
             <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wider text-zinc-400">
               JEE Practice & CBT Test Hub
@@ -797,27 +878,82 @@ export const TestHub: React.FC<TestHubProps> = ({
                 </div>
               ) : (
                 /* Ingestion Type: TEXT (Direct Question Paste Area) */
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center justify-between">
-                    <span>Paste Test Questions / OCR Text / DPP:</span>
-                    <span className="text-[11px] text-zinc-500">Supports LaTeX formulas, MCQs & Numerical questions</span>
-                  </label>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-red-500" />
+                      <span>Paste Questions / From ChatGPT, Claude, or OCR Text:</span>
+                    </label>
+
+                    {/* Quick Helper Actions */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleCopyExtractionPrompt}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
+                          copiedPrompt
+                            ? 'bg-emerald-600 text-white border-emerald-500'
+                            : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:border-red-500'
+                        }`}
+                      >
+                        {copiedPrompt ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-white" />
+                            <span>Prompt Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-red-400" />
+                            <span>Copy Prompt for ChatGPT/Claude</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleFillSampleQuestions}
+                        className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all"
+                      >
+                        💡 Load Sample
+                      </button>
+
+                      {pastedQuestionText && (
+                        <button
+                          type="button"
+                          onClick={() => setPastedQuestionText('')}
+                          className="text-[11px] font-semibold px-2 py-1 text-zinc-500 hover:text-red-400 transition-all"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <textarea
-                    rows={6}
+                    rows={7}
                     value={pastedQuestionText}
                     onChange={(e) => setPastedQuestionText(e.target.value)}
-                    placeholder="Paste question text here... e.g.:
+                    placeholder="Paste question text or JSON here... e.g.:
 1. A particle of mass m moves under the action of a force F = -kx. The time period is:
 (A) 2\pi \sqrt{m/k}
 (B) \pi \sqrt{m/k}
 (C) 2\pi \sqrt{k/m}
 (D) \sqrt{k/m}
 Answer: (A)
+Solution: Standard simple harmonic motion gives T = 2\pi\sqrt{m/k}
 
 2. Find the integer value of \int_0^2 x^3 dx.
 Answer: 4"
                     className="w-full px-4 py-3 text-xs font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
                   />
+
+                  {/* Pro-Tip banner */}
+                  <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-start gap-2.5 text-[11px] text-zinc-400">
+                    <Sparkles className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-zinc-200">Extracting from another AI?</span> Upload your question paper PDF to <span className="text-white font-semibold">ChatGPT</span>, <span className="text-white font-semibold">Claude</span>, or <span className="text-white font-semibold">DeepSeek</span> with our 1-click prompt above, then paste their output here. Click <span className="text-red-400 font-bold">⚡ Instant CBT Convert</span> to build your test in <span className="text-white font-bold">0.05 seconds</span> with zero serverless timeouts!
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -828,7 +964,7 @@ Answer: 4"
                     questionFile ? (
                       <span className="text-red-400 font-semibold flex items-center gap-1.5">
                         <CheckCircle2 className="w-4 h-4 text-red-500" />
-                        Ready to execute with Gemini 3.8 Flash Vision Engine
+                        Ready to execute with Gemini Vision Engine
                       </span>
                     ) : (
                       <span>Select your PDF or Image file above to begin</span>
@@ -836,14 +972,14 @@ Answer: 4"
                   ) : pastedQuestionText.trim() ? (
                     <span className="text-red-400 font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-red-500" />
-                      Ready to structure {pastedQuestionText.split('\n').length} lines of question text
+                      Ready to convert {pastedQuestionText.split('\n').length} lines of text
                     </span>
                   ) : (
                     <span>Paste your question paper text above to begin</span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {(questionFile || solutionFile || pastedQuestionText) && (
                     <button
                       type="button"
@@ -858,13 +994,28 @@ Answer: 4"
                       Reset
                     </button>
                   )}
+
+                  {/* If in text mode, provide Instant Deterministic Convert */}
+                  {ingestionType === 'TEXT' && (
+                    <button
+                      type="button"
+                      onClick={handleInstantConvert}
+                      disabled={!pastedQuestionText.trim()}
+                      className="px-5 py-2.5 text-xs font-black text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-red-500 active:scale-95 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-xs"
+                      title="Instant offline parser: 0.05s execution, 100% immune to API timeouts"
+                    >
+                      <Zap className="w-4 h-4 text-amber-400 fill-current" />
+                      Instant CBT Convert (0.05s)
+                    </button>
+                  )}
+
                   <button
                     onClick={handleStartConversion}
                     disabled={(ingestionType === 'FILE' && !questionFile) || (ingestionType === 'TEXT' && !pastedQuestionText.trim()) || isUploading}
                     className="px-6 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-4 h-4 text-white animate-pulse" />
-                    {isUploading ? 'inspiro AI is Extracting Questions...' : 'Extract Questions & Launch CBT Test'}
+                    {isUploading ? 'Processing Questions...' : (ingestionType === 'TEXT' ? 'AI LaTeX Enhance & Launch' : 'Extract PDF & Launch CBT Test')}
                   </button>
                 </div>
               </div>

@@ -11,6 +11,7 @@ import {
 import { MathRenderer } from './MathRenderer';
 import { NumericalKeypad } from './NumericalKeypad';
 import { ScratchpadModal } from './ScratchpadModal';
+import { InspiroLogo } from './InspiroLogo';
 import {
   Clock,
   User,
@@ -627,14 +628,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         {/* Left: Branding with official NTA & inspiro badge */}
         <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-1.5 select-none shrink-0">
-            <div className="w-7 h-7 rounded overflow-hidden flex items-center justify-center border border-slate-300 bg-white shrink-0 shadow-2xs">
-              <img
-                src="/src/assets/images/inspiro_logo.png"
-                alt="inspiro logo"
-                className="w-full h-full object-contain"
-                referrerPolicy="no-referrer"
-              />
-            </div>
+            <InspiroLogo size="sm" variant={uiMode === 'NTA_OFFICIAL' && !isDarkMode ? 'light' : 'dark'} />
             <div>
               <div className="flex items-center gap-1 font-bold text-xs md:text-sm">
                 <span className={uiMode === 'NTA_OFFICIAL' && !isDarkMode ? 'text-[#1f4e79]' : 'text-white'}>

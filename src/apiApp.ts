@@ -51,7 +51,9 @@ function getGeminiClient(): GoogleGenAI {
   });
 }
 
-// Resilient multi-model fallback: gemini-3.8-flash first (most capable for STEM, LaTeX and Vision OCR), followed by gemini-flash-latest and gemini-3.1-flash-lite
+import { parsePastedQuestionsInstant } from './utils/instantQuestionParser.ts';
+
+// Resilient multi-model fallback: prioritized stable models (gemini-3.5-flash, gemini-3.6-flash, gemini-3.8-flash, gemini-3.5-flash-lite)
 async function generateContentWithFallback(options: {
   contents: any;
   config?: any;
@@ -63,57 +65,59 @@ async function generateContentWithFallback(options: {
   }
 
   const ai = getGeminiClient();
-  // Standard prioritized models according to Gemini API guidance
-  const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+  // Models with high availability and low latency for STEM, LaTeX, and vision tasks
+  const candidateModels = [
+    'gemini-3.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+  ];
   let lastError: any = null;
-  const timeoutLimit = options.timeoutMs || 120000; // 120 seconds for deep multi-page STEM/LaTeX parsing
+  const isVercel = Boolean(process.env.VERCEL);
+  const maxTimeout = isVercel ? 25000 : 90000;
+  const timeoutLimit = options.timeoutMs ? Math.min(options.timeoutMs, maxTimeout) : maxTimeout;
 
   for (let i = 0; i < candidateModels.length; i++) {
     const model = candidateModels[i];
-    // Attempt up to 2 tries per model in case of momentary server overload
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        console.log(`[inspiro AI] Requesting model ${model} (attempt ${attempt}/2, timeout ${timeoutLimit}ms)...`);
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Timeout waiting for model ${model} (${timeoutLimit}ms)`)), timeoutLimit)
-        );
-        const callPromise = ai.models.generateContent({
-          model,
-          contents: options.contents,
-          config: options.config,
-        });
+    try {
+      console.log(`[inspiro AI] Requesting model ${model} (timeout ${timeoutLimit}ms)...`);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout waiting for model ${model} (${timeoutLimit}ms)`)), timeoutLimit)
+      );
+      const callPromise = ai.models.generateContent({
+        model,
+        contents: options.contents,
+        config: options.config,
+      });
 
-        const response: any = await Promise.race([callPromise, timeoutPromise]);
-        console.log(`[inspiro AI] Model ${model} succeeded on attempt ${attempt}!`);
-        return response;
-      } catch (err: any) {
-        const errStr = String(err?.message || err || '');
-        console.warn(`[inspiro AI] Model ${model} attempt ${attempt} failed: ${errStr}`);
-        lastError = err;
+      const response: any = await Promise.race([callPromise, timeoutPromise]);
+      console.log(`[inspiro AI] Model ${model} succeeded!`);
+      return response;
+    } catch (err: any) {
+      const errStr = String(err?.message || err || '');
+      console.warn(`[inspiro AI] Model ${model} failed: ${errStr}`);
+      lastError = err;
 
-        // If transient 503 UNAVAILABLE, 429 rate limit or ResourceExhausted, wait 2s before retry
-        const isTransient =
-          errStr.includes('UNAVAILABLE') ||
-          errStr.includes('503') ||
-          errStr.includes('429') ||
-          errStr.includes('ResourceExhausted') ||
-          errStr.includes('overloaded') ||
-          errStr.includes('try again later');
+      // On 503 UNAVAILABLE or 429 rate limit, immediately switch to the next candidate model
+      // without stalling Vercel serverless execution limits
+      const isTransient =
+        errStr.includes('UNAVAILABLE') ||
+        errStr.includes('503') ||
+        errStr.includes('429') ||
+        errStr.includes('ResourceExhausted') ||
+        errStr.includes('overloaded') ||
+        errStr.includes('try again later');
 
-        if (isTransient) {
-          console.log(`[inspiro AI] Transient capacity spike detected. Backing off 2000ms before next action...`);
-          await new Promise((r) => setTimeout(r, 2000));
-        } else {
-          // If non-transient (e.g. invalid argument or model not found), break immediately to try next model
-          break;
-        }
+      if (isTransient) {
+        console.log(`[inspiro AI] Transient spike on ${model}. Fast-switching to next candidate model...`);
       }
     }
   }
 
   throw new Error(
     lastError?.message ||
-    'AI service is temporarily unavailable. If you are using your own GEMINI_API_KEY, please verify it is active at aistudio.google.com and has standard rate limits.'
+    'AI service is temporarily experiencing high demand across candidate models. Please try again or use the Instant Deterministic Text Parser.'
   );
 }
 
@@ -296,9 +300,29 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
     }
 
     const apiKey = getGeminiApiKey();
+
+    // 1. Instant Mode or Keyless Text Mode: Convert immediately without waiting for API
+    if (req.body.instantMode === true || (!apiKey && textQuestions.trim())) {
+      console.log('[inspiro Engine] Instant deterministic parser invoked for pasted question text.');
+      const instantRes = parsePastedQuestionsInstant(
+        textQuestions,
+        examTitle,
+        pattern,
+        customDurationMinutes || 180
+      );
+      if (instantRes.success && instantRes.paper) {
+        return res.json({
+          success: true,
+          mode: 'INSTANT_DETERMINISTIC',
+          examPaper: instantRes.paper,
+          data: instantRes.paper,
+        });
+      }
+    }
+
     if (!apiKey) {
       return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables.',
+        error: 'GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables, or use Instant Convert mode for pasted text.',
       });
     }
 
@@ -380,68 +404,94 @@ You must strictly execute every instruction specified in the user's command abov
 
     parts.push({ text: promptText });
 
-    const response = await generateContentWithFallback({
-      contents: { parts },
-      timeoutMs: 90000,
-      config: {
-        systemInstruction,
-        maxOutputTokens: 16384,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            pattern: { type: Type.STRING },
-            durationMinutes: { type: Type.INTEGER },
-            totalMarks: { type: Type.INTEGER },
-            sections: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING, description: "'physics', 'chemistry', 'mathematics', or custom topic id" },
-                  name: { type: Type.STRING },
-                  questions: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        id: { type: Type.STRING },
-                        questionNumber: { type: Type.INTEGER },
-                        sectionId: { type: Type.STRING },
-                        type: { type: Type.STRING, description: "'SINGLE_CORRECT', 'MULTIPLE_CORRECT', 'NUMERICAL', 'MATRIX_MATCH'" },
-                        promptLatex: { type: Type.STRING },
-                        diagramDescription: { type: Type.STRING },
-                        options: {
-                          type: Type.ARRAY,
-                          items: {
-                            type: Type.OBJECT,
-                            properties: {
-                              id: { type: Type.STRING, description: "'A', 'B', 'C', or 'D'" },
-                              labelLatex: { type: Type.STRING },
+    let parsedData: any = null;
+
+    try {
+      const response = await generateContentWithFallback({
+        contents: { parts },
+        timeoutMs: 60000,
+        config: {
+          systemInstruction,
+          maxOutputTokens: 16384,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              pattern: { type: Type.STRING },
+              durationMinutes: { type: Type.INTEGER },
+              totalMarks: { type: Type.INTEGER },
+              sections: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING, description: "'physics', 'chemistry', 'mathematics', or custom topic id" },
+                    name: { type: Type.STRING },
+                    questions: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          id: { type: Type.STRING },
+                          questionNumber: { type: Type.INTEGER },
+                          sectionId: { type: Type.STRING },
+                          type: { type: Type.STRING, description: "'SINGLE_CORRECT', 'MULTIPLE_CORRECT', 'NUMERICAL', 'MATRIX_MATCH'" },
+                          promptLatex: { type: Type.STRING },
+                          diagramDescription: { type: Type.STRING },
+                          options: {
+                            type: Type.ARRAY,
+                            items: {
+                              type: Type.OBJECT,
+                              properties: {
+                                id: { type: Type.STRING, description: "'A', 'B', 'C', or 'D'" },
+                                labelLatex: { type: Type.STRING },
+                              },
+                              required: ['id', 'labelLatex'],
                             },
-                            required: ['id', 'labelLatex'],
                           },
+                          correctAnswer: { type: Type.STRING, description: "e.g. 'A', 'B', 'C', 'D' or numeric string like '25' or 'A,C' for multiple" },
+                          explanationLatex: { type: Type.STRING },
+                          positiveMarks: { type: Type.NUMBER },
+                          negativeMarks: { type: Type.NUMBER },
                         },
-                        correctAnswer: { type: Type.STRING, description: "e.g. 'A', 'B', 'C', 'D' or numeric string like '25' or 'A,C' for multiple" },
-                        explanationLatex: { type: Type.STRING },
-                        positiveMarks: { type: Type.NUMBER },
-                        negativeMarks: { type: Type.NUMBER },
+                        required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex'],
                       },
-                      required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex'],
                     },
                   },
+                  required: ['id', 'name', 'questions'],
                 },
-                required: ['id', 'name', 'questions'],
               },
             },
+            required: ['title', 'pattern', 'durationMinutes', 'sections'],
           },
-          required: ['title', 'pattern', 'durationMinutes', 'sections'],
         },
-      },
-    });
+      });
 
-    const parsedData = cleanAndParseJSON(response.text);
+      parsedData = cleanAndParseJSON(response.text);
+    } catch (aiError: any) {
+      console.warn('[inspiro AI] Primary AI generation caught error:', aiError?.message);
+      // Auto fallback if text was provided!
+      if (textQuestions && textQuestions.trim()) {
+        console.log('[inspiro AI] Auto-falling back to deterministic parser for text input...');
+        const fallbackRes = parsePastedQuestionsInstant(
+          textQuestions,
+          examTitle,
+          pattern,
+          customDurationMinutes || 180
+        );
+        if (fallbackRes.success && fallbackRes.paper) {
+          return res.json({
+            success: true,
+            mode: 'FALLBACK_INSTANT_PARSER',
+            note: 'Converted seamlessly via Instant Parser (AI was busy with high demand)',
+            examPaper: fallbackRes.paper,
+            data: fallbackRes.paper,
+          });
+        }
+      }
+      throw aiError;
+    }
 
     // Post-processing & Sanitization: Ensure sections and question numbering are robust
     if (!parsedData.sections || !Array.isArray(parsedData.sections) || parsedData.sections.length === 0) {

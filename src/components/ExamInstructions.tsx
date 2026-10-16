@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ExamPaper, UIMode } from '../types/exam';
 import { CheckCircle2, AlertCircle, Clock, ShieldCheck, Monitor, Flame } from 'lucide-react';
+import { InspiroLogo } from './InspiroLogo';
 
 interface ExamInstructionsProps {
   paper: ExamPaper;
@@ -26,18 +27,7 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
         <div className="bg-black text-white px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2 select-none">
-              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
-                <img
-                  src="/src/assets/images/inspiro_logo.png"
-                  alt="inspiro logo"
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="flex items-baseline gap-1.5 font-display text-lg font-black tracking-tight">
-                <span className="text-white">inspiro</span>
-                <span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.6)]">LIVE</span>
-              </div>
+              <InspiroLogo size="sm" showText />
               <span className="text-[10px] tracking-wider text-red-400 font-bold uppercase px-2 py-0.5 rounded bg-red-600/10 border border-red-500/20 ml-1">
                 {paper.pattern.replace('_', ' ')} CBT
               </span>

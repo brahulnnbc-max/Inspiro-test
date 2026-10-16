@@ -8,6 +8,12 @@ import {
 } from '../types/exam';
 import { MathRenderer } from './MathRenderer';
 import { RemedialPracticeModal } from './RemedialPracticeModal';
+import { InspiroLogo } from './InspiroLogo';
+import {
+  estimateMathonGoPercentile,
+  ShiftDifficulty,
+  PercentileReport,
+} from '../utils/mathongoPercentileEstimator';
 import {
   Trophy,
   CheckCircle2,
@@ -25,6 +31,9 @@ import {
   Sparkles,
   BookmarkPlus,
   Zap,
+  Target,
+  Sliders,
+  Award,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -58,6 +67,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
   const [selectedReasons, setSelectedReasons] = useState<
     Record<string, MistakeReason>
   >({});
+  const [shiftDifficulty, setShiftDifficulty] = useState<ShiftDifficulty>('MODERATE');
 
   // Remedial PYQ practice modal state
   const [remedialPack, setRemedialPack] = useState<RemedialPack | null>(null);
@@ -190,12 +200,26 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
         ? Math.round((correctCount / totalAttempted) * 100)
         : 0;
 
-    let estimatedPercentile = '85.0 - 90.0';
-    const scoreFraction = Math.max(0, totalScore) / paper.totalMarks;
-    if (scoreFraction >= 0.8) estimatedPercentile = '99.5 - 99.9+';
-    else if (scoreFraction >= 0.65) estimatedPercentile = '98.5 - 99.4';
-    else if (scoreFraction >= 0.5) estimatedPercentile = '96.0 - 98.4';
-    else if (scoreFraction >= 0.35) estimatedPercentile = '90.0 - 95.9';
+    // MathonGo-calibrated realistic percentile & rank evaluation
+    const percentileReport = estimateMathonGoPercentile(
+      totalScore,
+      paper.totalMarks,
+      paper.pattern,
+      shiftDifficulty
+    );
+
+    // Subject-wise percentiles
+    const subjectPercentiles: Record<string, string> = {};
+    Object.keys(subjectBreakdown).forEach((secId) => {
+      const secData = subjectBreakdown[secId];
+      const secReport = estimateMathonGoPercentile(
+        secData.score,
+        secData.maxMarks,
+        'JEE_MAIN',
+        shiftDifficulty
+      );
+      subjectPercentiles[secId] = secReport.percentileString;
+    });
 
     const totalTimeSeconds = Object.values(attempt.timeSpentSeconds).reduce(
       (a, b) => a + b,
@@ -210,13 +234,15 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
       unattemptedCount,
       totalAttempted,
       accuracy,
-      estimatedPercentile,
+      estimatedPercentile: percentileReport.percentileString,
+      percentileReport,
+      subjectPercentiles,
       timeSpentMins,
       subjectBreakdown,
       timeTraps,
       rushedErrors,
     };
-  }, [paper, attempt]);
+  }, [paper, attempt, shiftDifficulty]);
 
   // Evaluated question list
   const evaluatedQuestions = useMemo(() => {
@@ -365,18 +391,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 select-none mb-1">
-                <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shadow-[0_0_12px_rgba(220,38,38,0.4)] border border-zinc-800 bg-zinc-900 shrink-0">
-                  <img
-                    src="/src/assets/images/inspiro_logo.png"
-                    alt="inspiro logo"
-                    className="w-full h-full object-contain"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className="flex items-baseline gap-1.5 font-display text-lg font-black tracking-tight">
-                  <span className="text-white">inspiro</span>
-                  <span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.6)]">LIVE</span>
-                </div>
+                <InspiroLogo size="sm" showText />
                 <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider px-2 py-0.5 rounded bg-red-600/10 border border-red-500/20 ml-1">
                   Performance Analysis
                 </span>
@@ -389,7 +404,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
               </p>
             </div>
 
-            <div className="bg-black/80 px-6 py-4 rounded-xl border border-zinc-800 text-center shrink-0 shadow-lg">
+            <div className="bg-black/90 px-6 py-4 rounded-xl border border-zinc-800 text-center shrink-0 shadow-lg min-w-[220px]">
               <div className="text-xs text-zinc-400 uppercase font-medium tracking-wider">
                 Total Score
               </div>
@@ -399,8 +414,12 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                   / {paper.totalMarks}
                 </span>
               </div>
-              <div className="text-[11px] text-red-400 mt-1 font-semibold">
-                Est. Percentile: {analytics.estimatedPercentile}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-950/80 border border-red-800 text-red-300 text-xs font-bold font-mono mt-2">
+                <span>{analytics.percentileReport.percentileString}</span>
+                <span className="text-[10px] text-zinc-400 font-sans font-normal">• MathonGo Shift Model</span>
+              </div>
+              <div className="text-[11px] text-zinc-400 font-mono mt-1">
+                {analytics.percentileReport.rankRange}
               </div>
             </div>
           </div>
@@ -430,6 +449,126 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
               <span className="text-xl font-bold font-mono text-white">
                 {analytics.timeSpentMins}m / {paper.durationMinutes}m
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* MATHONGO CALIBRATED REALISTIC PERCENTILE & AIR RANK PREDICTOR */}
+        <div className="bg-zinc-950 rounded-2xl p-6 border border-zinc-800 shadow-2xl space-y-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]">
+                  MathonGo Calibrated
+                </span>
+                <span className="text-xs text-zinc-400">
+                  {paper.pattern === 'JEE_ADVANCED' ? 'JEE Advanced Rank Matrix' : 'NTA JEE Main Normalization Model'}
+                </span>
+              </div>
+              <h2 className="text-lg md:text-xl font-bold font-display text-white mt-1 flex items-center gap-2">
+                <Award className="w-5 h-5 text-red-500" />
+                Realistic Marks vs Percentile & AIR Console
+              </h2>
+            </div>
+
+            {/* Shift Difficulty Selector (MathonGo Signature Feature) */}
+            {paper.pattern !== 'JEE_ADVANCED' && (
+              <div className="flex items-center gap-1.5 p-1 bg-black rounded-xl border border-zinc-800 text-xs">
+                <span className="text-[11px] font-semibold text-zinc-500 px-2 flex items-center gap-1">
+                  <Sliders className="w-3.5 h-3.5" />
+                  Shift:
+                </span>
+                {(
+                  [
+                    { id: 'TOUGH', label: '🔥 Tough Shift' },
+                    { id: 'MODERATE', label: '⚖️ Moderate Shift' },
+                    { id: 'EASY', label: '⚡ Easy Shift' },
+                  ] as const
+                ).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setShiftDifficulty(s.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      shiftDifficulty === s.id
+                        ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 3-Column MathonGo Metric Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Card 1: Percentile & AIR */}
+            <div className="p-5 rounded-xl bg-black border border-zinc-800/80 space-y-3 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block">
+                  {paper.pattern === 'JEE_ADVANCED' ? 'Predicted IIT Rank' : 'Estimated NTA Percentile'}
+                </span>
+                <div className="text-3xl font-black font-mono text-white mt-1 flex items-baseline gap-2">
+                  <span className="text-red-500 font-black">{analytics.percentileReport.percentileString}</span>
+                </div>
+                <div className="text-xs text-zinc-400 font-mono mt-1">
+                  Confidence Band: <strong className="text-white">{analytics.percentileReport.percentileRange}</strong>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-zinc-900 space-y-1">
+                <div className="text-xs font-bold text-white flex items-center justify-between">
+                  <span>Predicted All India Rank (AIR):</span>
+                  <span className="font-mono text-red-400">~{analytics.percentileReport.estimatedRank.toLocaleString()}</span>
+                </div>
+                <div className="text-[11px] text-zinc-500 font-mono">
+                  {analytics.percentileReport.rankRange}
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: College Admission & Branch Predictor */}
+            <div className="p-5 rounded-xl bg-black border border-zinc-800/80 space-y-3 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block">
+                  College Admission Probability
+                </span>
+                <div className="text-xs font-bold text-emerald-400 mt-1 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>{analytics.percentileReport.categoryCutoffStatus}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 pt-2 border-t border-zinc-900">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Eligible Institutes & Branches:</span>
+                {analytics.percentileReport.targetColleges.map((col, idx) => (
+                  <div key={idx} className="text-xs text-zinc-300 flex items-start gap-1.5">
+                    <span className="text-red-500 shrink-0">•</span>
+                    <span>{col}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Card 3: Next Score Milestone (Targeting +1%ile) */}
+            <div className="p-5 rounded-xl bg-black border border-zinc-800/80 space-y-3 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider block flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5 text-red-400" />
+                  Next Rank Milestone (+{analytics.percentileReport.nextMilestone.marksNeeded} Marks)
+                </span>
+                <div className="text-sm font-bold text-white mt-1">
+                  Target: Reach <span className="text-red-400 font-mono">{analytics.percentileReport.nextMilestone.targetPercentile}%ile</span>
+                </div>
+                <div className="text-xs text-zinc-400 mt-1">
+                  Jump approximately <strong className="text-white font-mono">+{analytics.percentileReport.nextMilestone.rankJump.toLocaleString()}</strong> AIR ranks.
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800/80 text-[11px] text-zinc-300 leading-relaxed">
+                💡 <strong className="text-white">Kota Faculty Advice:</strong> {analytics.percentileReport.nextMilestone.advice}
+              </div>
             </div>
           </div>
         </div>
@@ -520,9 +659,16 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                       <span className="w-2 h-2 rounded-full bg-red-500" />
                       {secData.name}
                     </span>
-                    <span className="text-lg font-black font-mono text-red-500">
-                      {secData.score} <span className="text-xs text-zinc-500 font-normal">/ {secData.maxMarks}</span>
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-black font-mono text-red-500">
+                        {secData.score} <span className="text-xs text-zinc-500 font-normal">/ {secData.maxMarks}</span>
+                      </span>
+                      {analytics.subjectPercentiles[secId] && (
+                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-red-950/60 border border-red-800/80 text-red-300">
+                          {analytics.subjectPercentiles[secId]}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-center text-xs my-4 py-2.5 bg-black rounded-xl border border-zinc-900">
