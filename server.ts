@@ -4,7 +4,7 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import app from './src/apiApp.ts';
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Start Express server and mount Vite middleware
 async function startServer() {

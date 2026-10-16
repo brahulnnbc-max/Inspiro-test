@@ -1,4 +1,4 @@
-import { ExamPattern } from '../types/exam';
+import type { ExamPattern } from '../types/exam.ts';
 
 export type ShiftDifficulty = 'TOUGH' | 'MODERATE' | 'EASY';
 

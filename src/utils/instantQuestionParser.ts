@@ -1,4 +1,4 @@
-import { ExamPaper, ExamPattern, Question, ExamSection } from '../types/exam';
+import type { ExamPaper, ExamPattern, Question, ExamSection } from '../types/exam.ts';
 
 export interface ParseResult {
   success: boolean;
