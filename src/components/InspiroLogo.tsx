@@ -62,9 +62,11 @@ export const InspiroLogo: React.FC<InspiroLogoProps> = ({
       </div>
 
       {showText && (
-        <div className="flex items-baseline gap-1.5 font-display text-xl md:text-2xl font-black tracking-tight">
+        <div className={`flex items-baseline gap-1 font-display font-bold tracking-tight ${
+          size === 'xs' || size === 'sm' ? 'text-sm md:text-base' : 'text-xl md:text-2xl font-black'
+        }`}>
           <span className={variant === 'light' ? 'text-slate-900' : 'text-white'}>inspiro</span>
-          <span className="text-red-600 drop-shadow-[0_0_12px_rgba(220,38,38,0.6)]">LIVE</span>
+          <span className="text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.5)]">LIVE</span>
         </div>
       )}
     </div>

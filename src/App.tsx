@@ -384,12 +384,24 @@ export default function App() {
           savedCustomPapers={customPapers}
           onSaveCustomPaper={handleSaveCustomPaper}
           mistakes={mistakes}
+          onRemoveMistake={handleRemoveMistake}
+          onUpdateMistakeReason={handleUpdateMistakeReason}
           onPracticeSimilar={handlePracticeSimilarFromNotebook}
           scheduledTests={scheduledTests}
           onToggleTopic={handleToggleTopic}
           onEnterLiveTest={handleEnterLiveTest}
+          onAttachPaper={handleAttachPaper}
           onAddCustomSchedule={handleAddCustomSchedule}
           onDeleteScheduledTest={handleDeleteScheduledTest}
+          routineItems={routineItems}
+          onStartRoutineTask={handleStartRoutineTask}
+          onToggleRoutineComplete={handleToggleRoutineComplete}
+          onAddCustomRoutine={handleAddCustomRoutine}
+          onDeleteRoutineItem={handleDeleteRoutineItem}
+          taggedRaceQuestions={taggedRaceQuestions}
+          onRemoveTaggedQuestion={handleRemoveTaggedQuestion}
+          onUpdateQuestionTags={handleUpdateQuestionTags}
+          onToggleTagOnQuestion={handleToggleTagOnQuestion}
         />
       )}
 

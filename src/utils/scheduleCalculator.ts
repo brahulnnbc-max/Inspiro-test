@@ -266,3 +266,82 @@ export function generateLockedSchedule(options: ScheduleOptions): ScheduledTest[
 
   return tests;
 }
+
+export interface LiveWindowInfo {
+  status: 'UPCOMING_LOCKED' | 'STARTING_SOON' | 'LIVE_NOW' | 'ENDING_SOON' | 'MISSED' | 'COMPLETED';
+  isLive: boolean;
+  canEnter: boolean;
+  timeRemainingMinutes: number;
+  message: string;
+  badgeColor: string;
+}
+
+/**
+ * Calculates live window status with strict locked start/end durations and reminders
+ */
+export function getLiveTestWindowStatus(test: ScheduledTest, now: Date = new Date()): LiveWindowInfo {
+  if (test.status === 'COMPLETED') {
+    return {
+      status: 'COMPLETED',
+      isLive: false,
+      canEnter: false,
+      timeRemainingMinutes: 0,
+      message: 'Completed',
+      badgeColor: 'emerald',
+    };
+  }
+
+  const [startH, startM] = (test.startTime || '09:00').split(':').map(Number);
+  const [endH, endM] = (test.endTime || '12:00').split(':').map(Number);
+
+  // Parse test start & end timestamps
+  const testStartDate = new Date(`${test.scheduledDate}T${String(startH || 9).padStart(2, '0')}:${String(startM || 0).padStart(2, '0')}:00`);
+  const testEndDate = new Date(`${test.scheduledDate}T${String(endH || 12).padStart(2, '0')}:${String(endM || 0).padStart(2, '0')}:00`);
+
+  const nowMs = now.getTime();
+  const startMs = testStartDate.getTime();
+  const endMs = testEndDate.getTime();
+
+  // If scheduled test date & end time have already passed without completion
+  if (nowMs > endMs) {
+    return {
+      status: 'MISSED',
+      isLive: false,
+      canEnter: false,
+      timeRemainingMinutes: 0,
+      message: 'MISSED (Test Window Closed)',
+      badgeColor: 'red',
+    };
+  }
+
+  // If currently strictly within live duration (between startTime and endTime)
+  if (nowMs >= startMs && nowMs <= endMs) {
+    const minsLeft = Math.max(0, Math.round((endMs - nowMs) / 60000));
+    const isEndingSoon = minsLeft <= 15;
+    return {
+      status: isEndingSoon ? 'ENDING_SOON' : 'LIVE_NOW',
+      isLive: true,
+      canEnter: true,
+      timeRemainingMinutes: minsLeft,
+      message: isEndingSoon ? `⚠️ Ending in ${minsLeft}m! Submit soon.` : `🔴 Live Now (${minsLeft}m left)`,
+      badgeColor: isEndingSoon ? 'amber' : 'red',
+    };
+  }
+
+  // Before start time: Locked until start time
+  const minsToStart = Math.max(0, Math.round((startMs - nowMs) / 60000));
+  const isStartingSoon = minsToStart <= 15;
+  const hoursToStart = Math.floor(minsToStart / 60);
+  const remMins = minsToStart % 60;
+  const startStr = hoursToStart > 0 ? `${hoursToStart}h ${remMins}m` : `${remMins}m`;
+
+  return {
+    status: isStartingSoon ? 'STARTING_SOON' : 'UPCOMING_LOCKED',
+    isLive: false,
+    canEnter: false,
+    timeRemainingMinutes: minsToStart,
+    message: isStartingSoon ? `⏰ Starts in ${startStr}!` : `Opens in ${startStr} (at ${test.startTime})`,
+    badgeColor: isStartingSoon ? 'amber' : 'zinc',
+  };
+}
+
