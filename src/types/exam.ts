@@ -27,6 +27,7 @@ export interface Question {
   type: QuestionType;
   promptLatex: string;
   diagramDescription?: string;
+  imageUrl?: string;
   options?: QuestionOption[];
   correctAnswer?: string; // 'A', 'B', 'C', 'D' or '25' or 'A,C'
   explanationLatex?: string;

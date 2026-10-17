@@ -34,6 +34,8 @@ import {
   Target,
   Sliders,
   Award,
+  ZoomIn,
+  X,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -72,6 +74,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
   // Remedial PYQ practice modal state
   const [remedialPack, setRemedialPack] = useState<RemedialPack | null>(null);
   const [isLoadingRemedial, setIsLoadingRemedial] = useState(false);
+  const [zoomedImg, setZoomedImg] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -837,6 +840,25 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                           <MathRenderer content={q.promptLatex} />
                         </div>
 
+                        {q.imageUrl && (
+                          <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col items-center">
+                            <img
+                              src={q.imageUrl}
+                              alt={`Diagram for Question ${q.questionNumber}`}
+                              className="max-h-72 w-auto object-contain rounded-lg cursor-zoom-in"
+                              onClick={() => setZoomedImg(q.imageUrl || null)}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setZoomedImg(q.imageUrl || null)}
+                              className="mt-2 text-[11px] font-semibold text-zinc-400 hover:text-white flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-800 hover:border-red-600 transition-colors shadow-xs"
+                            >
+                              <ZoomIn className="w-3.5 h-3.5 text-red-500" />
+                              <span>Inspect Diagram Fullscreen</span>
+                            </button>
+                          </div>
+                        )}
+
                         {/* Options */}
                         {q.options && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -1037,6 +1059,42 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
           setIsLoadingRemedial(false);
         }}
       />
+
+      {/* Lightbox Image Zoom Modal */}
+      {zoomedImg && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-zoom-out"
+          onClick={() => setZoomedImg(null)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[90vh] bg-zinc-950 p-4 rounded-2xl border border-zinc-800 shadow-2xl flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setZoomedImg(null)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={zoomedImg}
+              alt="Enlarged Question Diagram"
+              className="max-h-[80vh] w-auto object-contain rounded-lg shadow-lg"
+            />
+            <div className="mt-3 text-xs text-zinc-400 font-medium flex items-center gap-2">
+              <span>Question Diagram Inspection</span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => setZoomedImg(null)}
+                className="text-red-400 hover:text-red-300 font-bold underline"
+              >
+                Close (or click outside)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

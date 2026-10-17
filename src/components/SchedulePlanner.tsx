@@ -58,6 +58,57 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
   const [expandedTestIds, setExpandedTestIds] = useState<Record<string, boolean>>({});
   const [earlyUnlockOverrides, setEarlyUnlockOverrides] = useState<Record<string, boolean>>({});
 
+  // Coaching material multi-month scheduler state
+  const [scheduleInputMode, setScheduleInputMode] = useState<'MATERIAL' | 'COMMAND'>('MATERIAL');
+  const [coachingMaterialText, setCoachingMaterialText] = useState('');
+  const [selectedHorizonMonths, setSelectedHorizonMonths] = useState<3 | 6>(6);
+  const [testCount, setTestCount] = useState<number>(8);
+
+  const handleLoadSampleCoachingMaterial = () => {
+    setCoachingMaterialText(`ALLEN LEADER KOTA - CLASS 11 & 12 COMPLETE SYLLABUS:
+
+PHYSICS:
+1. Physical World, Units & Dimensions, Vectors
+2. Kinematics 1D & 2D (Projectile Motion)
+3. Newton's Laws of Motion & Friction
+4. Work, Energy & Power, Circular Motion
+5. Center of Mass, Momentum & Collisions
+6. Rotational Motion & Moment of Inertia
+7. Gravitation & Fluid Mechanics
+8. Thermodynamics, Calorimetry & Heat Transfer
+9. SHM & Mechanical Waves
+10. Electrostatics & Current Electricity
+11. Magnetism & Magnetic Effects of Current
+12. Electromagnetic Induction (EMI) & AC
+13. Ray & Wave Optics
+14. Modern Physics, Atoms, Nuclei & Semiconductors
+
+CHEMISTRY:
+1. Mole Concept & Atomic Structure
+2. Periodic Properties & Chemical Bonding
+3. Chemical & Ionic Equilibrium
+4. Chemical Thermodynamics & Redox
+5. Electrochemistry & Chemical Kinetics
+6. Solutions & Colligative Properties
+7. Coordination Compounds & d-Block
+8. General Organic Chemistry (GOC) & Isomerism
+9. Hydrocarbons & Haloalkanes
+10. Oxygen Containing Organic (Alcohols, Aldehydes, Ketones, Acids)
+11. Nitrogen Compounds, Biomolecules & Polymers
+
+MATHEMATICS:
+1. Sets, Relations, Functions & Quadratic Equations
+2. Complex Numbers & Sequences and Series
+3. Permutations, Combinations & Binomial Theorem
+4. Matrices & Determinants
+5. Straight Lines, Circles & Conic Sections
+6. Limits, Continuity, Differentiability & AOD
+7. Indefinite & Definite Integrals
+8. Differential Equations & Area Under Curves
+9. Vectors & 3D Geometry
+10. Probability & Statistics`);
+  };
+
   // Attach paper modal state
   const [attachingTestId, setAttachingTestId] = useState<string | null>(null);
   const [isModalUploading, setIsModalUploading] = useState(false);
@@ -160,8 +211,19 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
 
   // Natural Language AI Command Schedule Generation
   const handleGenerateSchedule = async (presetCommand?: string) => {
-    const textToUse = presetCommand || commandText;
-    if (!textToUse.trim()) return;
+    let textToUse = presetCommand;
+    let countToUse = testCount;
+    if (!textToUse) {
+      if (scheduleInputMode === 'MATERIAL') {
+        textToUse = coachingMaterialText.trim()
+          ? `Convert the following coaching material chapters into a ${selectedHorizonMonths}-month periodic test series with ${testCount} tests on alternate Sundays: \n\n${coachingMaterialText.trim()}`
+          : '';
+        countToUse = testCount;
+      } else {
+        textToUse = commandText.trim();
+      }
+    }
+    if (!textToUse || !textToUse.trim()) return;
 
     setIsGenerating(true);
     setGenError('');
@@ -172,6 +234,7 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           command: textToUse,
+          numberOfTests: countToUse,
           currentDate: new Date().toISOString().split('T')[0],
         }),
       });
@@ -227,78 +290,194 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
 
   return (
     <div className="space-y-8 text-white">
-      {/* 1. AI COMMAND BAR: ARRANGE 3-6 MONTH SCHEDULE */}
+      {/* 1. AI ROADMAP BUILDER: CONVERT COACHING MATERIAL INTO MULTI-MONTH TEST SERIES */}
       <div className="bg-zinc-950 rounded-2xl p-6 border border-zinc-800 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-wider">
               <Sparkles className="w-4 h-4 text-red-500" />
-              inspiro AI Roadmap Builder
+              inspiro AI Test Roadmap Builder
             </div>
             <h2 className="text-lg md:text-xl font-bold font-display text-white mt-0.5">
-              Command inspiro AI to Arrange Your 3 to 6-Month Test Schedule
+              Convert Coaching Material & Syllabus into a Multi-Month Test Series
             </h2>
             <p className="text-xs text-zinc-400 mt-1">
-              Tell inspiro AI your coaching syllabus, test frequency, or paste your Allen / FIITJEE test schedule.
+              Paste your Allen, FIITJEE, Resonance, or MathonGo chapter list. AI organizes it into periodic Minor & Major tests with checklists.
             </p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-1.5 p-1 bg-black rounded-xl border border-zinc-800 self-start md:self-auto">
+            <button
+              type="button"
+              onClick={() => setScheduleInputMode('MATERIAL')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                scheduleInputMode === 'MATERIAL'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Paste Coaching Material
+            </button>
+            <button
+              type="button"
+              onClick={() => setScheduleInputMode('COMMAND')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                scheduleInputMode === 'COMMAND'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Quick Command
+            </button>
           </div>
         </div>
 
-        {/* Command Input Box */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
-            value={commandText}
-            onChange={(e) => setCommandText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleGenerateSchedule()}
-            placeholder="e.g. Schedule 8 Allen Leader periodic tests on alternate Sundays covering 11th then 12th syllabus with live 9am windows"
-            disabled={isGenerating}
-            className="flex-1 px-4 py-3 text-xs md:text-sm rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
-          />
-          <button
-            onClick={() => handleGenerateSchedule()}
-            disabled={!commandText.trim() || isGenerating}
-            className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
-          >
-            <Sparkles className="w-4 h-4 text-white" />
-            {isGenerating ? 'Arranging Schedule...' : 'Command inspiro AI to Build'}
-          </button>
-        </div>
+        {/* Mode A: Paste Coaching Material */}
+        {scheduleInputMode === 'MATERIAL' ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-zinc-400 font-semibold">Schedule Horizon:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedHorizonMonths(3);
+                    setTestCount(6);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${
+                    selectedHorizonMonths === 3
+                      ? 'bg-red-600 text-white border-red-500'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  ⚡ 3 Months (6 Periodic Tests)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedHorizonMonths(6);
+                    setTestCount(8);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${
+                    selectedHorizonMonths === 6
+                      ? 'bg-red-600 text-white border-red-500'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  🎯 6 Months (8 Periodic Tests)
+                </button>
+              </div>
 
-        {/* Quick Presets */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-          <span className="text-zinc-400 font-medium">Quick Presets:</span>
-          <button
-            onClick={() =>
-              handleGenerateSchedule(
-                'Create an Allen Leader 6-Month Test Series with 8 tests on alternate Sundays, covering class 11th and 12th physics, chemistry, and math syllabus progressively'
-              )
-            }
-            className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-red-600 transition-colors"
-          >
-            🎯 Allen Leader 6-Month (8 Tests)
-          </button>
-          <button
-            onClick={() =>
-              handleGenerateSchedule(
-                'Create a 3-Month JEE Intensive Booster Series with 6 tests every 2 weeks, focusing on high-weightage chapters in mechanics, calculus, and physical chemistry'
-              )
-            }
-            className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-red-600 transition-colors"
-          >
-            ⚡ 3-Month High-Yield (6 Tests)
-          </button>
-          <button
-            onClick={() =>
-              handleGenerateSchedule(
-                'Create an All India Open Mock Test Series with 6 Full Syllabus tests scheduled on consecutive Sundays'
-              )
-            }
-            className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-red-600 transition-colors"
-          >
-            🏆 Full Syllabus Ranker Mocks (6 Tests)
-          </button>
-        </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleLoadSampleCoachingMaterial}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700 transition-all font-semibold"
+                >
+                  💡 Load Kota Syllabus Sample
+                </button>
+                {coachingMaterialText && (
+                  <button
+                    type="button"
+                    onClick={() => setCoachingMaterialText('')}
+                    className="px-2 py-1 text-zinc-500 hover:text-red-400 transition-all font-semibold"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <textarea
+              rows={6}
+              value={coachingMaterialText}
+              onChange={(e) => setCoachingMaterialText(e.target.value)}
+              placeholder="Paste your coaching material chapters, module index, or syllabus roadmap here... e.g.:
+PHYSICS: Kinematics, Newton's Laws, Work Energy Power, Rotational Motion, Gravitation, Thermodynamics, Electrostatics, Optics...
+CHEMISTRY: Mole Concept, Atomic Structure, Periodic Table, Chemical Bonding, Equilibrium, GOC, Coordination Chemistry...
+MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, Calculus, Vectors & 3D..."
+              className="w-full px-4 py-3 text-xs md:text-sm font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
+            />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <span className="text-[11px] text-zinc-400">
+                AI distributes all pasted chapters across alternate Sundays with chapter checklists & CBT exam links.
+              </span>
+              <button
+                type="button"
+                onClick={() => handleGenerateSchedule()}
+                disabled={!coachingMaterialText.trim() || isGenerating}
+                className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+                {isGenerating
+                  ? `Arranging ${selectedHorizonMonths}-Month Roadmap...`
+                  : `Convert to ${selectedHorizonMonths}-Month Test Series`}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Mode B: Quick Natural Language Command */
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={commandText}
+                onChange={(e) => setCommandText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleGenerateSchedule()}
+                placeholder="e.g. Schedule 8 Allen Leader periodic tests on alternate Sundays covering 11th then 12th syllabus with live 9am windows"
+                disabled={isGenerating}
+                className="flex-1 px-4 py-3 text-xs md:text-sm rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-500 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
+              />
+              <button
+                onClick={() => handleGenerateSchedule()}
+                disabled={!commandText.trim() || isGenerating}
+                className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+                {isGenerating ? 'Arranging Schedule...' : 'Build Test Series'}
+              </button>
+            </div>
+
+            {/* Quick Presets */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+              <span className="text-zinc-400 font-medium">Quick Presets:</span>
+              <button
+                onClick={() =>
+                  handleGenerateSchedule(
+                    'Create an Allen Leader 6-Month Test Series with 8 tests on alternate Sundays, covering class 11th and 12th physics, chemistry, and math syllabus progressively'
+                  )
+                }
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-red-600 transition-colors"
+              >
+                🎯 Allen Leader 6-Month (8 Tests)
+              </button>
+              <button
+                onClick={() =>
+                  handleGenerateSchedule(
+                    'Create a 3-Month JEE Intensive Booster Series with 6 tests every 2 weeks, focusing on high-weightage chapters in mechanics, calculus, and physical chemistry'
+                  )
+                }
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-red-600 transition-colors"
+              >
+                ⚡ 3-Month High-Yield (6 Tests)
+              </button>
+              <button
+                onClick={() =>
+                  handleGenerateSchedule(
+                    'Create an All India Open Mock Test Series with 6 Full Syllabus tests scheduled on consecutive Sundays'
+                  )
+                }
+                className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 hover:border-red-600 transition-colors"
+              >
+                🏆 Full Syllabus Ranker Mocks (6 Tests)
+              </button>
+            </div>
+          </div>
+        )}
 
         {genError && (
           <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-800/80 text-xs text-red-300 flex items-center gap-2">

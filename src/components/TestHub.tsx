@@ -21,6 +21,7 @@ import { MathRenderer } from './MathRenderer';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import { InspiroLogo } from './InspiroLogo';
 import { DiagnosisWorkbench } from './DiagnosisWorkbench';
+import { compressImageFile, CompressedImage } from '../utils/imageCompressor';
 import {
   UploadCloud,
   FileText,
@@ -50,6 +51,9 @@ import {
   ChevronUp,
   Copy,
   Check,
+  Image as ImageIcon,
+  Paperclip,
+  X,
 } from 'lucide-react';
 
 interface TestHubProps {
@@ -164,6 +168,61 @@ export const TestHub: React.FC<TestHubProps> = ({
   const solFileInputRef = useRef<HTMLInputElement | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
 
+  // Attached question photos & screenshots
+  const [attachedImages, setAttachedImages] = useState<CompressedImage[]>([]);
+  const [isCompressingImages, setIsCompressingImages] = useState(false);
+  const [pastedNotification, setPastedNotification] = useState('');
+  const imgInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleAttachImageFiles = async (files: FileList | File[]) => {
+    const list = Array.from(files);
+    if (list.length === 0) return;
+    setIsCompressingImages(true);
+    try {
+      const compressedList = await Promise.all(
+        list.map((f) => compressImageFile(f, f.name))
+      );
+      setAttachedImages((prev) => [...prev, ...compressedList]);
+    } catch (err: any) {
+      console.error('Image compression error:', err);
+    } finally {
+      setIsCompressingImages(false);
+    }
+  };
+
+  const handleRemoveImage = (id: string) => {
+    setAttachedImages((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const handlePasteOnTextarea = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) imageFiles.push(file);
+      }
+    }
+    if (imageFiles.length > 0) {
+      setIsCompressingImages(true);
+      try {
+        const compressedList = await Promise.all(
+          imageFiles.map((f, idx) =>
+            compressImageFile(f, `Screenshot_${Date.now()}_${idx + 1}.jpg`)
+          )
+        );
+        setAttachedImages((prev) => [...prev, ...compressedList]);
+        setPastedNotification(`Attached ${imageFiles.length} screenshot(s) from clipboard!`);
+        setTimeout(() => setPastedNotification(''), 4000);
+      } catch (err) {
+        console.error('Clipboard paste compression error:', err);
+      } finally {
+        setIsCompressingImages(false);
+      }
+    }
+  };
+
   // 1-Click prompt copy for ChatGPT / Claude / DeepSeek
   const handleCopyExtractionPrompt = () => {
     const prompt = `Please extract all questions from this document into clean, structured text in this exact format so I can paste it into my JEE CBT simulator:
@@ -219,7 +278,8 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
       pastedQuestionText,
       examTitle,
       selectedPattern,
-      customDuration
+      customDuration,
+      attachedImages
     );
     if (!result.success || !result.paper) {
       setErrorMsg(
@@ -232,19 +292,22 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
     setExtractedPaperResult(result.paper);
   };
 
-  // Convert files using Advanced Gemini 3.8 Flash Vision Engine
+  // Convert files using High-Speed Gemini Vision Engine
   const handleStartConversion = async () => {
-    if (ingestionType === 'FILE' && !questionFile) {
-      setErrorMsg('Please select a Question Paper or Module Exercise PDF / Image first');
-      return;
-    }
-    if (ingestionType === 'TEXT' && !pastedQuestionText.trim()) {
-      setErrorMsg('Please paste question paper or DPP text to extract questions');
+    const hasInput =
+      (ingestionType === 'FILE' && questionFile) ||
+      (ingestionType === 'TEXT' && (pastedQuestionText.trim() || attachedImages.length > 0));
+
+    if (!hasInput) {
+      setErrorMsg('Please paste question text or attach question photos/screenshots.');
       return;
     }
 
     const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-    const totalBytes = (questionFile ? questionFile.size : 0) + (solutionFile ? solutionFile.size : 0);
+    const totalBytes =
+      (questionFile ? questionFile.size : 0) +
+      (solutionFile ? solutionFile.size : 0) +
+      attachedImages.reduce((sum, img) => sum + img.compressedSize, 0);
     const maxLimit = isVercel ? 4 * 1024 * 1024 : 28 * 1024 * 1024;
     if (ingestionType === 'FILE' && totalBytes > maxLimit) {
       setErrorMsg(
@@ -260,7 +323,9 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
     setExtractedPaperResult(null);
     setActiveStageIndex(0);
     setUploadProgress(
-      ingestionType === 'FILE'
+      attachedImages.length > 0
+        ? `Preparing ${attachedImages.length} compressed question image(s) & text...`
+        : ingestionType === 'FILE'
         ? 'Reading & encoding PDF documents with OCR pre-processor...'
         : 'Parsing and structuring pasted question paper text...'
     );
@@ -287,8 +352,10 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
       setActiveStageIndex(1);
       setUploadProgress(
         solutionFile
-          ? 'Gemini 3.8 Flash Vision is cross-referencing Question Paper & Solutions with LaTeX...'
-          : 'Gemini 3.8 Flash Vision is deep-scanning all questions, diagrams, and formulas...'
+          ? 'Gemini 2.5 Flash is cross-referencing Question Paper & Solutions with LaTeX...'
+          : attachedImages.length > 0
+          ? `Gemini 2.5 Flash is extracting questions from text & ${attachedImages.length} attached image(s)...`
+          : 'Gemini 2.5 Flash is deep-scanning questions, diagrams, and formulas...'
       );
 
       const examTitle =
@@ -302,6 +369,11 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
         body: JSON.stringify({
           fileBase64: fileBase64 || undefined,
           textQuestions: ingestionType === 'TEXT' ? pastedQuestionText.trim() : undefined,
+          images: attachedImages.map((img) => ({
+            base64: img.base64,
+            mimeType: img.mimeType,
+            name: img.name,
+          })),
           solutionFileBase64: solutionFileBase64 || undefined,
           mimeType: questionFile?.type || 'application/pdf',
           examTitle,
@@ -351,7 +423,8 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
           pastedQuestionText,
           examTitle,
           selectedPattern,
-          customDuration
+          customDuration,
+          attachedImages
         );
         if (instantResult.success && instantResult.paper) {
           onSaveCustomPaper(instantResult.paper);
@@ -907,16 +980,40 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                   </div>
                 </div>
               ) : (
-                /* Ingestion Type: TEXT (Direct Question Paste Area) */
-                <div className="space-y-2.5">
+                /* Ingestion Type: TEXT (Direct Question Paste & Snap Mode) */
+                <div className="space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <label className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
                       <FileText className="w-4 h-4 text-red-500" />
-                      <span>Paste Questions / From ChatGPT, Claude, or OCR Text:</span>
+                      <span>Paste Questions & Attach Photos / Screenshots:</span>
                     </label>
 
                     {/* Quick Helper Actions */}
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      <input
+                        ref={imgInputRef}
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            handleAttachImageFiles(e.target.files);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => imgInputRef.current?.click()}
+                        disabled={isCompressingImages}
+                        className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-700/60 text-red-300 hover:text-white hover:bg-red-900 transition-all flex items-center gap-1.5 active:scale-95 shadow-xs"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5 text-red-400" />
+                        <span>{isCompressingImages ? 'Compressing...' : '+ Attach Question Photos'}</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={handleCopyExtractionPrompt}
@@ -934,7 +1031,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                         ) : (
                           <>
                             <Copy className="w-3.5 h-3.5 text-red-400" />
-                            <span>Copy Prompt for ChatGPT/Claude</span>
+                            <span>Copy Prompt for AI</span>
                           </>
                         )}
                       </button>
@@ -947,41 +1044,98 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                         💡 Load Sample
                       </button>
 
-                      {pastedQuestionText && (
+                      {(pastedQuestionText || attachedImages.length > 0) && (
                         <button
                           type="button"
-                          onClick={() => setPastedQuestionText('')}
+                          onClick={() => {
+                            setPastedQuestionText('');
+                            setAttachedImages([]);
+                          }}
                           className="text-[11px] font-semibold px-2 py-1 text-zinc-500 hover:text-red-400 transition-all"
                         >
-                          Clear
+                          Clear All
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <textarea
-                    rows={7}
-                    value={pastedQuestionText}
-                    onChange={(e) => setPastedQuestionText(e.target.value)}
-                    placeholder="Paste question text or JSON here... e.g.:
-1. A particle of mass m moves under the action of a force F = -kx. The time period is:
+                  {pastedNotification && (
+                    <div className="px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>{pastedNotification}</span>
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <textarea
+                      rows={6}
+                      value={pastedQuestionText}
+                      onChange={(e) => setPastedQuestionText(e.target.value)}
+                      onPaste={handlePasteOnTextarea}
+                      placeholder="Paste question text here, or press Ctrl+V to paste screenshot photos directly from your clipboard... e.g.:
+1. A particle of mass m moves under restoring force F = -kx. Time period is:
 (A) 2\pi \sqrt{m/k}
 (B) \pi \sqrt{m/k}
 (C) 2\pi \sqrt{k/m}
 (D) \sqrt{k/m}
-Answer: (A)
-Solution: Standard simple harmonic motion gives T = 2\pi\sqrt{m/k}
+Answer: (A)"
+                      className="w-full px-4 py-3 text-xs font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
+                    />
+                    <div className="absolute right-3 bottom-3 text-[10px] text-zinc-500 bg-zinc-950/80 px-2 py-0.5 rounded border border-zinc-800 pointer-events-none select-none">
+                      Tip: Ctrl+V pastes images
+                    </div>
+                  </div>
 
-2. Find the integer value of \int_0^2 x^3 dx.
-Answer: 4"
-                    className="w-full px-4 py-3 text-xs font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
-                  />
+                  {/* Attached Images Thumbnails Row */}
+                  {attachedImages.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[11px] font-bold text-zinc-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <ImageIcon className="w-3.5 h-3.5 text-red-500" />
+                          Attached Photos & Diagrams ({attachedImages.length}):
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          Auto-compressed for ultra-fast Gemini Vision processing
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                        {attachedImages.map((img) => (
+                          <div
+                            key={img.id}
+                            className="relative group bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex items-center gap-2 overflow-hidden hover:border-zinc-700 transition-all"
+                          >
+                            <img
+                              src={img.dataUrl}
+                              alt={img.name}
+                              className="w-10 h-10 object-cover rounded-lg bg-black border border-zinc-800 shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[11px] font-semibold text-zinc-200 truncate">
+                                {img.name}
+                              </p>
+                              <p className="text-[10px] text-zinc-500">
+                                {(img.compressedSize / 1024).toFixed(0)} KB
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(img.id)}
+                              className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+                              title="Remove image"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Pro-Tip banner */}
                   <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-start gap-2.5 text-[11px] text-zinc-400">
                     <Sparkles className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold text-zinc-200">Extracting from another AI?</span> Upload your question paper PDF to <span className="text-white font-semibold">ChatGPT</span>, <span className="text-white font-semibold">Claude</span>, or <span className="text-white font-semibold">DeepSeek</span> with our 1-click prompt above, then paste their output here. Click <span className="text-red-400 font-bold">⚡ Instant CBT Convert</span> to build your test in <span className="text-white font-bold">0.05 seconds</span> with zero serverless timeouts!
+                      <span className="font-bold text-zinc-200">Multimodal Input Ready:</span> You can paste text formulas AND attach screenshots of diagrams or question photos. Gemini 2.5 Flash will assemble them into complete Computer-Based Test questions in seconds!
                     </div>
                   </div>
                 </div>
@@ -999,24 +1153,28 @@ Answer: 4"
                     ) : (
                       <span>Select your PDF or Image file above to begin</span>
                     )
-                  ) : pastedQuestionText.trim() ? (
+                  ) : (pastedQuestionText.trim() || attachedImages.length > 0) ? (
                     <span className="text-red-400 font-semibold flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-red-500" />
-                      Ready to convert {pastedQuestionText.split('\n').length} lines of text
+                      Ready to convert{' '}
+                      {pastedQuestionText.trim() ? `${pastedQuestionText.split('\n').length} lines of text` : ''}
+                      {pastedQuestionText.trim() && attachedImages.length > 0 ? ' and ' : ''}
+                      {attachedImages.length > 0 ? `${attachedImages.length} attached photo(s)` : ''}
                     </span>
                   ) : (
-                    <span>Paste your question paper text above to begin</span>
+                    <span>Paste question text or attach photos above to begin</span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  {(questionFile || solutionFile || pastedQuestionText) && (
+                  {(questionFile || solutionFile || pastedQuestionText || attachedImages.length > 0) && (
                     <button
                       type="button"
                       onClick={() => {
                         setQuestionFile(null);
                         setSolutionFile(null);
                         setPastedQuestionText('');
+                        setAttachedImages([]);
                         setExtractedPaperResult(null);
                       }}
                       className="px-3 py-2 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-xl transition-all"
@@ -1041,11 +1199,21 @@ Answer: 4"
 
                   <button
                     onClick={handleStartConversion}
-                    disabled={(ingestionType === 'FILE' && !questionFile) || (ingestionType === 'TEXT' && !pastedQuestionText.trim()) || isUploading}
+                    disabled={
+                      (ingestionType === 'FILE' && !questionFile) ||
+                      (ingestionType === 'TEXT' && !pastedQuestionText.trim() && attachedImages.length === 0) ||
+                      isUploading
+                    }
                     className="px-6 py-2.5 text-xs font-black text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-4 h-4 text-white animate-pulse" />
-                    {isUploading ? 'Processing Questions...' : (ingestionType === 'TEXT' ? 'AI LaTeX Enhance & Launch' : 'Extract PDF & Launch CBT Test')}
+                    {isUploading
+                      ? 'Processing Questions...'
+                      : attachedImages.length > 0
+                      ? `AI Convert (${attachedImages.length} Photo${attachedImages.length > 1 ? 's' : ''} + Text)`
+                      : ingestionType === 'TEXT'
+                      ? 'AI Convert Text to CBT'
+                      : 'Extract PDF & Launch CBT Test'}
                   </button>
                 </div>
               </div>

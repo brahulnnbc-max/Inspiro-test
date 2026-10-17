@@ -31,6 +31,7 @@ import {
   Star,
   Zap,
   Flame,
+  ZoomIn,
 } from 'lucide-react';
 
 interface CBTExamRoomProps {
@@ -97,6 +98,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState(false);
+  const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
 
   // Active section reference
   const currentSection = useMemo(() => {
@@ -957,7 +959,26 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                   <MathRenderer content={currentQuestion.promptLatex} />
                 </div>
 
-                {currentQuestion.diagramDescription && (
+                {currentQuestion.imageUrl && (
+                  <div className="my-3 p-2.5 rounded-xl border border-zinc-700/60 bg-black/40 dark:bg-black/60 flex flex-col items-center group max-w-lg mx-auto shadow-sm">
+                    <img
+                      src={currentQuestion.imageUrl}
+                      alt={`Diagram for Question ${currentQuestion.questionNumber}`}
+                      className="max-h-80 w-auto object-contain rounded-lg cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.02]"
+                      onClick={() => setZoomedImageUrl(currentQuestion.imageUrl || null)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setZoomedImageUrl(currentQuestion.imageUrl || null)}
+                      className="mt-2 text-[11px] font-semibold text-zinc-400 hover:text-white flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-800 hover:border-red-600 transition-colors shadow-xs"
+                    >
+                      <ZoomIn className="w-3.5 h-3.5 text-red-500" />
+                      <span>Click to Enlarge / Fullscreen</span>
+                    </button>
+                  </div>
+                )}
+
+                {currentQuestion.diagramDescription && !currentQuestion.imageUrl && (
                   <div className="p-3 rounded-lg border border-dashed border-indigo-300 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20 text-xs text-indigo-900 dark:text-indigo-200">
                     <strong>[Figure / Diagram]:</strong>{' '}
                     {currentQuestion.diagramDescription}
@@ -1211,6 +1232,142 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         isOpen={isScratchpadOpen}
         onClose={() => setIsScratchpadOpen(false)}
       />
+
+      {/* Full Question Paper Overview Modal */}
+      {isQuestionPaperModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-3 md:p-6">
+          <div className="w-full max-w-4xl max-h-[90vh] bg-zinc-950 rounded-2xl shadow-2xl border border-zinc-800 flex flex-col overflow-hidden text-white">
+            <div className="px-6 py-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-red-500" />
+                <h3 className="font-bold text-sm md:text-base text-white">
+                  Question Paper — {paper.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsQuestionPaperModalOpen(false)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+              {paper.sections.map((section) => (
+                <div key={section.id} className="space-y-4">
+                  <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+                    <span className="w-3 h-3 rounded-full bg-red-600" />
+                    <h4 className="font-extrabold text-sm uppercase tracking-wider text-zinc-200">
+                      {section.name} ({section.questions.length} Questions)
+                    </h4>
+                  </div>
+
+                  <div className="space-y-4">
+                    {section.questions.map((q, qIdx) => (
+                      <div
+                        key={q.id}
+                        className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-900/40 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-red-400">
+                            Question {q.questionNumber} ({q.type.replace('_', ' ')})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsQuestionPaperModalOpen(false);
+                              navigateToQuestion(section.id, qIdx);
+                            }}
+                            className="px-3 py-1 rounded text-[11px] font-bold bg-zinc-800 hover:bg-red-600 text-white transition-colors"
+                          >
+                            Jump to Question
+                          </button>
+                        </div>
+
+                        <div className="text-xs md:text-sm text-zinc-200 leading-relaxed">
+                          <MathRenderer content={q.promptLatex} />
+                        </div>
+
+                        {q.imageUrl && (
+                          <div className="my-2 max-w-sm rounded-lg overflow-hidden border border-zinc-700 bg-black/60 p-2">
+                            <img
+                              src={q.imageUrl}
+                              alt={`Diagram for Question ${q.questionNumber}`}
+                              className="max-h-48 w-auto object-contain rounded"
+                            />
+                          </div>
+                        )}
+
+                        {q.options && q.options.length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs text-zinc-300">
+                            {q.options.map((opt) => (
+                              <div
+                                key={opt.id}
+                                className="p-2 rounded-lg bg-zinc-950/80 border border-zinc-800 flex items-center gap-2"
+                              >
+                                <span className="w-5 h-5 rounded-full bg-zinc-800 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  {opt.id}
+                                </span>
+                                <MathRenderer content={opt.labelLatex} />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-6 py-3.5 bg-zinc-900 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-400 shrink-0">
+              <span>Press Esc or click Close to return to the live exam terminal.</span>
+              <button
+                onClick={() => setIsQuestionPaperModalOpen(false)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition-colors"
+              >
+                Close Question Paper
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Image Zoom Modal */}
+      {zoomedImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 cursor-zoom-out"
+          onClick={() => setZoomedImageUrl(null)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[90vh] bg-zinc-950 p-4 rounded-2xl border border-zinc-800 shadow-2xl flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setZoomedImageUrl(null)}
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={zoomedImageUrl}
+              alt="Enlarged Question Diagram"
+              className="max-h-[80vh] w-auto object-contain rounded-lg shadow-lg"
+            />
+            <div className="mt-3 text-xs text-zinc-400 font-medium flex items-center gap-2">
+              <span>Zoomed Diagram View</span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => setZoomedImageUrl(null)}
+                className="text-red-400 hover:text-red-300 font-bold underline"
+              >
+                Close (or click outside)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isInstructionsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">

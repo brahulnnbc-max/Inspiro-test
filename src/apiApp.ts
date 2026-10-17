@@ -36,7 +36,13 @@ app.use((req, res, next) => {
 });
 
 function getGeminiApiKey(): string | undefined {
-  return process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  return (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_GENAI_API_KEY ||
+    process.env.VITE_GEMINI_API_KEY ||
+    process.env.GEMINI_KEY
+  );
 }
 
 function getGeminiClient(): GoogleGenAI {
@@ -53,7 +59,7 @@ function getGeminiClient(): GoogleGenAI {
 
 import { parsePastedQuestionsInstant } from './utils/instantQuestionParser.ts';
 
-// Resilient multi-model fallback: prioritized stable models (gemini-3.5-flash, gemini-3.6-flash, gemini-3.8-flash, gemini-3.5-flash-lite)
+// Resilient multi-model fallback: prioritized high-speed stable models (gemini-2.5-flash, gemini-3.8-flash, gemini-2.0-flash)
 async function generateContentWithFallback(options: {
   contents: any;
   config?: any;
@@ -65,24 +71,21 @@ async function generateContentWithFallback(options: {
   }
 
   const ai = getGeminiClient();
-  // Models with high availability and low latency for STEM, LaTeX, and vision tasks
+  // High-availability models for fast multimodal STEM, LaTeX, and vision tasks
   const candidateModels = [
     'gemini-3.8-flash',
     'gemini-3.1-flash-lite',
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite',
   ];
   let lastError: any = null;
   const isVercel = Boolean(process.env.VERCEL);
-  const maxTimeout = isVercel ? 25000 : 90000;
-  const timeoutLimit = options.timeoutMs ? Math.min(options.timeoutMs, maxTimeout) : maxTimeout;
+  const perModelTimeout = isVercel ? 12000 : (options.timeoutMs ? Math.min(options.timeoutMs, 25000) : 25000);
 
   for (let i = 0; i < candidateModels.length; i++) {
     const model = candidateModels[i];
     try {
-      console.log(`[inspiro AI] Requesting model ${model} (timeout ${timeoutLimit}ms)...`);
+      console.log(`[inspiro AI] Requesting model ${model} (timeout ${perModelTimeout}ms)...`);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout waiting for model ${model} (${timeoutLimit}ms)`)), timeoutLimit)
+        setTimeout(() => reject(new Error(`Timeout waiting for model ${model} (${perModelTimeout}ms)`)), perModelTimeout)
       );
       const callPromise = ai.models.generateContent({
         model,
@@ -285,6 +288,7 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
       req.body.fileBase64 || req.body.pdfBase64 || req.body.questionFileBase64;
     const textQuestions =
       req.body.textQuestions || req.body.textContent || req.body.rawText || '';
+    const images: any[] = Array.isArray(req.body.images) ? req.body.images : [];
     const rawSolutionBase64 =
       req.body.solutionFileBase64 || req.body.solutionBase64;
     const mimeType =
@@ -301,14 +305,20 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
     const defaultPositiveMarks = req.body.defaultPositiveMarks ?? 4;
     const defaultNegativeMarks = req.body.defaultNegativeMarks ?? 1;
 
-    if (!rawFileBase64 && !textQuestions.trim()) {
-      return res.status(400).json({ error: 'Please upload a PDF/Image or paste question paper text' });
+    const hasAnyContent = Boolean(
+      rawFileBase64 || textQuestions.trim() || images.length > 0
+    );
+
+    if (!hasAnyContent) {
+      return res.status(400).json({
+        error: 'Please paste question text or upload/paste question images/PDF.',
+      });
     }
 
     const apiKey = getGeminiApiKey();
 
-    // 1. Instant Mode or Keyless Text Mode: Convert immediately without waiting for API
-    if (req.body.instantMode === true || (!apiKey && textQuestions.trim())) {
+    // 1. Instant Mode or Keyless Text Mode (if no key and text is present)
+    if (req.body.instantMode === true || (!apiKey && textQuestions.trim() && images.length === 0)) {
       console.log('[inspiro Engine] Instant deterministic parser invoked for pasted question text.');
       const instantRes = parsePastedQuestionsInstant(
         textQuestions,
@@ -327,42 +337,84 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
     }
 
     if (!apiKey) {
+      // If text exists, fall back to instant deterministic parser rather than erroring out
+      if (textQuestions.trim()) {
+        const instantRes = parsePastedQuestionsInstant(
+          textQuestions,
+          examTitle,
+          pattern,
+          customDurationMinutes || 180
+        );
+        if (instantRes.success && instantRes.paper) {
+          return res.json({
+            success: true,
+            mode: 'INSTANT_KEYLESS_FALLBACK',
+            note: 'Server is running without GEMINI_API_KEY. Converted using Instant Deterministic Parser.',
+            examPaper: instantRes.paper,
+            data: instantRes.paper,
+          });
+        }
+      }
       return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables, or use Instant Convert mode for pasted text.',
+        error:
+          'GEMINI_API_KEY is not configured on this server. Please add GEMINI_API_KEY in your hosting environment variables (Vercel / Render / .env), or paste question text with numbers for instant keyless conversion.',
       });
     }
 
-    const systemInstruction = `You are the World's Premier JEE (Joint Entrance Examination) Question Paper & Coaching Module Extraction AI.
-You have analyzed hundreds of thousands of test papers from Kota and Hyderabad (Allen, FIITJEE, MathonGo, Resonance, Narayana, Sri Chaitanya, PhysicsWallah, Motion, Competishun, and official NTA papers).
-
+    const systemInstruction = `You are a high-speed JEE Question Paper & Module Extraction Engine.
 Your core mission:
-1. FAITHFULLY EXTRACT EVERY SINGLE QUESTION from the uploaded document(s). Do not skip questions, do not stop halfway, and do not summarize.
-2. PRESERVE AND FORMAT ALL MATHEMATICS, PHYSICS, AND CHEMISTRY with flawless standard LaTeX syntax:
-   - Inline math: $formula$, e.g. $E = mc^2$, $\\vec{F} = m\\vec{a}$, $\\int_0^\\pi \\sin(x) dx$, $\\alpha, \\beta, \\gamma, \\theta$, $\\Delta H^\\circ$, $[Fe(CN)_6]^{4-}$.
+1. FAITHFULLY EXTRACT EVERY QUESTION from the provided text and/or images into standard CBT question objects.
+2. PRESERVE MATHEMATICS, PHYSICS, AND CHEMISTRY with LaTeX syntax:
+   - Inline math: $formula$, e.g. $E = mc^2$, $\\vec{F} = m\\vec{a}$, $\\alpha, \\beta, \\theta$.
    - Block equations: $$display formula$$.
-   - Fractions: $\\frac{a}{b}$, square roots: $\\sqrt{x}$, vectors: $\\vec{v}$ or $\\mathbf{v}$.
-3. DIAGRAM & FIGURE PRESERVATION:
-   - If a question includes or refers to an image, graph, electrical circuit, free-body diagram, ray diagram, chemical apparatus, or geometry figure, include a comprehensive, vivid description in [Diagram: ...] within promptLatex, e.g. [Diagram: A uniform cylinder of mass M and radius R rolls without slipping down an inclined plane of angle theta].
-4. QUESTION TYPES & ACCURATE CLASSIFICATION:
-   - "SINGLE_CORRECT": Standard MCQ with options A, B, C, D (or 1, 2, 3, 4). Single option is correct. Standard marking: +4, -1.
-   - "MULTIPLE_CORRECT": JEE Advanced multi-select where 1, 2, 3, or all 4 options can be correct. Marking: +4, -2.
-   - "NUMERICAL": Integer or decimal answer (e.g., 5, 25, 0.75, -3). Non-MCQ question. Marking: +4, 0 or -1.
-   - "MATRIX_MATCH": Column matching question (List I vs List II).
-5. VERIFIED ANSWER KEY & MASTERCLASS SOLUTIONS:
-   - Cross-reference the answer key if it appears on the last page of the paper, in an answer key table, or in the attached solution document.
-   - If NO printed answer key is found in the document, you MUST solve each question step-by-step with rigorous physics/chemistry/math principles, determine the correct answer, and explain it clearly in explanationLatex.
-   - For every question, write an insightful, step-by-step masterclass solution in explanationLatex so the student learns the concept and common traps.
+3. DIAGRAM & IMAGE LINKING:
+   - If a question corresponds to one of the attached images (circuit, graph, pulley, chemical structure, geometry):
+     Set "imageIndex": <0-based index of the attached image this question corresponds to>, e.g. 0 for Image 1, 1 for Image 2.
+     If a question does NOT use an attached image, set "imageIndex": -1.
+   - Also describe it concisely in [Diagram: ...] within promptLatex.
+4. QUESTION TYPES & OPTIONS:
+   - "SINGLE_CORRECT": 4 distinct options (A, B, C, D).
+   - "NUMERICAL": Integer or decimal answer (e.g., 5, 25, 0.75). No options required.
+   - "MULTIPLE_CORRECT": 1 or more correct options (e.g. A, C).
+5. LIGHTWEIGHT SPEED DIRECTIVE:
+   - Keep explanationLatex concise (1-2 sentences of formula/concept) so extraction finishes rapidly without server timeouts.
 6. SECTION ORGANIZATION:
-   - If the paper contains multiple subjects, group them into:
-     - Section "physics": Physics questions
-     - Section "chemistry": Chemistry questions
-     - Section "mathematics": Mathematics questions
-   - If the document is a single subject or module exercise (e.g. only Physics, or only Kinematics Module), create a section matching the subject/topic.
-7. COMPLIANCE WITH USER COMMANDS:
-   - The user may supply specific directives (e.g. page numbers to extract, answer key mappings, duration overrides, section names). You MUST give their custom command the HIGHEST PRIORITY.`;
+   - Assign sectionId: "physics", "chemistry", or "mathematics". If unspecified, default to "physics".`;
 
     const parts: any[] = [];
 
+    // Add attached/pasted multiple images with labeled indices
+    if (images.length > 0) {
+      images.forEach((img: any, idx: number) => {
+        let b64 = '';
+        let mType = 'image/jpeg';
+        if (typeof img === 'string') {
+          const match = img.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            mType = match[1];
+            b64 = match[2];
+          } else {
+            b64 = img.replace(/^data:[^;]+;base64,/, '');
+          }
+        } else if (img && typeof img === 'object') {
+          b64 = (img.base64 || img.data || img.dataUrl || '').replace(/^data:[^;]+;base64,/, '');
+          mType = img.mimeType || 'image/jpeg';
+        }
+        if (b64) {
+          parts.push({
+            text: `[Attached Image ${idx + 1} (imageIndex: ${idx}, label: "${img.name || `Image_${idx + 1}`}")]`,
+          });
+          parts.push({
+            inlineData: {
+              mimeType: mType,
+              data: b64,
+            },
+          });
+        }
+      });
+    }
+
+    // Add legacy single file if present
     if (rawFileBase64) {
       const cleanBase64 = rawFileBase64.replace(/^data:[^;]+;base64,/, '');
       parts.push({
@@ -373,6 +425,7 @@ Your core mission:
       });
     }
 
+    // Add pasted text if present
     if (textQuestions.trim()) {
       parts.push({
         text: `Here is the question paper text content:\n\n${textQuestions.trim()}`,
@@ -388,25 +441,24 @@ Your core mission:
         },
       });
       parts.push({
-        text: 'The first file contains the question paper. The second file contains the official answer key and solutions. Cross-reference them to extract both questions, correct answers, and step-by-step solutions.',
+        text: 'Cross-reference this solution/answer key to set correct answers.',
       });
     }
 
-    let promptText = `Extract the full question paper into a complete structured Computer-Based Test (CBT) paper.
+    let promptText = `Extract questions from the provided text and/or images into a structured Computer-Based Test (CBT) paper.
 Session Title: "${examTitle}"
 Exam Pattern: ${pattern}
-Target Duration: ${customDurationMinutes || (pattern === 'JEE_MAIN' ? 180 : 180)} minutes
+Target Duration: ${customDurationMinutes || 180} minutes
 `;
 
     if (userCommand && userCommand.trim()) {
-      promptText += `\n\n🚨 USER CUSTOM COMMAND & SPECIAL DIRECTIVE (HIGHEST PRIORITY):
+      promptText += `\n\n🚨 USER CUSTOM INSTRUCTION:
 """
 ${userCommand.trim()}
-"""
-You must strictly execute every instruction specified in the user's command above.`;
+"""`;
     }
 
-    promptText += `\n\nEnsure that ALL questions found in the document are extracted sequentially, with accurate question numbers, proper LaTeX math formatting (with double-escaped backslashes like \\\\frac and \\\\sqrt), all 4 options (for MCQs), correct answers, and thorough step-by-step solutions.`;
+    promptText += `\n\nEnsure ALL questions from the text and images are extracted with proper LaTeX formatting and options A, B, C, D (or numerical). If an attached image belongs to a question, set its imageIndex accordingly.`;
 
     parts.push({ text: promptText });
 
@@ -415,10 +467,10 @@ You must strictly execute every instruction specified in the user's command abov
     try {
       const response = await generateContentWithFallback({
         contents: { parts },
-        timeoutMs: 60000,
+        timeoutMs: 25000,
         config: {
           systemInstruction,
-          maxOutputTokens: 16384,
+          maxOutputTokens: 8192,
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
@@ -432,7 +484,7 @@ You must strictly execute every instruction specified in the user's command abov
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    id: { type: Type.STRING, description: "'physics', 'chemistry', 'mathematics', or custom topic id" },
+                    id: { type: Type.STRING },
                     name: { type: Type.STRING },
                     questions: {
                       type: Type.ARRAY,
@@ -442,26 +494,27 @@ You must strictly execute every instruction specified in the user's command abov
                           id: { type: Type.STRING },
                           questionNumber: { type: Type.INTEGER },
                           sectionId: { type: Type.STRING },
-                          type: { type: Type.STRING, description: "'SINGLE_CORRECT', 'MULTIPLE_CORRECT', 'NUMERICAL', 'MATRIX_MATCH'" },
+                          type: { type: Type.STRING },
                           promptLatex: { type: Type.STRING },
                           diagramDescription: { type: Type.STRING },
+                          imageIndex: { type: Type.INTEGER, description: "0-based index of attached image, or -1" },
                           options: {
                             type: Type.ARRAY,
                             items: {
                               type: Type.OBJECT,
                               properties: {
-                                id: { type: Type.STRING, description: "'A', 'B', 'C', or 'D'" },
+                                id: { type: Type.STRING },
                                 labelLatex: { type: Type.STRING },
                               },
                               required: ['id', 'labelLatex'],
                             },
                           },
-                          correctAnswer: { type: Type.STRING, description: "e.g. 'A', 'B', 'C', 'D' or numeric string like '25' or 'A,C' for multiple" },
+                          correctAnswer: { type: Type.STRING },
                           explanationLatex: { type: Type.STRING },
                           positiveMarks: { type: Type.NUMBER },
                           negativeMarks: { type: Type.NUMBER },
                         },
-                        required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex', 'options', 'correctAnswer'],
+                        required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex', 'correctAnswer'],
                       },
                     },
                   },
@@ -484,13 +537,14 @@ You must strictly execute every instruction specified in the user's command abov
           textQuestions,
           examTitle,
           pattern,
-          customDurationMinutes || 180
+          customDurationMinutes || 180,
+          images
         );
-        if (fallbackRes.success && fallbackRes.paper && (fallbackRes.questionCount > 1 || (fallbackRes.paper.sections?.[0]?.questions?.length ?? 0) > 1)) {
+        if (fallbackRes.success && fallbackRes.paper) {
           return res.json({
             success: true,
             mode: 'FALLBACK_INSTANT_PARSER',
-            note: 'Converted seamlessly via Instant Parser (AI was busy with high demand)',
+            note: 'Converted seamlessly via Instant Parser (AI request was busy or timed out)',
             examPaper: fallbackRes.paper,
             data: fallbackRes.paper,
           });
@@ -523,7 +577,7 @@ You must strictly execute every instruction specified in the user's command abov
       if (!sec.name) sec.name = String(sec.id).toUpperCase();
 
       if (Array.isArray(sec.questions)) {
-        sec.questions.forEach((q: any) => {
+        sec.questions.forEach((q: any, qIdx: number) => {
           if (!q.id) q.id = `q-${globalQuestionIndex}`;
           q.questionNumber = globalQuestionIndex;
           q.sectionId = sec.id;
@@ -585,6 +639,27 @@ You must strictly execute every instruction specified in the user's command abov
 
           if (!q.explanationLatex) {
             q.explanationLatex = `Step-by-step solution for Question ${globalQuestionIndex}. Correct Answer: ${q.correctAnswer}.`;
+          }
+
+          // Attach Diagram / Image URL if matched with uploaded/pasted images
+          let matchedImg: any = undefined;
+          if (typeof q.imageIndex === 'number' && q.imageIndex >= 0 && q.imageIndex < images.length) {
+            matchedImg = images[q.imageIndex];
+          } else if (images.length === 1) {
+            // If single image and either single question or prompt mentions diagram/figure
+            if (sec.questions.length === 1 || /diagram|figure|graph|circuit|shown|image/i.test(q.promptLatex || '') || globalQuestionIndex === 1) {
+              matchedImg = images[0];
+            }
+          } else if (images.length > 0 && qIdx < images.length && sec.questions.length <= images.length) {
+            matchedImg = images[qIdx];
+          }
+
+          if (matchedImg) {
+            const b64 = (typeof matchedImg === 'string' ? matchedImg : matchedImg.base64 || matchedImg.data || matchedImg.dataUrl || '').replace(/^data:[^;]+;base64,/, '');
+            const mType = (typeof matchedImg === 'object' && matchedImg.mimeType) || 'image/jpeg';
+            if (b64) {
+              q.imageUrl = `data:${mType};base64,${b64}`;
+            }
           }
 
           calculatedTotalMarks += q.positiveMarks;
@@ -709,6 +784,132 @@ For each question:
   }
 });
 
+function generateFallbackTestSchedule(prompt: string, pattern: string, numberOfTests: number) {
+  const today = new Date();
+  const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+  const tests = [];
+  const syllabi = [
+    [
+      { subject: 'physics', name: 'Units & Dimensions, Kinematics 1D & 2D' },
+      { subject: 'chemistry', name: 'Some Basic Concepts of Chemistry, Atomic Structure' },
+      { subject: 'mathematics', name: 'Sets, Relations, Functions & Quadratic Equations' },
+    ],
+    [
+      { subject: 'physics', name: 'Laws of Motion & Work, Power and Energy' },
+      { subject: 'chemistry', name: 'Periodic Table & Chemical Bonding' },
+      { subject: 'mathematics', name: 'Sequences & Series, Complex Numbers' },
+    ],
+    [
+      { subject: 'physics', name: 'Rotational Motion & Gravitation' },
+      { subject: 'chemistry', name: 'Thermodynamics & Chemical Equilibrium' },
+      { subject: 'mathematics', name: 'Permutations & Combinations, Binomial Theorem' },
+    ],
+    [
+      { subject: 'physics', name: 'Mechanical Properties of Solids & Fluids, Thermal Physics' },
+      { subject: 'chemistry', name: 'Ionic Equilibrium, Redox Reactions & Organic GOC' },
+      { subject: 'mathematics', name: 'Straight Lines, Circles & Conic Sections' },
+    ],
+    [
+      { subject: 'physics', name: 'Electrostatics & Current Electricity' },
+      { subject: 'chemistry', name: 'Solutions & Electrochemistry' },
+      { subject: 'mathematics', name: 'Limits, Continuity & Differentiability' },
+    ],
+    [
+      { subject: 'physics', name: 'Magnetic Effects of Current & EMI/AC' },
+      { subject: 'chemistry', name: 'Chemical Kinetics & Coordination Compounds' },
+      { subject: 'mathematics', name: 'Application of Derivatives & Indefinite Integrals' },
+    ],
+    [
+      { subject: 'physics', name: 'Ray & Wave Optics, Modern Physics' },
+      { subject: 'chemistry', name: 'Haloalkanes, Alcohols, Aldehydes & Ketones' },
+      { subject: 'mathematics', name: 'Definite Integrals, Differential Equations, Vectors & 3D' },
+    ],
+    [
+      { subject: 'physics', name: 'Full Syllabus Complete Physics NTA Model' },
+      { subject: 'chemistry', name: 'Full Syllabus Complete Chemistry NTA Model' },
+      { subject: 'mathematics', name: 'Full Syllabus Complete Mathematics NTA Model' },
+    ],
+  ];
+
+  const count = Math.min(Math.max(numberOfTests || 8, 4), 12);
+  for (let i = 0; i < count; i++) {
+    const testDate = new Date(today.getTime() + (daysUntilSunday + i * 14) * 86400000);
+    const dateStr = testDate.toISOString().split('T')[0];
+    const isMajor = i >= count - 2;
+    const testNum = i + 1;
+    tests.push({
+      id: `sched-test-${Date.now()}-${i}`,
+      title: isMajor
+        ? `Allen Leader Major Test 0${testNum - (count - 2)} (Full Syllabus CBT)`
+        : `Allen Leader Minor Test 0${testNum} (Periodic Revision)`,
+      scheduledDate: dateStr,
+      startTime: '09:00',
+      endTime: '12:00',
+      pattern: pattern || 'JEE_MAIN',
+      syllabus: syllabi[i % syllabi.length],
+    });
+  }
+
+  return {
+    seriesTitle: `Allen Leader 6-Month Periodic CBT Test Series (${pattern || 'JEE_MAIN'})`,
+    description: `Structured fortnightly test series organized according to Kota coaching curriculum for ${prompt || 'JEE Aspirants'}.`,
+    tests,
+  };
+}
+
+function generateFallbackFullRoutine(commandPrompt: string, practiceSlot: string, testSlot: string) {
+  const today = new Date();
+  const items = [];
+  const chapters = [
+    { sub: 'physics', name: 'Kinematics & NLM Module Exercise 1' },
+    { sub: 'chemistry', name: 'Atomic Structure & Periodic Trends Drill' },
+    { sub: 'mathematics', name: 'Quadratic Equations & Functions Sprint' },
+    { sub: 'physics', name: 'Work Energy Power & Circular Motion' },
+    { sub: 'chemistry', name: 'Chemical Bonding & GOC Revision' },
+  ];
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(today.getTime() + (i + 1) * 86400000);
+    items.push({
+      id: `rout-item-${Date.now()}-${i}`,
+      type: 'MODULE_PRACTICE',
+      title: `${chapters[i].name} (25 Questions)`,
+      chapterOrTopic: chapters[i].name,
+      subject: chapters[i].sub,
+      scheduledDate: d.toISOString().split('T')[0],
+      scheduledSlot: practiceSlot || '19:00 - 20:00',
+      durationMinutes: 50,
+      questionCount: 25,
+      weekNumber: 1,
+      dayName: dayNames[d.getDay()],
+    });
+  }
+
+  const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+  const sunday = new Date(today.getTime() + daysUntilSunday * 86400000);
+  items.push({
+    id: `rout-item-${Date.now()}-mock`,
+    type: 'REAL_TEST',
+    title: 'Weekend Fortnightly Real Test (300 Marks CBT)',
+    chapterOrTopic: 'Full Syllabus Covered During Fortnight',
+    subject: 'physics',
+    scheduledDate: sunday.toISOString().split('T')[0],
+    scheduledSlot: testSlot || '09:00 - 12:00',
+    durationMinutes: 180,
+    questionCount: 75,
+    weekNumber: 1,
+    dayName: 'Sunday',
+  });
+
+  return {
+    routineTitle: 'Allen Kota Leader Daily Practice + Weekend Test Routine',
+    summary: 'Mon-Fri 50-minute module practice sprints (19:00-20:00) + Sunday full CBT mock test',
+    items,
+  };
+}
+
 // AI-Powered Long-Term Test Series Scheduler & Syllabus Checklist Generator
 app.all(['/api/generate-test-schedule', '/generate-test-schedule', '/api/generate-roadmap-schedule', '/api/generate-test-schedule/'], async (req, res) => {
   if (req.method === 'GET') {
@@ -724,8 +925,12 @@ app.all(['/api/generate-test-schedule', '/generate-test-schedule', '/api/generat
 
     const apiKey = getGeminiApiKey();
     if (!apiKey) {
-      return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables.',
+      console.log('[inspiro Scheduler] No API key present. Serving deterministic Kota coaching schedule.');
+      const fallbackData = generateFallbackTestSchedule(prompt, pattern, Number(numberOfTests));
+      return res.json({
+        success: true,
+        data: fallbackData,
+        mode: 'DETERMINISTIC_COACHING_SCHEDULE',
       });
     }
 
@@ -748,78 +953,96 @@ Follow strict coaching norms:
 4. For EVERY scheduled test:
    - Provide an authentic coaching title (e.g. "Allen Leader Minor Test 01 - Mechanics & Physical Chem").
    - Set standard NTA live test time windows: "09:00" to "12:00" (Morning Shift) or "14:00" to "17:00" (Afternoon Shift).
-   - For EACH of the 3 subjects (Physics, Chemistry, Mathematics), provide specific chapter & topic checklists so the student can track their revision before the test!`;
+   - For EACH of the 3 subjects (Physics, Chemistry, Mathematics), provide specific chapter & topic checklists so the student can track their revision before the test!
+5. COACHING MATERIAL PARSING DIRECTIVE:
+   - If the user has pasted a table of contents, syllabus index, or chapters list from their coaching modules (e.g. Allen, FIITJEE, Resonance, MathonGo):
+   - Faithfully distribute all provided chapters across the tests systematically from basic to advanced.
+   - Group them into progressive Minor Tests (every 2 weeks) and culminating Revision / Major Mocks.
+   - Keep syllabus topic names concise and clean so generation finishes rapidly without timeouts.`;
 
-    const response = await generateContentWithFallback({
-      contents: `Generate a structured test series schedule based on user instructions: "${prompt}". Number of tests: ${numberOfTests}. Pattern: ${pattern}. Current date is ${currentIso} (${currentYear}).`,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            seriesTitle: { type: Type.STRING },
-            description: { type: Type.STRING },
-            tests: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  title: { type: Type.STRING },
-                  scheduledDate: { type: Type.STRING, description: "YYYY-MM-DD format" },
-                  startTime: { type: Type.STRING, description: "HH:MM format, e.g. 09:00 or 14:00" },
-                  endTime: { type: Type.STRING, description: "HH:MM format, e.g. 12:00 or 17:00" },
-                  pattern: { type: Type.STRING },
-                  syllabus: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        subject: { type: Type.STRING, description: "'physics', 'chemistry', or 'mathematics'" },
-                        name: { type: Type.STRING, description: "Specific chapter or topics, e.g. 'Kinematics & NLM' or 'Thermodynamics'" },
+    try {
+      const response = await generateContentWithFallback({
+        contents: `Generate a structured test series schedule based on user instructions: "${prompt}". Number of tests: ${numberOfTests}. Pattern: ${pattern}. Current date is ${currentIso} (${currentYear}).`,
+        timeoutMs: 20000,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              seriesTitle: { type: Type.STRING },
+              description: { type: Type.STRING },
+              tests: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING },
+                    title: { type: Type.STRING },
+                    scheduledDate: { type: Type.STRING, description: "YYYY-MM-DD format" },
+                    startTime: { type: Type.STRING, description: "HH:MM format, e.g. 09:00 or 14:00" },
+                    endTime: { type: Type.STRING, description: "HH:MM format, e.g. 12:00 or 17:00" },
+                    pattern: { type: Type.STRING },
+                    syllabus: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          subject: { type: Type.STRING, description: "'physics', 'chemistry', or 'mathematics'" },
+                          name: { type: Type.STRING, description: "Specific chapter or topics, e.g. 'Kinematics & NLM' or 'Thermodynamics'" },
+                        },
+                        required: ['subject', 'name'],
                       },
-                      required: ['subject', 'name'],
                     },
                   },
+                  required: ['id', 'title', 'scheduledDate', 'startTime', 'endTime', 'syllabus'],
                 },
-                required: ['id', 'title', 'scheduledDate', 'startTime', 'endTime', 'syllabus'],
               },
             },
+            required: ['seriesTitle', 'description', 'tests'],
           },
-          required: ['seriesTitle', 'description', 'tests'],
         },
-      },
-    });
+      });
 
-    const parsedData = cleanAndParseJSON(response.text);
+      const parsedData = cleanAndParseJSON(response.text);
 
-    // Post-processing safety: Verify dates are strictly present and in current or future calendar
-    if (parsedData.tests && Array.isArray(parsedData.tests)) {
-      parsedData.tests.forEach((t: any, idx: number) => {
-        const isStale =
-          !t.scheduledDate ||
-          t.scheduledDate < currentIso ||
-          t.scheduledDate.startsWith('2023') ||
-          t.scheduledDate.startsWith('2024') ||
-          t.scheduledDate.startsWith('2025');
+      // Post-processing safety: Verify dates are strictly present and in current or future calendar
+      if (parsedData.tests && Array.isArray(parsedData.tests)) {
+        parsedData.tests.forEach((t: any, idx: number) => {
+          const isStale =
+            !t.scheduledDate ||
+            t.scheduledDate < currentIso ||
+            t.scheduledDate.startsWith('2023') ||
+            t.scheduledDate.startsWith('2024') ||
+            t.scheduledDate.startsWith('2025');
 
-        if (isStale) {
-          const testDate = new Date(today.getTime() + (daysUntilSunday + idx * 14) * 86400000);
-          t.scheduledDate = testDate.toISOString().split('T')[0];
-        }
+          if (isStale) {
+            const testDate = new Date(today.getTime() + (daysUntilSunday + idx * 14) * 86400000);
+            t.scheduledDate = testDate.toISOString().split('T')[0];
+          }
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: parsedData,
+      });
+    } catch (aiErr: any) {
+      console.warn('[inspiro Scheduler] AI schedule failed, using fallback coaching schedule:', aiErr.message);
+      const fallbackData = generateFallbackTestSchedule(prompt, pattern, Number(numberOfTests));
+      return res.json({
+        success: true,
+        data: fallbackData,
+        mode: 'FALLBACK_COACHING_SCHEDULE',
       });
     }
-
-    res.json({
-      success: true,
-      data: parsedData,
-    });
   } catch (error: any) {
     console.error('Error generating test schedule:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to generate test schedule with AI',
+    const fallbackData = generateFallbackTestSchedule('JEE Periodic Tests', 'JEE_MAIN', 8);
+    res.json({
+      success: true,
+      data: fallbackData,
+      mode: 'EMERGENCY_FALLBACK_SCHEDULE',
     });
   }
 });
@@ -840,8 +1063,12 @@ app.all(['/api/generate-full-routine', '/generate-full-routine', '/api/generate-
 
     const apiKey = getGeminiApiKey();
     if (!apiKey) {
-      return res.status(500).json({
-        error: 'GEMINI_API_KEY is not configured. Please add GEMINI_API_KEY in your Vercel Project Settings > Environment Variables.',
+      console.log('[inspiro Routine] No API key present. Serving deterministic Kota module routine.');
+      const fallbackRoutine = generateFallbackFullRoutine(commandPrompt, practiceSlot, testSlot);
+      return res.json({
+        success: true,
+        data: fallbackRoutine,
+        mode: 'DETERMINISTIC_ROUTINE_FALLBACK',
       });
     }
 
@@ -864,65 +1091,78 @@ Follow the proven Kota coaching methodology:
    - "weekNumber": integer 1, 2, 3...
    - "dayName": "Monday", "Tuesday", etc.`;
 
-    const response = await generateContentWithFallback({
-      contents: `Generate a structured daily practice + real test routine based on command: "${commandPrompt}". Practice slot: ${practiceSlot}. Test slot: ${testSlot}.`,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            routineTitle: { type: Type.STRING },
-            summary: { type: Type.STRING },
-            items: {
-              type: Type.ARRAY,
+    try {
+      const response = await generateContentWithFallback({
+        contents: `Generate a structured daily practice + real test routine based on command: "${commandPrompt}". Practice slot: ${practiceSlot}. Test slot: ${testSlot}.`,
+        timeoutMs: 20000,
+        config: {
+          systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              routineTitle: { type: Type.STRING },
+              summary: { type: Type.STRING },
               items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  type: { type: Type.STRING, description: "'MODULE_PRACTICE' or 'REAL_TEST'" },
-                  title: { type: Type.STRING },
-                  chapterOrTopic: { type: Type.STRING },
-                  subject: { type: Type.STRING, description: "'physics', 'chemistry', or 'mathematics'" },
-                  scheduledDate: { type: Type.STRING },
-                  scheduledSlot: { type: Type.STRING },
-                  durationMinutes: { type: Type.INTEGER },
-                  questionCount: { type: Type.INTEGER },
-                  weekNumber: { type: Type.INTEGER },
-                  dayName: { type: Type.STRING },
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING },
+                    type: { type: Type.STRING, description: "'MODULE_PRACTICE' or 'REAL_TEST'" },
+                    title: { type: Type.STRING },
+                    chapterOrTopic: { type: Type.STRING },
+                    subject: { type: Type.STRING, description: "'physics', 'chemistry', or 'mathematics'" },
+                    scheduledDate: { type: Type.STRING },
+                    scheduledSlot: { type: Type.STRING },
+                    durationMinutes: { type: Type.INTEGER },
+                    questionCount: { type: Type.INTEGER },
+                    weekNumber: { type: Type.INTEGER },
+                    dayName: { type: Type.STRING },
+                  },
+                  required: [
+                    'id',
+                    'type',
+                    'title',
+                    'chapterOrTopic',
+                    'subject',
+                    'scheduledDate',
+                    'scheduledSlot',
+                    'durationMinutes',
+                    'questionCount',
+                    'weekNumber',
+                    'dayName',
+                  ],
                 },
-                required: [
-                  'id',
-                  'type',
-                  'title',
-                  'chapterOrTopic',
-                  'subject',
-                  'scheduledDate',
-                  'scheduledSlot',
-                  'durationMinutes',
-                  'questionCount',
-                  'weekNumber',
-                  'dayName',
-                ],
               },
             },
+            required: ['routineTitle', 'summary', 'items'],
           },
-          required: ['routineTitle', 'summary', 'items'],
         },
-      },
-    });
+      });
 
-    const parsedData = cleanAndParseJSON(response.text);
+      const parsedData = cleanAndParseJSON(response.text);
 
-    res.json({
-      success: true,
-      data: parsedData,
-    });
+      return res.json({
+        success: true,
+        data: parsedData,
+      });
+    } catch (aiErr: any) {
+      console.warn('[inspiro Routine] AI routine generation failed, using fallback routine:', aiErr.message);
+      const fallbackRoutine = generateFallbackFullRoutine(commandPrompt, practiceSlot, testSlot);
+      return res.json({
+        success: true,
+        data: fallbackRoutine,
+        mode: 'FALLBACK_ROUTINE',
+      });
+    }
   } catch (error: any) {
     console.error('Error generating full routine:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to generate routine with AI',
+    const fallbackRoutine = generateFallbackFullRoutine('Kota Module Practice', '19:00 - 20:00', '09:00 - 12:00');
+    res.json({
+      success: true,
+      data: fallbackRoutine,
+      mode: 'EMERGENCY_ROUTINE_FALLBACK',
     });
   }
 });

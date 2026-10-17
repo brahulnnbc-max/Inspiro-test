@@ -451,6 +451,16 @@ export const RaceQuestionBank: React.FC<RaceQuestionBankProps> = ({
                   <MathRenderer content={entry.question.promptLatex} />
                 </div>
 
+                {entry.question.imageUrl && (
+                  <div className="my-2 p-2 rounded-xl border border-zinc-800 bg-black/50 max-w-sm">
+                    <img
+                      src={entry.question.imageUrl}
+                      alt="Question Diagram"
+                      className="max-h-48 w-auto object-contain rounded"
+                    />
+                  </div>
+                )}
+
                 {/* Options if MCQ */}
                 {entry.question.options && entry.question.options.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">

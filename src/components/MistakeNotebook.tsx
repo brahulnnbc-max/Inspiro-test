@@ -251,6 +251,16 @@ export const MistakeNotebook: React.FC<MistakeNotebookProps> = ({
                   <MathRenderer content={entry.question.promptLatex} />
                 </div>
 
+                {entry.question.imageUrl && (
+                  <div className="my-2 p-2 rounded-lg border border-zinc-800 bg-black/60 max-w-sm">
+                    <img
+                      src={entry.question.imageUrl}
+                      alt="Question Diagram"
+                      className="max-h-48 w-auto object-contain rounded"
+                    />
+                  </div>
+                )}
+
                 {/* Response Comparison */}
                 <div className="flex flex-wrap items-center gap-4 text-xs font-mono bg-zinc-900/60 p-3 rounded-lg border border-zinc-800">
                   <div>

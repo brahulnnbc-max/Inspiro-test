@@ -17,7 +17,8 @@ export function parsePastedQuestionsInstant(
   rawText: string,
   customTitle: string = 'Custom Module Practice Test',
   pattern: ExamPattern = 'JEE_MAIN',
-  customDuration: number = 180
+  customDuration: number = 180,
+  attachedImages?: Array<{ dataUrl?: string; base64?: string; mimeType?: string; name?: string }>
 ): ParseResult {
   const text = (rawText || '').trim();
   if (!text) {
@@ -125,7 +126,37 @@ export function parsePastedQuestionsInstant(
   }
 
   const parsedQuestions: Question[] = chunks.map((chunk, index) => {
-    return parseSingleQuestionChunk(chunk.content, chunk.qNum || index + 1);
+    const q = parseSingleQuestionChunk(chunk.content, chunk.qNum || index + 1);
+
+    // If attached images are present, associate them intelligently
+    if (attachedImages && attachedImages.length > 0) {
+      const imgUrls = attachedImages.map((img) =>
+        img.dataUrl || (img.base64 ? `data:${img.mimeType || 'image/jpeg'};base64,${img.base64}` : '')
+      ).filter(Boolean);
+
+      // Check if chunk explicitly mentions image number e.g. [image 1], [figure 2], (diagram 1)
+      const explicitImgMatch = chunk.content.match(/(?:image|figure|diagram|fig)\s*[:#\-\s]*(\d+)/i);
+      if (explicitImgMatch) {
+        const imgNum = parseInt(explicitImgMatch[1], 10);
+        const targetIdx = imgNum - 1; // 1-based to 0-based
+        if (targetIdx >= 0 && targetIdx < imgUrls.length) {
+          q.imageUrl = imgUrls[targetIdx];
+        }
+      }
+
+      // If not explicitly matched and we have 1 image, attach to the question mentioning diagram or Question 1
+      if (!q.imageUrl && imgUrls.length === 1) {
+        const hasDiagramMention = /diagram|figure|graph|circuit|shown in|following structure/i.test(chunk.content);
+        if (hasDiagramMention || index === 0) {
+          q.imageUrl = imgUrls[0];
+        }
+      } else if (!q.imageUrl && index < imgUrls.length && chunks.length <= imgUrls.length) {
+        // 1-to-1 sequential mapping if counts match
+        q.imageUrl = imgUrls[index];
+      }
+    }
+
+    return q;
   });
 
   return groupIntoExamPaper(parsedQuestions, customTitle, pattern, customDuration);
