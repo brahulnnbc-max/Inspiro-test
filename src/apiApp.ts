@@ -73,13 +73,14 @@ async function generateContentWithFallback(options: {
 
   const ai = getGeminiClient();
   // High-availability models for fast multimodal STEM, LaTeX, and vision tasks
+  // gemini-3.1-flash-lite responds in ~1000ms with high uptime, avoiding 503 spikes on Vercel
   const candidateModels = [
-    'gemini-3.8-flash',
     'gemini-3.1-flash-lite',
+    'gemini-3.8-flash',
   ];
   let lastError: any = null;
   const isVercel = Boolean(process.env.VERCEL);
-  const perModelTimeout = isVercel ? 12000 : (options.timeoutMs ? Math.min(options.timeoutMs, 25000) : 25000);
+  const perModelTimeout = isVercel ? 6000 : (options.timeoutMs ? Math.min(options.timeoutMs, 20000) : 20000);
 
   for (let i = 0; i < candidateModels.length; i++) {
     const model = candidateModels[i];
@@ -493,7 +494,39 @@ ${userCommand.trim()}
 """`;
     }
 
-    promptText += `\n\nEnsure ALL questions from the text and images are extracted with proper LaTeX formatting and options A, B, C, D (or numerical). If an attached image belongs to a question, set its imageIndex accordingly.`;
+    promptText += `\n\nReturn valid JSON matching this exact structure:
+{
+  "title": "${examTitle}",
+  "pattern": "${pattern}",
+  "durationMinutes": ${customDurationMinutes || 180},
+  "sections": [
+    {
+      "id": "physics",
+      "name": "PHYSICS",
+      "questions": [
+        {
+          "id": "q-1",
+          "questionNumber": 1,
+          "sectionId": "physics",
+          "type": "SINGLE_CORRECT",
+          "promptLatex": "Question text with LaTeX $...$",
+          "diagramDescription": "",
+          "imageIndex": -1,
+          "options": [
+            { "id": "A", "labelLatex": "Option A" },
+            { "id": "B", "labelLatex": "Option B" },
+            { "id": "C", "labelLatex": "Option C" },
+            { "id": "D", "labelLatex": "Option D" }
+          ],
+          "correctAnswer": "A",
+          "explanationLatex": "Concise solution",
+          "positiveMarks": 4,
+          "negativeMarks": 1
+        }
+      ]
+    }
+  ]
+}`;
 
     parts.push({ text: promptText });
 
@@ -502,63 +535,11 @@ ${userCommand.trim()}
     try {
       const response = await generateContentWithFallback({
         contents: { parts },
-        timeoutMs: 25000,
+        timeoutMs: 10000,
         config: {
           systemInstruction,
           maxOutputTokens: 8192,
           responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              pattern: { type: Type.STRING },
-              durationMinutes: { type: Type.INTEGER },
-              totalMarks: { type: Type.INTEGER },
-              sections: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    id: { type: Type.STRING },
-                    name: { type: Type.STRING },
-                    questions: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          id: { type: Type.STRING },
-                          questionNumber: { type: Type.INTEGER },
-                          sectionId: { type: Type.STRING },
-                          type: { type: Type.STRING },
-                          promptLatex: { type: Type.STRING },
-                          diagramDescription: { type: Type.STRING },
-                          imageIndex: { type: Type.INTEGER, description: "0-based index of attached image, or -1" },
-                          options: {
-                            type: Type.ARRAY,
-                            items: {
-                              type: Type.OBJECT,
-                              properties: {
-                                id: { type: Type.STRING },
-                                labelLatex: { type: Type.STRING },
-                              },
-                              required: ['id', 'labelLatex'],
-                            },
-                          },
-                          correctAnswer: { type: Type.STRING },
-                          explanationLatex: { type: Type.STRING },
-                          positiveMarks: { type: Type.NUMBER },
-                          negativeMarks: { type: Type.NUMBER },
-                        },
-                        required: ['id', 'questionNumber', 'sectionId', 'type', 'promptLatex', 'correctAnswer'],
-                      },
-                    },
-                  },
-                  required: ['id', 'name', 'questions'],
-                },
-              },
-            },
-            required: ['title', 'pattern', 'durationMinutes', 'sections'],
-          },
         },
       });
 
@@ -589,7 +570,14 @@ ${userCommand.trim()}
     }
 
     // Post-processing & Sanitization: Ensure sections and question numbering are robust
-    if (!parsedData.sections || !Array.isArray(parsedData.sections) || parsedData.sections.length === 0) {
+    if (Array.isArray(parsedData)) {
+      parsedData = {
+        title: examTitle,
+        sections: [{ id: 'physics', name: 'ALL SUBJECTS', questions: parsedData }],
+      };
+    } else if (parsedData && Array.isArray(parsedData.questions)) {
+      parsedData.sections = [{ id: 'physics', name: 'ALL SUBJECTS', questions: parsedData.questions }];
+    } else if (!parsedData.sections || !Array.isArray(parsedData.sections) || parsedData.sections.length === 0) {
       parsedData.sections = [
         {
           id: 'physics',
@@ -616,6 +604,15 @@ ${userCommand.trim()}
           if (!q.id) q.id = `q-${globalQuestionIndex}`;
           q.questionNumber = globalQuestionIndex;
           q.sectionId = sec.id;
+          q.promptLatex = String(q.promptLatex || q.question || q.prompt || q.text || '').trim();
+
+          // Convert options if returned as an object { A: "...", B: "..." }
+          if (q.options && typeof q.options === 'object' && !Array.isArray(q.options)) {
+            q.options = Object.entries(q.options).map(([k, v]) => ({
+              id: String(k).toUpperCase().trim(),
+              labelLatex: String(v || '').trim(),
+            }));
+          }
 
           // Normalize Options
           if (Array.isArray(q.options) && q.options.length > 0) {
@@ -624,14 +621,14 @@ ${userCommand.trim()}
               if (typeof opt === 'string') {
                 return { id: defaultId, labelLatex: opt };
               }
-              let optId = String(opt.id || defaultId).toUpperCase().trim();
+              let optId = String(opt.id || opt.key || defaultId).toUpperCase().trim();
               if (optId === '1') optId = 'A';
               else if (optId === '2') optId = 'B';
               else if (optId === '3') optId = 'C';
               else if (optId === '4') optId = 'D';
               return {
                 id: optId,
-                labelLatex: String(opt.labelLatex || opt.text || opt.label || '').trim(),
+                labelLatex: String(opt.labelLatex || opt.text || opt.label || opt.value || '').trim(),
               };
             });
             if (!q.type || q.type === 'NUMERICAL') {
@@ -656,8 +653,9 @@ ${userCommand.trim()}
           }
 
           // Normalize Correct Answer
-          if (q.correctAnswer !== undefined && q.correctAnswer !== null) {
-            let ca = String(q.correctAnswer).trim().toUpperCase();
+          const rawAns = q.correctAnswer ?? q.answer ?? q.key ?? q.correct_answer;
+          if (rawAns !== undefined && rawAns !== null) {
+            let ca = String(rawAns).trim().toUpperCase();
             if (ca === '1') ca = 'A';
             else if (ca === '2') ca = 'B';
             else if (ca === '3') ca = 'C';
@@ -666,6 +664,8 @@ ${userCommand.trim()}
           } else {
             q.correctAnswer = q.type === 'NUMERICAL' ? '0' : 'A';
           }
+
+          q.explanationLatex = String(q.explanationLatex || q.explanation || q.solution || `Step-by-step solution for Question ${globalQuestionIndex}. Correct Answer: ${q.correctAnswer}`).trim();
 
           if (q.positiveMarks === undefined) q.positiveMarks = defaultPositiveMarks;
           if (q.negativeMarks === undefined) {
