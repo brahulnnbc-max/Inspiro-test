@@ -58,6 +58,7 @@ function getGeminiClient(): GoogleGenAI {
 }
 
 import { parsePastedQuestionsInstant } from './utils/instantQuestionParser.ts';
+import { generateLockedSchedule, parseScheduleCommand } from './utils/scheduleCalculator.ts';
 
 // Resilient multi-model fallback: prioritized high-speed stable models (gemini-2.5-flash, gemini-3.8-flash, gemini-2.0-flash)
 async function generateContentWithFallback(options: {
@@ -327,11 +328,28 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
         customDurationMinutes || 180
       );
       if (instantRes.success && instantRes.paper) {
+        let scheduledTests: any[] = [];
+        const fullCmd = `${userCommand || ''} ${req.body.schedulingCommand || ''} ${textQuestions || ''}`.trim();
+        if (req.body.autoSchedule || req.body.scheduleOptions) {
+          const opts = req.body.scheduleOptions || {
+            paper: instantRes.paper,
+            ...parseScheduleCommand(fullCmd),
+          };
+          opts.paper = instantRes.paper;
+          scheduledTests = generateLockedSchedule(opts);
+        } else if (/schedule|alternate|sunday|tomorrow|today|routine|cadence/i.test(fullCmd)) {
+          const parsedCmd = parseScheduleCommand(fullCmd);
+          scheduledTests = generateLockedSchedule({
+            paper: instantRes.paper,
+            ...parsedCmd,
+          });
+        }
         return res.json({
           success: true,
           mode: 'INSTANT_DETERMINISTIC',
           examPaper: instantRes.paper,
           data: instantRes.paper,
+          scheduledTests: scheduledTests.length > 0 ? scheduledTests : undefined,
         });
       }
     }
@@ -346,12 +364,29 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
           customDurationMinutes || 180
         );
         if (instantRes.success && instantRes.paper) {
+          let scheduledTests: any[] = [];
+          const fullCmd = `${userCommand || ''} ${req.body.schedulingCommand || ''} ${textQuestions || ''}`.trim();
+          if (req.body.autoSchedule || req.body.scheduleOptions) {
+            const opts = req.body.scheduleOptions || {
+              paper: instantRes.paper,
+              ...parseScheduleCommand(fullCmd),
+            };
+            opts.paper = instantRes.paper;
+            scheduledTests = generateLockedSchedule(opts);
+          } else if (/schedule|alternate|sunday|tomorrow|today|routine|cadence/i.test(fullCmd)) {
+            const parsedCmd = parseScheduleCommand(fullCmd);
+            scheduledTests = generateLockedSchedule({
+              paper: instantRes.paper,
+              ...parsedCmd,
+            });
+          }
           return res.json({
             success: true,
             mode: 'INSTANT_KEYLESS_FALLBACK',
             note: 'Server is running without GEMINI_API_KEY. Converted using Instant Deterministic Parser.',
             examPaper: instantRes.paper,
             data: instantRes.paper,
+            scheduledTests: scheduledTests.length > 0 ? scheduledTests : undefined,
           });
         }
       }
@@ -361,16 +396,16 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
       });
     }
 
-    const systemInstruction = `You are a high-speed JEE Question Paper & Module Extraction Engine.
+    const systemInstruction = `You are an elite JEE Question Paper & CBT Test Creator Engine.
 Your core mission:
-1. FAITHFULLY EXTRACT EVERY QUESTION from the provided text and/or images into standard CBT question objects.
+1. FAITHFULLY EXTRACT OR GENERATE QUESTIONS into standard CBT question objects:
+   - If questions are provided, extract every single question, keeping all options, math formulas, and solutions.
+   - If topic outlines, chapter names, or prompts are given (e.g. "Create 25 questions on Rotation and Optics"), generate authentic, high-yield JEE Main / Advanced level questions with tricky conceptual traps, proper LaTeX formatting, and complete calculations.
 2. PRESERVE MATHEMATICS, PHYSICS, AND CHEMISTRY with LaTeX syntax:
    - Inline math: $formula$, e.g. $E = mc^2$, $\\vec{F} = m\\vec{a}$, $\\alpha, \\beta, \\theta$.
    - Block equations: $$display formula$$.
 3. DIAGRAM & IMAGE LINKING:
-   - If a question corresponds to one of the attached images (circuit, graph, pulley, chemical structure, geometry):
-     Set "imageIndex": <0-based index of the attached image this question corresponds to>, e.g. 0 for Image 1, 1 for Image 2.
-     If a question does NOT use an attached image, set "imageIndex": -1.
+   - If an attached image matches a question, set "imageIndex": <0-based index of the attached image>. Otherwise set "imageIndex": -1.
    - Also describe it concisely in [Diagram: ...] within promptLatex.
 4. QUESTION TYPES & OPTIONS:
    - "SINGLE_CORRECT": 4 distinct options (A, B, C, D).
@@ -674,10 +709,28 @@ ${userCommand.trim()}
     parsedData.durationMinutes = parsedData.durationMinutes || customDurationMinutes || 180;
     parsedData.totalMarks = calculatedTotalMarks > 0 ? calculatedTotalMarks : (pattern === 'JEE_MAIN' ? 300 : 180);
 
+    let scheduledTests: any[] = [];
+    const fullCmd = `${userCommand || ''} ${req.body.schedulingCommand || ''} ${textQuestions || ''}`.trim();
+    if (req.body.autoSchedule || req.body.scheduleOptions) {
+      const opts = req.body.scheduleOptions || {
+        paper: parsedData,
+        ...parseScheduleCommand(fullCmd),
+      };
+      opts.paper = parsedData;
+      scheduledTests = generateLockedSchedule(opts);
+    } else if (/schedule|alternate|sunday|tomorrow|today|routine|cadence/i.test(fullCmd)) {
+      const parsedCmd = parseScheduleCommand(fullCmd);
+      scheduledTests = generateLockedSchedule({
+        paper: parsedData,
+        ...parsedCmd,
+      });
+    }
+
     res.json({
       success: true,
       examPaper: parsedData,
       data: parsedData,
+      scheduledTests: scheduledTests.length > 0 ? scheduledTests : undefined,
     });
   } catch (error: any) {
     console.error('Error parsing exam PDF:', error);

@@ -146,6 +146,8 @@ export interface ScheduledTest {
   paper?: ExamPaper;
   status: LiveWindowStatus;
   score?: number;
+  isLocked?: boolean; // Strictly committed, cannot be rescheduled or edited
+  scheduledAt?: number;
 }
 
 export type RoutineType = 'MODULE_PRACTICE' | 'REAL_TEST';
