@@ -74,10 +74,13 @@ async function generateContentWithFallback(options: {
   const ai = getGeminiClient();
   // High-availability models for fast multimodal STEM, LaTeX, and vision tasks
   // gemini-3.1-flash-lite responds in ~1000ms with high uptime, avoiding 503 spikes on Vercel
-  const candidateModels = [
-    'gemini-3.1-flash-lite',
-    'gemini-3.8-flash',
-  ];
+  // PATCH 2.0 + PATCH 4: FREE UNLIMITED - 4500/day free, no billing
+const candidateModels = [
+  'gemini-2.0-flash',        // 1500/day FREE - MAIN
+  'gemini-2.0-flash-lite',   // 1500/day FREE - BACKUP 1
+  'gemini-1.5-flash-8b',     // 4000/day FREE - BACKUP 2 (for truly unlimited)
+  'gemini-1.5-flash',        // 1500/day FREE - BACKUP 3
+];
   let lastError: any = null;
   const isVercel = Boolean(process.env.VERCEL);
   const perModelTimeout = isVercel ? 6000 : (options.timeoutMs ? Math.min(options.timeoutMs, 20000) : 20000);
