@@ -1,8 +1,12 @@
 import { ScheduledTest, DailyRoutineItem, TaggedQuestionEntry } from '../types/exam';
 import { SAMPLE_JEE_MAIN_MOCK } from './samplePapers';
 import { getFiftyAndRemainingScheduledMockTests } from './sampleSplitFiftyPapers';
+import { getVibrantElectrostaticsLockedTests } from './vibrantElectrostaticsData';
 
-export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = getFiftyAndRemainingScheduledMockTests();
+export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = [
+  ...getVibrantElectrostaticsLockedTests(),
+  ...getFiftyAndRemainingScheduledMockTests(),
+];
 
 export const SAMPLE_DAILY_ROUTINE: DailyRoutineItem[] = [
   // Week 1 Routine

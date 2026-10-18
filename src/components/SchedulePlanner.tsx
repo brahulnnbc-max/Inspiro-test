@@ -1210,13 +1210,15 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                       ) : (
                         <span className="text-zinc-500 italic">No paper attached</span>
                       )}
-                      <button
-                        onClick={() => setAttachingTestId(test.id)}
-                        className="text-[11px] text-zinc-400 hover:text-white underline flex items-center gap-1"
-                      >
-                        <Paperclip className="w-3 h-3 text-red-400" />
-                        {test.paper ? 'Change Paper' : 'Attach PDF Paper'}
-                      </button>
+                      {!test.isLocked && (
+                        <button
+                          onClick={() => setAttachingTestId(test.id)}
+                          className="text-[11px] text-zinc-400 hover:text-white underline flex items-center gap-1"
+                        >
+                          <Paperclip className="w-3 h-3 text-red-400" />
+                          {test.paper ? 'Change Paper' : 'Attach PDF Paper'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1247,13 +1249,23 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                         : 'Locked'}
                     </button>
 
-                    <button
-                      onClick={() => onDeleteTest(test.id)}
-                      className="p-2 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-zinc-900 transition-colors"
-                      title="Remove from schedule"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {test.isLocked ? (
+                      <div
+                        className="p-2 text-amber-500/80 bg-amber-950/20 rounded-lg border border-amber-800/40 flex items-center gap-1 text-[11px] font-semibold cursor-not-allowed select-none"
+                        title="Strictly Locked Examination — Cannot be rescheduled or edited"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="hidden sm:inline">Locked</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => onDeleteTest(test.id)}
+                        className="p-2 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-zinc-900 transition-colors"
+                        title="Remove from schedule"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

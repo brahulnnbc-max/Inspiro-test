@@ -25,6 +25,7 @@ import {
   SAMPLE_JEE_FIFTY_PART_1,
   SAMPLE_JEE_REMAINING_PART_2,
 } from '../data/samplePapers';
+import { VIBRANT_ELECTROSTATICS_PAPER_1 } from '../data/vibrantElectrostaticsData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
   getTodayIso,
@@ -127,6 +128,7 @@ export const TestHub: React.FC<TestHubProps> = ({
   // Available Mock Papers (Default JEE Main & Advanced + 50-Q Split CBT Papers + Custom Uploads)
   const allAvailablePapers: ExamPaper[] = useMemo(() => {
     const list: ExamPaper[] = [
+      VIBRANT_ELECTROSTATICS_PAPER_1,
       SAMPLE_JEE_FIFTY_PART_1,
       SAMPLE_JEE_REMAINING_PART_2,
       SAMPLE_JEE_MAIN_MOCK,

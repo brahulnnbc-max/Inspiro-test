@@ -68,7 +68,12 @@ export default function App() {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const missingLockedTests = SAMPLE_SCHEDULED_TESTS.filter(
+            (st) => !parsed.some((p: any) => p.id === st.id)
+          );
+          return [...missingLockedTests, ...parsed];
+        }
       }
       return SAMPLE_SCHEDULED_TESTS;
     } catch {
