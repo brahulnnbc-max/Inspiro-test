@@ -12,13 +12,19 @@ import {
 } from '../types/exam';
 import { InspiroLogo } from './InspiroLogo';
 import { MathRenderer } from './MathRenderer';
-import { DiagnosisWorkbench } from './DiagnosisWorkbench';
 import { DailyRoutineDesk } from './DailyRoutineDesk';
 import { ModulePracticeSection } from './ModulePracticeSection';
 import { RaceQuestionBank } from './RaceQuestionBank';
 import { SchedulePlanner } from './SchedulePlanner';
 import { AIMentorSchedulerChat } from './AIMentorSchedulerChat';
 import { MistakeNotebook } from './MistakeNotebook';
+import { AdminPanelModal } from './AdminPanelModal';
+import {
+  SAMPLE_JEE_MAIN_MOCK,
+  SAMPLE_JEE_ADVANCED_MOCK,
+  SAMPLE_JEE_FIFTY_PART_1,
+  SAMPLE_JEE_REMAINING_PART_2,
+} from '../data/samplePapers';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
   getTodayIso,
@@ -50,6 +56,7 @@ import {
   Flame,
   Bell,
   AlertTriangle,
+  Shield,
 } from 'lucide-react';
 
 interface TestHubProps {
@@ -58,6 +65,7 @@ interface TestHubProps {
   savedAttempts: StudentAttempt[];
   savedCustomPapers: ExamPaper[];
   onSaveCustomPaper: (paper: ExamPaper) => void;
+  onDeleteCustomPaper?: (paperId: string) => void;
   mistakes: MistakeEntry[];
   onRemoveMistake?: (id: string) => void;
   onUpdateMistakeReason?: (id: string, reason: any, notes?: string) => void;
@@ -68,6 +76,7 @@ interface TestHubProps {
   onAttachPaper?: (testId: string, paper: ExamPaper) => void;
   onAddCustomSchedule: (newTests: ScheduledTest[]) => void;
   onDeleteScheduledTest?: (testId: string) => void;
+  onClearAllScheduledTests?: () => void;
   routineItems?: DailyRoutineItem[];
   onStartRoutineTask?: (item: DailyRoutineItem) => void;
   onToggleRoutineComplete?: (itemId: string) => void;
@@ -85,6 +94,7 @@ export const TestHub: React.FC<TestHubProps> = ({
   savedAttempts = [],
   savedCustomPapers = [],
   onSaveCustomPaper,
+  onDeleteCustomPaper,
   mistakes = [],
   onRemoveMistake = () => {},
   onUpdateMistakeReason = () => {},
@@ -95,6 +105,7 @@ export const TestHub: React.FC<TestHubProps> = ({
   onAttachPaper = () => {},
   onAddCustomSchedule,
   onDeleteScheduledTest = () => {},
+  onClearAllScheduledTests = () => {},
   routineItems = [],
   onStartRoutineTask = () => {},
   onToggleRoutineComplete = () => {},
@@ -105,10 +116,29 @@ export const TestHub: React.FC<TestHubProps> = ({
   onUpdateQuestionTags = () => {},
   onToggleTagOnQuestion = () => {},
 }) => {
-  // Navigation Tabs (All previous features restored)
+  // Navigation Tabs for Students (Clean & focused)
   const [activeTab, setActiveTab] = useState<
-    'TESTS' | 'SCHEDULE' | 'DIAGNOSIS' | 'ROUTINE' | 'MODULES' | 'RACE' | 'MENTOR' | 'MISTAKES' | 'HISTORY'
+    'TESTS' | 'ROUTINE' | 'MODULES' | 'RACE' | 'MENTOR' | 'MISTAKES' | 'HISTORY' | 'SCHEDULE'
   >('TESTS');
+
+  // Admin Portal Modal State
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+
+  // Available Mock Papers (Default JEE Main & Advanced + 50-Q Split CBT Papers + Custom Uploads)
+  const allAvailablePapers: ExamPaper[] = useMemo(() => {
+    const list: ExamPaper[] = [
+      SAMPLE_JEE_FIFTY_PART_1,
+      SAMPLE_JEE_REMAINING_PART_2,
+      SAMPLE_JEE_MAIN_MOCK,
+      SAMPLE_JEE_ADVANCED_MOCK,
+    ];
+    savedCustomPapers.forEach((cp) => {
+      if (!list.some((p) => p.id === cp.id)) {
+        list.push(cp);
+      }
+    });
+    return list;
+  }, [savedCustomPapers]);
 
   // Input & AI Conversion State
   const [pastedText, setPastedText] = useState('');
@@ -341,13 +371,21 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">
+            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 hidden sm:inline">
               Today: <strong className="text-white">{todayStr}</strong>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-zinc-900 border border-zinc-800 text-zinc-300">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               <span>NTA & MathonGo CBT</span>
             </span>
+            <button
+              onClick={() => setIsAdminModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all cursor-pointer"
+              title="Open Teacher & Administrator Console"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span>Admin Portal</span>
+            </button>
           </div>
         </header>
 
@@ -391,7 +429,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
         )}
 
         {/* ======================================================== */}
-        {/* PRIMARY NAVIGATION TABS (All features restored)         */}
+        {/* PRIMARY NAVIGATION TABS (STUDENT VIEW)                   */}
         {/* ======================================================== */}
         <div className="flex items-center gap-1.5 border-b border-zinc-800 pb-1 overflow-x-auto">
           <button
@@ -403,43 +441,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
             }`}
           >
             <Play className="w-3.5 h-3.5 fill-current" />
-            Live Tests & Creator
-          </button>
-
-          <button
-            onClick={() => setActiveTab('SCHEDULE')}
-            className={`px-3 py-2 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'SCHEDULE'
-                ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-            }`}
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            6-Month Schedule
-          </button>
-
-          <button
-            onClick={() => setActiveTab('DIAGNOSIS')}
-            className={`px-3 py-2 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'DIAGNOSIS'
-                ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5 text-red-400" />
-            Diagnosis
-          </button>
-
-          <button
-            onClick={() => setActiveTab('ROUTINE')}
-            className={`px-3 py-2 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'ROUTINE'
-                ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
-            Daily Desk
+            CBT Tests & Mocks
           </button>
 
           <button
@@ -452,6 +454,18 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
           >
             <Layers className="w-3.5 h-3.5" />
             Module Practice
+          </button>
+
+          <button
+            onClick={() => setActiveTab('ROUTINE')}
+            className={`px-3 py-2 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
+              activeTab === 'ROUTINE'
+                ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
+            Daily Desk
           </button>
 
           <button
@@ -511,194 +525,136 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
             <History className="w-3.5 h-3.5" />
             History ({savedAttempts.length + missedTests.length})
           </button>
+
+          <button
+            onClick={() => setActiveTab('SCHEDULE')}
+            className={`px-3 py-2 text-xs md:text-sm font-bold rounded-lg transition-all flex items-center gap-1.5 shrink-0 ${
+              activeTab === 'SCHEDULE'
+                ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)]'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            Schedule Calendar
+          </button>
         </div>
 
         {/* ======================================================== */}
-        {/* TAB 1: TESTS & AI TEXT-TO-TEST CREATOR                   */}
+        {/* TAB 1: STUDENT CBT TESTS & AVAILABLE MOCKS               */}
         {/* ======================================================== */}
         {activeTab === 'TESTS' && (
           <div className="space-y-7">
-            {/* AI Text Ingestion & Clock Scheduler */}
-            <div
-              ref={creatorRef}
-              className="rounded-2xl bg-zinc-950 border border-zinc-800 p-5 shadow-xl space-y-4"
-            >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            {/* Alternate Day 50-Question Schedule Status Banner */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-red-950/60 via-zinc-950 to-black border border-red-600/40 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-600/20 border border-red-500/50 flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider font-display">
+                      50-Question Section CBT Schedule Active
+                    </span>
+                    <span className="px-2 py-0.2 rounded text-[10px] font-mono font-black bg-red-600 text-white">
+                      ALTERNATE DAYS (09:00 - 12:00)
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Tests locked at 180 mins for 50 questions & (Questions × 4 mins) for remaining questions with scrambled MCQs, diagrams & verified solutions.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setActiveTab('SCHEDULE')}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                  <span>View Calendar</span>
+                </button>
+                <button
+                  onClick={() => setIsAdminModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Chunk & Schedule</span>
+                </button>
+              </div>
+            </div>
+
+            {/* SUB-SECTION 1: AVAILABLE CBT MOCK EXAMS (STUDENT PORTAL) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-red-500" />
-                  <h3 className="text-base font-bold font-display text-white">
-                    Paste Questions Text & Schedule Live Test
+                  <Play className="w-4 h-4 text-red-500 fill-current" />
+                  <h3 className="text-base font-bold font-display uppercase tracking-wider text-white">
+                    Available CBT Mock Exam Papers
                   </h3>
                 </div>
-
-                <button
-                  onClick={handleFillSample}
-                  className="text-xs text-red-400 hover:text-red-300 font-mono underline cursor-pointer"
-                >
-                  Paste Sample Questions
-                </button>
+                <span className="text-xs font-mono text-zinc-400">
+                  {allAvailablePapers.length} Paper(s) Ready
+                </span>
               </div>
 
-              {/* Text Input Area */}
-              <textarea
-                value={pastedText}
-                onChange={(e) => setPastedText(e.target.value)}
-                rows={5}
-                placeholder="Paste questions here with options (A, B, C, D) and answers, or syllabus chapters...
-Example:
-1. A particle of mass $m$ moves under restoring force $F = -kx$...
-(A) $2\pi \sqrt{m/k}$
-(B) $\pi \sqrt{m/k}$
-Answer: (A)
-Solution: $\omega = \sqrt{k/m}$, hence $T = 2\pi/\omega$."
-                className="w-full rounded-xl bg-black border border-zinc-800 p-3.5 text-xs md:text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-red-600"
-              />
-
-              {/* AI Command input */}
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  value={aiCommand}
-                  onChange={(e) => setAiCommand(e.target.value)}
-                  placeholder="AI Schedule Command (e.g. 'Tomorrow at 9 AM', 'Alternate days for 1 month', 'Every Sunday for 3 months')"
-                  className="w-full rounded-lg bg-zinc-900 border border-zinc-800 px-3 py-2 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-red-500"
-                />
-
-                <div className="flex items-center gap-1.5 shrink-0 overflow-x-auto w-full sm:w-auto">
-                  <button
-                    type="button"
-                    onClick={() => setAiCommand('Schedule for tomorrow at 9 AM')}
-                    className="px-2 py-1 text-[11px] rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-                  >
-                    Tomorrow
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAiCommand('Schedule on alternate days for 1 month at 9 AM')}
-                    className="px-2 py-1 text-[11px] rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-                  >
-                    Alternate Days
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAiCommand('Schedule every Sunday for 3 months at 9 AM')}
-                    className="px-2 py-1 text-[11px] rounded bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
-                  >
-                    Every Sunday
-                  </button>
-                </div>
-              </div>
-
-              {/* Clock Time Picker & Cadence Bar */}
-              <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-                  <Clock className="w-3.5 h-3.5 text-red-500" />
-                  <span>Choose Specific Clock Time & Live Duration:</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div>
-                    <label className="text-zinc-400 block mb-1">Start Time (Clock):</label>
-                    <input
-                      type="time"
-                      value={clockStartTime}
-                      onChange={(e) => setClockStartTime(e.target.value)}
-                      className="w-full rounded bg-black border border-zinc-700 px-2.5 py-1.5 text-zinc-200 font-mono text-xs focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-zinc-400 block mb-1">End Time (Clock):</label>
-                    <input
-                      type="time"
-                      value={clockEndTime}
-                      onChange={(e) => setClockEndTime(e.target.value)}
-                      className="w-full rounded bg-black border border-zinc-700 px-2.5 py-1.5 text-zinc-200 font-mono text-xs focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-zinc-400 block mb-1">Date:</label>
-                    <input
-                      type="date"
-                      value={scheduleTargetDate}
-                      onChange={(e) => setScheduleTargetDate(e.target.value)}
-                      className="w-full rounded bg-black border border-zinc-700 px-2 py-1.5 text-zinc-200 font-mono text-xs focus:outline-none focus:border-red-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-zinc-400 block mb-1">Cadence / Span:</label>
-                    <select
-                      value={scheduleCadence}
-                      onChange={(e) => setScheduleCadence(e.target.value as any)}
-                      className="w-full rounded bg-black border border-zinc-700 px-2 py-1.5 text-zinc-200 text-xs focus:outline-none focus:border-red-500"
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {allAvailablePapers.map((paper) => {
+                  const qCount = paper.sections.reduce(
+                    (acc, s) => acc + (s.questions?.length || 0),
+                    0
+                  );
+                  const isMain = paper.pattern === 'JEE_MAIN';
+                  return (
+                    <div
+                      key={paper.id}
+                      className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col justify-between space-y-4 group"
                     >
-                      <option value="SINGLE">Single Live Test</option>
-                      <option value="ALTERNATE_DAYS">Alternate Days (Kota style)</option>
-                      <option value="WEEKLY_SUNDAYS">Every Sunday Mock</option>
-                      <option value="TWICE_WEEKLY">Twice a Week (Wed & Sat)</option>
-                    </select>
-                  </div>
-                </div>
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className={`px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                              isMain
+                                ? 'bg-red-600/20 border border-red-500/40 text-red-400'
+                                : 'bg-purple-600/20 border border-purple-500/40 text-purple-400'
+                            }`}
+                          >
+                            {paper.pattern}
+                          </span>
+                          <span className="text-xs font-mono text-zinc-400">
+                            {paper.durationMinutes}m • {paper.totalMarks} Marks
+                          </span>
+                        </div>
 
-                {scheduleCadence !== 'SINGLE' && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-xs text-zinc-400">Duration Span:</span>
-                    {[1, 3, 6].map((m) => (
+                        <h4 className="text-base font-bold text-white group-hover:text-red-400 transition-colors line-clamp-2">
+                          {paper.title}
+                        </h4>
+
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {paper.sections.map((sec) => (
+                            <span
+                              key={sec.id}
+                              className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 capitalize font-medium"
+                            >
+                              {sec.name} ({sec.questions?.length || 0})
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="text-[11px] font-mono text-zinc-500 pt-0.5">
+                          {qCount} Questions • {isMain ? '+4 / -1 Marking' : '+4 / -2 Advanced Pattern'}
+                        </div>
+                      </div>
+
                       <button
-                        key={m}
-                        type="button"
-                        onClick={() => setScheduleDurationMonths(m as 1 | 3 | 6)}
-                        className={`px-3 py-1 rounded text-xs font-bold cursor-pointer ${
-                          scheduleDurationMonths === m
-                            ? 'bg-red-600 text-white'
-                            : 'bg-black border border-zinc-800 text-zinc-400'
-                        }`}
+                        onClick={() => onSelectExam(paper)}
+                        className="w-full py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white flex items-center justify-center gap-2 shadow-[0_0_12px_rgba(220,38,38,0.3)] transition-all cursor-pointer"
                       >
-                        {m} Month{m > 1 ? 's' : ''}
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>START EXAMINATION</span>
                       </button>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* Action & Commitment Bar */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
-                <div className="text-[11px] text-zinc-500 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                  <span>Strict Lock: Once scheduled, tests cannot be edited, skipped, or rescheduled.</span>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={isProcessing}
-                  onClick={handleConvertAndSchedule}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.4)] disabled:opacity-50 cursor-pointer"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Converting & Scheduling...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3.5 h-3.5 fill-current" />
-                      <span>Convert Text & Lock Schedule</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {statusMessage && (
-                <div className="text-xs text-zinc-400 font-mono animate-pulse">{statusMessage}</div>
-              )}
-              {errorMessage && (
-                <div className="text-xs text-red-400 font-mono flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
             </div>
 
             {/* ======================================================== */}
@@ -915,21 +871,6 @@ Solution: $\omega = \sqrt{k/m}$, hence $T = 2\pi/\omega$."
         )}
 
         {/* ======================================================== */}
-        {/* TAB 3: ROOT-CAUSE DIAGNOSIS                              */}
-        {/* ======================================================== */}
-        {activeTab === 'DIAGNOSIS' && (
-          <DiagnosisWorkbench
-            onNavigateToTab={(tab) => {
-              if (tab === 'TESTS') setActiveTab('TESTS');
-              else if (tab === 'SCHEDULE') setActiveTab('SCHEDULE');
-              else if (tab === 'ROUTINE') setActiveTab('ROUTINE');
-              else if (tab === 'MENTOR') setActiveTab('MENTOR');
-            }}
-            onLaunchSampleTest={() => setActiveTab('TESTS')}
-          />
-        )}
-
-        {/* ======================================================== */}
         {/* TAB 4: DAILY ROUTINE DESK                                */}
         {/* ======================================================== */}
         {activeTab === 'ROUTINE' && (
@@ -1115,6 +1056,20 @@ Solution: $\omega = \sqrt{k/m}$, hence $T = 2\pi/\omega$."
           </div>
         )}
       </div>
+
+      {/* Admin Management Modal Console */}
+      <AdminPanelModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        savedCustomPapers={savedCustomPapers}
+        onSaveCustomPaper={onSaveCustomPaper}
+        onDeleteCustomPaper={onDeleteCustomPaper}
+        scheduledTests={scheduledTests}
+        onAddCustomSchedule={onAddCustomSchedule}
+        onDeleteScheduledTest={onDeleteScheduledTest}
+        onClearAllScheduledTests={onClearAllScheduledTests}
+        onStartTestDirectly={onSelectExam}
+      />
     </div>
   );
 };

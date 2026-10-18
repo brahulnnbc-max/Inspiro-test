@@ -4,6 +4,7 @@ import {
   SyllabusTopic,
   ExamPaper,
   SubjectId,
+  Question,
 } from '../types/exam';
 import { SAMPLE_JEE_MAIN_MOCK, SAMPLE_JEE_ADVANCED_MOCK } from '../data/samplePapers';
 import {
@@ -26,7 +27,19 @@ import {
   Paperclip,
   X,
   FileText,
+  Sun,
+  Sunrise,
+  Moon,
+  CalendarCheck,
+  Zap,
 } from 'lucide-react';
+import { splitQuestionsIntoFiftyChunks, schedulePapersOnAlternateDays } from '../utils/questionSplitter';
+import {
+  SAMPLE_JEE_FIFTY_PART_1,
+  SAMPLE_JEE_REMAINING_PART_2,
+  getFiftyAndRemainingScheduledMockTests,
+} from '../data/sampleSplitFiftyPapers';
+import { getIsoDate } from '../utils/scheduleCalculator';
 
 interface SchedulePlannerProps {
   scheduledTests: ScheduledTest[];
@@ -58,11 +71,40 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
   const [expandedTestIds, setExpandedTestIds] = useState<Record<string, boolean>>({});
   const [earlyUnlockOverrides, setEarlyUnlockOverrides] = useState<Record<string, boolean>>({});
 
+  // Date computation helpers
+  const getTodayIso = () => new Date().toISOString().split('T')[0];
+  const getTomorrowIso = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  };
+  const getUpcomingSundayIso = () => {
+    const d = new Date();
+    const daysUntilSunday = (7 - d.getDay()) % 7 || 7;
+    const sunday = new Date(d.getTime() + daysUntilSunday * 86400000);
+    return sunday.toISOString().split('T')[0];
+  };
+  const getTwoWeeksLaterIso = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    return d.toISOString().split('T')[0];
+  };
+
   // Coaching material multi-month scheduler state
   const [scheduleInputMode, setScheduleInputMode] = useState<'MATERIAL' | 'COMMAND'>('MATERIAL');
   const [coachingMaterialText, setCoachingMaterialText] = useState('');
-  const [selectedHorizonMonths, setSelectedHorizonMonths] = useState<3 | 6>(6);
-  const [testCount, setTestCount] = useState<number>(8);
+  const [selectedHorizon, setSelectedHorizon] = useState<
+    '3_MONTHS' | '6_MONTHS' | 'SPECIFIC_DATE_TIME' | 'FIFTY_ALTERNATE'
+  >('FIFTY_ALTERNATE');
+  const [testCount, setTestCount] = useState<number>(2);
+
+  // Specific Date & Clock Time scheduling state
+  const [specificDate, setSpecificDate] = useState<string>(getUpcomingSundayIso());
+  const [specificStartTime, setSpecificStartTime] = useState<string>('09:00');
+  const [specificEndTime, setSpecificEndTime] = useState<string>('12:00');
+  const [specificTestTitle, setSpecificTestTitle] = useState<string>('');
+  const [specificPaperId, setSpecificPaperId] = useState<string>('');
+  const [scheduleSuccessNotice, setScheduleSuccessNotice] = useState<string>('');
 
   const handleLoadSampleCoachingMaterial = () => {
     setCoachingMaterialText(`ALLEN LEADER KOTA - CLASS 11 & 12 COMPLETE SYLLABUS:
@@ -209,14 +251,130 @@ MATHEMATICS:
     }
   };
 
+  // Schedule a single test on an exact specific date and clock time
+  const handleScheduleSpecificDateTime = () => {
+    if (!specificDate) {
+      setGenError('Please choose a valid specific date.');
+      return;
+    }
+    if (!specificStartTime || !specificEndTime) {
+      setGenError('Please select both start and end clock times for the test window.');
+      return;
+    }
+    setGenError('');
+
+    // Determine paper
+    let attachedPaper: ExamPaper | undefined = undefined;
+    if (specificPaperId === 'sample-main') {
+      attachedPaper = SAMPLE_JEE_MAIN_MOCK;
+    } else if (specificPaperId === 'sample-adv') {
+      attachedPaper = SAMPLE_JEE_ADVANCED_MOCK;
+    } else if (specificPaperId) {
+      attachedPaper = savedCustomPapers.find((p) => p.id === specificPaperId);
+    }
+
+    // Determine syllabus
+    let syllabusTopics: SyllabusTopic[] = [];
+    if (attachedPaper && attachedPaper.sections) {
+      syllabusTopics = attachedPaper.sections.map((s, idx) => ({
+        id: `syl-spec-${Date.now()}-${idx}`,
+        subject: (s.id as SubjectId) || 'physics',
+        name: s.name,
+        completed: false,
+      }));
+    } else if (coachingMaterialText.trim()) {
+      const lines = coachingMaterialText
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 2 && !l.endsWith(':'))
+        .slice(0, 9);
+      syllabusTopics = lines.map((line, idx) => ({
+        id: `syl-spec-${Date.now()}-${idx}`,
+        subject: (idx % 3 === 0 ? 'physics' : idx % 3 === 1 ? 'chemistry' : 'mathematics') as SubjectId,
+        name: line.replace(/^[0-9]+[.)]\s*/, ''),
+        completed: false,
+      }));
+    }
+
+    if (syllabusTopics.length === 0) {
+      syllabusTopics = [
+        { id: `syl-spec-1`, subject: 'physics', name: 'Units & Dimensions, Kinematics 1D & 2D', completed: false },
+        { id: `syl-spec-2`, subject: 'chemistry', name: 'Atomic Structure & Chemical Bonding', completed: false },
+        { id: `syl-spec-3`, subject: 'mathematics', name: 'Quadratic Equations & Complex Numbers', completed: false },
+      ];
+    }
+
+    if (selectedHorizon === 'FIFTY_ALTERNATE') {
+      const paperToSplit = attachedPaper || SAMPLE_JEE_FIFTY_PART_1;
+      const allQ: Question[] = [];
+      paperToSplit.sections.forEach((sec) => {
+        if (Array.isArray(sec.questions)) allQ.push(...sec.questions);
+      });
+
+      if (allQ.length > 0) {
+        const splitPapers = splitQuestionsIntoFiftyChunks(
+          allQ,
+          specificTestTitle.trim() || paperToSplit.title,
+          paperToSplit.pattern,
+          true
+        );
+        splitPapers.forEach((sp) => onSaveCustomPaper && onSaveCustomPaper(sp));
+        const scheduled = schedulePapersOnAlternateDays(splitPapers, {
+          startDate: specificDate,
+          startTime: specificStartTime || '09:00',
+          endTime: specificEndTime || '12:00',
+        });
+        onAddCustomSchedule(scheduled);
+        setScheduleSuccessNotice(`🔒 Successfully scheduled ${splitPapers.length} tests (50-Q @ 180m & remainder @ Q×4m) on alternate days starting ${specificDate} (${specificStartTime} - ${specificEndTime})!`);
+      } else {
+        const mockTests = getFiftyAndRemainingScheduledMockTests();
+        onAddCustomSchedule(mockTests);
+        setScheduleSuccessNotice(`🔒 Successfully scheduled 50-Q Part 1 (180m) & Part 2 (100m) on alternate days (${specificStartTime} - ${specificEndTime})!`);
+      }
+      setSpecificTestTitle('');
+      setTimeout(() => setScheduleSuccessNotice(''), 6000);
+      return;
+    }
+
+    const title =
+      specificTestTitle.trim() ||
+      attachedPaper?.title ||
+      (coachingMaterialText.trim() ? 'Coaching Module Scheduled Test' : 'Custom Scheduled CBT Exam');
+
+    const duration = attachedPaper?.durationMinutes || 180;
+    const pattern = attachedPaper?.pattern || 'JEE_MAIN';
+
+    const newTest: ScheduledTest = {
+      id: `sched-spec-${Date.now()}`,
+      paperId: attachedPaper?.id,
+      paper: attachedPaper,
+      title,
+      scheduledDate: specificDate,
+      startTime: specificStartTime,
+      endTime: specificEndTime,
+      pattern,
+      durationMinutes: duration,
+      totalMarks: attachedPaper?.totalMarks || 300,
+      status: 'UPCOMING_LOCKED',
+      isLocked: true,
+      syllabus: syllabusTopics,
+    };
+
+    onAddCustomSchedule([newTest, ...scheduledTests]);
+    setScheduleSuccessNotice(`🔒 Successfully scheduled "${title}" on ${specificDate} (${specificStartTime} - ${specificEndTime})!`);
+    setSpecificTestTitle('');
+    setTimeout(() => setScheduleSuccessNotice(''), 6000);
+  };
+
   // Natural Language AI Command Schedule Generation
   const handleGenerateSchedule = async (presetCommand?: string) => {
     let textToUse = presetCommand;
     let countToUse = testCount;
     if (!textToUse) {
       if (scheduleInputMode === 'MATERIAL') {
+        const horizonMonths = selectedHorizon === '3_MONTHS' ? 3 : 6;
         textToUse = coachingMaterialText.trim()
-          ? `Convert the following coaching material chapters into a ${selectedHorizonMonths}-month periodic test series with ${testCount} tests on alternate Sundays: \n\n${coachingMaterialText.trim()}`
+          ? `Convert the following coaching material chapters into a ${horizonMonths}-month periodic test series with ${testCount} tests starting on ${specificDate} with test slot ${specificStartTime}-${specificEndTime}: \n\n${coachingMaterialText.trim()}`
           : '';
         countToUse = testCount;
       } else {
@@ -235,6 +393,9 @@ MATHEMATICS:
         body: JSON.stringify({
           command: textToUse,
           numberOfTests: countToUse,
+          startDate: specificDate,
+          startTime: specificStartTime,
+          endTime: specificEndTime,
           currentDate: new Date().toISOString().split('T')[0],
         }),
       });
@@ -251,8 +412,8 @@ MATHEMATICS:
             title: t.title,
             pattern: 'JEE_MAIN',
             scheduledDate: t.scheduledDate,
-            startTime: t.startTime || '09:00',
-            endTime: t.endTime || '12:00',
+            startTime: t.startTime || specificStartTime || '09:00',
+            endTime: t.endTime || specificEndTime || '12:00',
             durationMinutes: 180,
             status: idx === 0 ? 'LIVE_NOW' : 'UPCOMING_LOCKED',
             syllabus: (t.syllabus || []).map((s: any, sIdx: number) => ({
@@ -266,6 +427,8 @@ MATHEMATICS:
 
         onAddCustomSchedule(generatedTests);
         setCommandText('');
+        setScheduleSuccessNotice(`🔒 Successfully scheduled ${generatedTests.length} tests starting on ${specificDate} (${specificStartTime} - ${specificEndTime})!`);
+        setTimeout(() => setScheduleSuccessNotice(''), 6000);
       }
     } catch (e: any) {
       console.error(e);
@@ -339,35 +502,67 @@ MATHEMATICS:
         {scheduleInputMode === 'MATERIAL' ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-zinc-400 font-semibold">Schedule Horizon:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-zinc-400 font-semibold">Schedule Horizon / Mode:</span>
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedHorizonMonths(3);
+                    setSelectedHorizon('3_MONTHS');
                     setTestCount(6);
                   }}
-                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${
-                    selectedHorizonMonths === 3
-                      ? 'bg-red-600 text-white border-red-500'
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    selectedHorizon === '3_MONTHS'
+                      ? 'bg-red-600 text-white border-red-500 shadow-xs'
                       : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                   }`}
                 >
-                  ⚡ 3 Months (6 Periodic Tests)
+                  ⚡ 3 Months (6 Tests)
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedHorizonMonths(6);
+                    setSelectedHorizon('6_MONTHS');
                     setTestCount(8);
                   }}
-                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all ${
-                    selectedHorizonMonths === 6
-                      ? 'bg-red-600 text-white border-red-500'
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    selectedHorizon === '6_MONTHS'
+                      ? 'bg-red-600 text-white border-red-500 shadow-xs'
                       : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                   }`}
                 >
-                  🎯 6 Months (8 Periodic Tests)
+                  🎯 6 Months (8 Tests)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedHorizon('SPECIFIC_DATE_TIME');
+                    setTestCount(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    selectedHorizon === 'SPECIFIC_DATE_TIME'
+                      ? 'bg-red-600 text-white border-red-500 shadow-xs ring-1 ring-red-400'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <CalendarCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>📅 Specific Date & Clock Time</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedHorizon('FIFTY_ALTERNATE');
+                    setTestCount(2);
+                    setSpecificStartTime('09:00');
+                    setSpecificEndTime('12:00');
+                  }}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    selectedHorizon === 'FIFTY_ALTERNATE'
+                      ? 'bg-red-600 text-white border-red-500 shadow-xs ring-1 ring-red-400'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                  <span>⚡ 50-Q Alternate Days (09:00-12:00)</span>
                 </button>
               </div>
 
@@ -383,12 +578,209 @@ MATHEMATICS:
                   <button
                     type="button"
                     onClick={() => setCoachingMaterialText('')}
-                    className="px-2 py-1 text-zinc-500 hover:text-red-400 transition-all font-semibold"
+                    className="px-2 py-1 text-zinc-500 hover:text-red-400 transition-all font-semibold cursor-pointer"
                   >
                     Clear
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* INTERACTIVE SPECIFIC DATE & CLOCK TIME SCHEDULE CONTROLS */}
+            <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-red-500" />
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    {selectedHorizon === 'SPECIFIC_DATE_TIME'
+                      ? 'Choose Specific Date & Clock Live Shift Window'
+                      : 'Series Starting Date & Shift Clock Window'}
+                  </span>
+                </div>
+                <span className="text-[11px] text-zinc-400 font-mono">
+                  {selectedHorizon === 'SPECIFIC_DATE_TIME'
+                    ? `Window: ${specificDate} (${specificStartTime} - ${specificEndTime})`
+                    : `Starts: ${specificDate} • Shift: ${specificStartTime} - ${specificEndTime}`}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. Date Picker & Quick Chips */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-red-500" />
+                      <span>{selectedHorizon === 'SPECIFIC_DATE_TIME' ? 'Specific Exam Date:' : 'First Test Date:'}</span>
+                    </label>
+                    <span className="text-[11px] font-mono text-red-400 font-bold">{specificDate}</span>
+                  </div>
+                  <input
+                    type="date"
+                    value={specificDate}
+                    onChange={(e) => setSpecificDate(e.target.value)}
+                    min={getTodayIso()}
+                    className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-zinc-800 bg-zinc-950 text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 cursor-pointer"
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setSpecificDate(getTodayIso())}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
+                        specificDate === getTodayIso()
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Today
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSpecificDate(getTomorrowIso())}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
+                        specificDate === getTomorrowIso()
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Tomorrow
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSpecificDate(getUpcomingSundayIso())}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
+                        specificDate === getUpcomingSundayIso()
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Next Sunday
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSpecificDate(getTwoWeeksLaterIso())}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer ${
+                        specificDate === getTwoWeeksLaterIso()
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      +2 Weeks
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Clock Time Slot & Quick Shifts */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Clock Time Slot (Start & End):</span>
+                    </label>
+                    <span className="text-[11px] font-mono text-zinc-400">
+                      {specificStartTime} to {specificEndTime}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="time"
+                      value={specificStartTime}
+                      onChange={(e) => setSpecificStartTime(e.target.value)}
+                      className="w-1/2 px-3 py-2 text-xs font-mono rounded-lg border border-zinc-800 bg-zinc-950 text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 cursor-pointer"
+                    />
+                    <span className="text-zinc-500 text-xs font-mono font-bold">TO</span>
+                    <input
+                      type="time"
+                      value={specificEndTime}
+                      onChange={(e) => setSpecificEndTime(e.target.value)}
+                      className="w-1/2 px-3 py-2 text-xs font-mono rounded-lg border border-zinc-800 bg-zinc-950 text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSpecificStartTime('09:00');
+                        setSpecificEndTime('12:00');
+                      }}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
+                        specificStartTime === '09:00' && specificEndTime === '12:00'
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      <Sunrise className="w-3 h-3 text-amber-400" />
+                      Morning (09:00 - 12:00)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSpecificStartTime('14:00');
+                        setSpecificEndTime('17:00');
+                      }}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
+                        specificStartTime === '14:00' && specificEndTime === '17:00'
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      <Sun className="w-3 h-3 text-amber-400" />
+                      Afternoon (14:00 - 17:00)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSpecificStartTime('18:00');
+                        setSpecificEndTime('21:00');
+                      }}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border transition-all flex items-center gap-1 cursor-pointer ${
+                        specificStartTime === '18:00' && specificEndTime === '21:00'
+                          ? 'bg-red-600 text-white border-red-500'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      <Moon className="w-3 h-3 text-purple-400" />
+                      Evening (18:00 - 21:00)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Specific Date & Clock Time Paper Selector & Title */}
+              {selectedHorizon === 'SPECIFIC_DATE_TIME' && (
+                <div className="pt-3 border-t border-zinc-800/80 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-zinc-400 block mb-1">
+                      Attach Test Paper (Optional):
+                    </label>
+                    <select
+                      value={specificPaperId}
+                      onChange={(e) => setSpecificPaperId(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-800 bg-zinc-950 text-white focus:outline-none focus:border-red-600 cursor-pointer"
+                    >
+                      <option value="">-- Use Pasted Syllabus Chapters --</option>
+                      <option value="sample-main">Full JEE Main 2026 CBT Mock Test (300 Marks)</option>
+                      <option value="sample-adv">Full JEE Advanced 2026 Mock Test (Paper 1)</option>
+                      {savedCustomPapers.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          Custom Paper: {p.title} ({p.pattern})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-400 block mb-1">
+                      Custom Test Title (Optional):
+                    </label>
+                    <input
+                      type="text"
+                      value={specificTestTitle}
+                      onChange={(e) => setSpecificTestTitle(e.target.value)}
+                      placeholder="e.g. Kinematics & Mechanics Live Window"
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-zinc-800 bg-zinc-950 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-600"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <textarea
@@ -399,24 +791,44 @@ MATHEMATICS:
 PHYSICS: Kinematics, Newton's Laws, Work Energy Power, Rotational Motion, Gravitation, Thermodynamics, Electrostatics, Optics...
 CHEMISTRY: Mole Concept, Atomic Structure, Periodic Table, Chemical Bonding, Equilibrium, GOC, Coordination Chemistry...
 MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, Calculus, Vectors & 3D..."
-              className="w-full px-4 py-3 text-xs md:text-sm font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-hidden focus:border-red-600 focus:ring-1 focus:ring-red-600"
+              className="w-full px-4 py-3 text-xs md:text-sm font-mono rounded-xl border border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
             />
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
               <span className="text-[11px] text-zinc-400">
-                AI distributes all pasted chapters across alternate Sundays with chapter checklists & CBT exam links.
+                {selectedHorizon === 'FIFTY_ALTERNATE'
+                  ? `Locks 50-Q tests (180 mins) & remaining questions (count × 4 mins) on alternate days (${specificStartTime} - ${specificEndTime}).`
+                  : selectedHorizon === 'SPECIFIC_DATE_TIME'
+                  ? `Locks 1 real exam window on ${specificDate} (${specificStartTime} - ${specificEndTime}).`
+                  : `Distributes chapters across ${selectedHorizon === '3_MONTHS' ? 6 : 8} periodic tests starting ${specificDate} @ ${specificStartTime}.`}
               </span>
-              <button
-                type="button"
-                onClick={() => handleGenerateSchedule()}
-                disabled={!coachingMaterialText.trim() || isGenerating}
-                className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
-              >
-                <Sparkles className="w-4 h-4 text-white" />
-                {isGenerating
-                  ? `Arranging ${selectedHorizonMonths}-Month Roadmap...`
-                  : `Convert to ${selectedHorizonMonths}-Month Test Series`}
-              </button>
+
+              {selectedHorizon === 'SPECIFIC_DATE_TIME' || selectedHorizon === 'FIFTY_ALTERNATE' ? (
+                <button
+                  type="button"
+                  onClick={handleScheduleSpecificDateTime}
+                  className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0"
+                >
+                  <Lock className="w-4 h-4 text-white" />
+                  <span>
+                    {selectedHorizon === 'FIFTY_ALTERNATE'
+                      ? `Lock 50-Q Alternate Day Series (Starts ${specificDate})`
+                      : `Schedule Test for ${specificDate} (${specificStartTime})`}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleGenerateSchedule()}
+                  disabled={!coachingMaterialText.trim() || isGenerating}
+                  className="px-6 py-3 text-xs md:text-sm font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-white" />
+                  {isGenerating
+                    ? `Arranging ${selectedHorizon === '3_MONTHS' ? '3' : '6'}-Month Roadmap...`
+                    : `Convert to ${selectedHorizon === '3_MONTHS' ? '3' : '6'}-Month Series (Starts ${specificDate})`}
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -476,6 +888,22 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                 🏆 Full Syllabus Ranker Mocks (6 Tests)
               </button>
             </div>
+          </div>
+        )}
+
+        {scheduleSuccessNotice && (
+          <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-500/70 text-emerald-200 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-semibold">{scheduleSuccessNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setScheduleSuccessNotice('')}
+              className="text-emerald-400 hover:text-white p-1 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 

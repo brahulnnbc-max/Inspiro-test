@@ -59,6 +59,7 @@ function getGeminiClient(): GoogleGenAI {
 
 import { parsePastedQuestionsInstant } from './utils/instantQuestionParser.ts';
 import { generateLockedSchedule, parseScheduleCommand } from './utils/scheduleCalculator.ts';
+import { splitQuestionsIntoFiftyChunks, schedulePapersOnAlternateDays } from './utils/questionSplitter.ts';
 
 // Resilient multi-model fallback: prioritized high-speed stable models (gemini-2.5-flash, gemini-3.8-flash, gemini-2.0-flash)
 async function generateContentWithFallback(options: {
@@ -72,18 +73,18 @@ async function generateContentWithFallback(options: {
   }
 
   const ai = getGeminiClient();
-  // High-availability models for fast multimodal STEM, LaTeX, and vision tasks
-  // gemini-3.1-flash-lite responds in ~1000ms with high uptime, avoiding 503 spikes on Vercel
-  // PATCH 2.0 + PATCH 4: FREE UNLIMITED - 4500/day free, no billing
-const candidateModels = [
-  'gemini-2.0-flash',        // 1500/day FREE - MAIN
-  'gemini-2.0-flash-lite',   // 1500/day FREE - BACKUP 1
-  'gemini-1.5-flash-8b',     // 4000/day FREE - BACKUP 2 (for truly unlimited)
-  'gemini-1.5-flash',        // 1500/day FREE - BACKUP 3
-];
+  // Valid modern Gemini models for free tier (Google AI Studio Free Plan: 15 RPM, 1M TPM, 1500 RPD)
+  // gemini-3.8-flash: flagship fast multimodal STEM & LaTeX reasoner
+  // gemini-3.1-flash-lite: ultra-low latency fallback
+  // gemini-2.5-flash: high-throughput fallback
+  const candidateModels = [
+    'gemini-3.8-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+  ];
   let lastError: any = null;
   const isVercel = Boolean(process.env.VERCEL);
-  const perModelTimeout = isVercel ? 6000 : (options.timeoutMs ? Math.min(options.timeoutMs, 20000) : 20000);
+  const perModelTimeout = isVercel ? 12000 : (options.timeoutMs ? Math.min(options.timeoutMs, 40000) : 35000);
 
   for (let i = 0; i < candidateModels.length; i++) {
     const model = candidateModels[i];
@@ -106,18 +107,18 @@ const candidateModels = [
       console.warn(`[inspiro AI] Model ${model} failed: ${errStr}`);
       lastError = err;
 
-      // On 503 UNAVAILABLE or 429 rate limit, immediately switch to the next candidate model
-      // without stalling Vercel serverless execution limits
+      // On 503 UNAVAILABLE or 429 rate limit or not found, switch to next candidate model
       const isTransient =
         errStr.includes('UNAVAILABLE') ||
         errStr.includes('503') ||
         errStr.includes('429') ||
         errStr.includes('ResourceExhausted') ||
         errStr.includes('overloaded') ||
+        errStr.includes('not found') ||
         errStr.includes('try again later');
 
       if (isTransient) {
-        console.log(`[inspiro AI] Transient spike on ${model}. Fast-switching to next candidate model...`);
+        console.log(`[inspiro AI] Transient or fallback on ${model}. Switching to next candidate model...`);
       }
     }
   }
@@ -253,10 +254,12 @@ app.get('/api', (req, res) => {
     status: 'ok',
     appName: 'inspiro LIVE • JEE Test & Module Practice',
     hasGeminiKey: Boolean(apiKey),
-    aiEngine: 'inspiro AI Flash Vision & STEM Reasoner',
+    aiEngine: 'inspiro AI (gemini-3.8-flash Free Plan)',
+    backupEngine: 'gemini-3.1-flash-lite',
     serverTime: new Date().toISOString(),
     endpoints: [
       '/api/health',
+      '/api/test-ai',
       '/api/parse-exam-pdf',
       '/api/generate-remedial-pyqs',
       '/api/generate-test-schedule',
@@ -273,11 +276,70 @@ app.get(['/api/health', '/health'], (req, res) => {
     status: 'ok',
     appName: 'inspiro LIVE • JEE Test & Module Practice',
     hasGeminiKey: Boolean(apiKey),
-    aiEngine: 'inspiro AI 3.8 Flash Vision & STEM Reasoner',
+    activeModel: 'gemini-3.8-flash',
+    backupModel: 'gemini-3.1-flash-lite',
+    freePlanActive: true,
     serverTime: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     platform: process.env.VERCEL ? 'vercel' : 'node',
   });
+});
+
+// Real-time AI connectivity test endpoint for Admin panel
+app.all(['/api/test-ai', '/test-ai'], async (req, res) => {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    return res.json({
+      success: false,
+      hasGeminiKey: false,
+      message: 'GEMINI_API_KEY is not set in environment. Deterministic instant question parser is active (100% keyless).',
+      model: 'deterministic-instant-parser',
+    });
+  }
+
+  try {
+    const ai = getGeminiClient();
+    const startTime = Date.now();
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: 'Respond with exactly: "OK: JEE AI Engine Operational"',
+    });
+    const latencyMs = Date.now() - startTime;
+    return res.json({
+      success: true,
+      hasGeminiKey: true,
+      latencyMs,
+      model: 'gemini-3.8-flash (Free Tier)',
+      reply: result.text?.trim() || 'OK',
+      message: 'Gemini 3.8 Flash responded successfully on the free plan!',
+    });
+  } catch (err: any) {
+    console.warn('[test-ai] Direct 3.8-flash ping error, testing 3.1-flash-lite fallback:', err.message);
+    try {
+      const ai = getGeminiClient();
+      const startTime = Date.now();
+      const result = await ai.models.generateContent({
+        model: 'gemini-3.1-flash-lite',
+        contents: 'Respond with exactly: "OK: Backup AI Engine Operational"',
+      });
+      const latencyMs = Date.now() - startTime;
+      return res.json({
+        success: true,
+        hasGeminiKey: true,
+        latencyMs,
+        model: 'gemini-3.1-flash-lite (Free Tier Backup)',
+        reply: result.text?.trim() || 'OK',
+        message: 'Gemini 3.1 Flash Lite responded successfully on the free plan!',
+      });
+    } catch (fallbackErr: any) {
+      return res.status(500).json({
+        success: false,
+        hasGeminiKey: true,
+        error: fallbackErr.message || err.message,
+        message: 'AI request failed. Please verify your GEMINI_API_KEY has active quota.',
+      });
+    }
+  }
 });
 
 // Advanced Question Paper & Module PDF Extraction Endpoint
@@ -333,20 +395,9 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
       );
       if (instantRes.success && instantRes.paper) {
         let scheduledTests: any[] = [];
-        const fullCmd = `${userCommand || ''} ${req.body.schedulingCommand || ''} ${textQuestions || ''}`.trim();
-        if (req.body.autoSchedule || req.body.scheduleOptions) {
-          const opts = req.body.scheduleOptions || {
-            paper: instantRes.paper,
-            ...parseScheduleCommand(fullCmd),
-          };
-          opts.paper = instantRes.paper;
+        if (req.body.explicitScheduleRequested === true && req.body.scheduleOptions) {
+          const opts = { ...req.body.scheduleOptions, paper: instantRes.paper };
           scheduledTests = generateLockedSchedule(opts);
-        } else if (/schedule|alternate|sunday|tomorrow|today|routine|cadence/i.test(fullCmd)) {
-          const parsedCmd = parseScheduleCommand(fullCmd);
-          scheduledTests = generateLockedSchedule({
-            paper: instantRes.paper,
-            ...parsedCmd,
-          });
         }
         return res.json({
           success: true,
@@ -369,20 +420,9 @@ app.all(['/api/parse-exam-pdf', '/parse-exam-pdf', '/api/parse-exam-pdf/'], asyn
         );
         if (instantRes.success && instantRes.paper) {
           let scheduledTests: any[] = [];
-          const fullCmd = `${userCommand || ''} ${req.body.schedulingCommand || ''} ${textQuestions || ''}`.trim();
-          if (req.body.autoSchedule || req.body.scheduleOptions) {
-            const opts = req.body.scheduleOptions || {
-              paper: instantRes.paper,
-              ...parseScheduleCommand(fullCmd),
-            };
-            opts.paper = instantRes.paper;
+          if (req.body.explicitScheduleRequested === true && req.body.scheduleOptions) {
+            const opts = { ...req.body.scheduleOptions, paper: instantRes.paper };
             scheduledTests = generateLockedSchedule(opts);
-          } else if (/schedule|alternate|sunday|tomorrow|today|routine|cadence/i.test(fullCmd)) {
-            const parsedCmd = parseScheduleCommand(fullCmd);
-            scheduledTests = generateLockedSchedule({
-              paper: instantRes.paper,
-              ...parsedCmd,
-            });
           }
           return res.json({
             success: true,
@@ -713,26 +753,34 @@ ${userCommand.trim()}
     parsedData.totalMarks = calculatedTotalMarks > 0 ? calculatedTotalMarks : (pattern === 'JEE_MAIN' ? 300 : 180);
 
     let scheduledTests: any[] = [];
-    const fullCmd = `${userCommand || ''} ${req.body.schedulingCommand || ''} ${textQuestions || ''}`.trim();
-    if (req.body.autoSchedule || req.body.scheduleOptions) {
-      const opts = req.body.scheduleOptions || {
-        paper: parsedData,
-        ...parseScheduleCommand(fullCmd),
-      };
-      opts.paper = parsedData;
-      scheduledTests = generateLockedSchedule(opts);
-    } else if (/schedule|alternate|sunday|tomorrow|today|routine|cadence/i.test(fullCmd)) {
-      const parsedCmd = parseScheduleCommand(fullCmd);
-      scheduledTests = generateLockedSchedule({
-        paper: parsedData,
-        ...parsedCmd,
+    let splitPapers: any[] = [];
+
+    if (req.body.splitFiftySchedule === true || req.body.scheduleFiftyAlternate === true) {
+      const allQ: any[] = [];
+      parsedData.sections.forEach((sec: any) => {
+        if (Array.isArray(sec.questions)) allQ.push(...sec.questions);
       });
+      splitPapers = splitQuestionsIntoFiftyChunks(
+        allQ,
+        parsedData.title,
+        parsedData.pattern,
+        req.body.randomizeMcq !== false
+      );
+      scheduledTests = schedulePapersOnAlternateDays(splitPapers, {
+        startDate: req.body.startDate,
+        startTime: req.body.startTime || '09:00',
+        endTime: req.body.endTime || '12:00',
+      });
+    } else if (req.body.explicitScheduleRequested === true && req.body.scheduleOptions) {
+      const opts = { ...req.body.scheduleOptions, paper: parsedData };
+      scheduledTests = generateLockedSchedule(opts);
     }
 
     res.json({
       success: true,
       examPaper: parsedData,
       data: parsedData,
+      splitPapers: splitPapers.length > 0 ? splitPapers : undefined,
       scheduledTests: scheduledTests.length > 0 ? scheduledTests : undefined,
     });
   } catch (error: any) {
@@ -741,6 +789,35 @@ ${userCommand.trim()}
       success: false,
       error: error.message || 'Failed to process question paper with Advanced AI Engine',
     });
+  }
+});
+
+// Dedicated 50-Question CBT Chunker & Alternate Day Schedule Endpoint
+app.post(['/api/chunk-fifty-and-schedule', '/chunk-fifty-and-schedule'], async (req, res) => {
+  try {
+    const { questions, paper, startDate, startTime, endTime, randomizeMcq, baseTitle, pattern } = req.body;
+    let qs = questions || [];
+    if (!qs.length && paper && paper.sections) {
+      paper.sections.forEach((s: any) => {
+        if (Array.isArray(s.questions)) qs.push(...s.questions);
+      });
+    }
+    const title = baseTitle || (paper ? paper.title : 'JEE CBT Series');
+    const pat = pattern || (paper ? paper.pattern : 'JEE_MAIN');
+    const splitPapers = splitQuestionsIntoFiftyChunks(qs, title, pat, randomizeMcq !== false);
+    const scheduled = schedulePapersOnAlternateDays(splitPapers, {
+      startDate,
+      startTime: startTime || '09:00',
+      endTime: endTime || '12:00',
+    });
+    return res.json({
+      success: true,
+      splitPapers,
+      scheduledTests: scheduled,
+      message: `Created ${splitPapers.length} tests (50-question 180m & remaining Q*4m) locked on alternate days from 9:00 AM!`,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -840,9 +917,27 @@ For each question:
   }
 });
 
-function generateFallbackTestSchedule(prompt: string, pattern: string, numberOfTests: number) {
+function generateFallbackTestSchedule(
+  prompt: string,
+  pattern: string,
+  numberOfTests: number,
+  startDate?: string,
+  startTime?: string,
+  endTime?: string
+) {
   const today = new Date();
-  const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+  let baseDate: Date;
+  if (startDate) {
+    baseDate = new Date(`${startDate}T12:00:00`);
+    if (isNaN(baseDate.getTime())) {
+      const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+      baseDate = new Date(today.getTime() + daysUntilSunday * 86400000);
+    }
+  } else {
+    const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
+    baseDate = new Date(today.getTime() + daysUntilSunday * 86400000);
+  }
+
   const tests = [];
   const syllabi = [
     [
@@ -887,28 +982,32 @@ function generateFallbackTestSchedule(prompt: string, pattern: string, numberOfT
     ],
   ];
 
-  const count = Math.min(Math.max(numberOfTests || 8, 4), 12);
+  const count = Math.min(Math.max(numberOfTests || 8, 1), 12);
   for (let i = 0; i < count; i++) {
-    const testDate = new Date(today.getTime() + (daysUntilSunday + i * 14) * 86400000);
+    const testDate = new Date(baseDate.getTime() + i * 14 * 86400000);
     const dateStr = testDate.toISOString().split('T')[0];
-    const isMajor = i >= count - 2;
+    const isMajor = count > 2 && i >= count - 2;
     const testNum = i + 1;
     tests.push({
       id: `sched-test-${Date.now()}-${i}`,
-      title: isMajor
+      title: count === 1
+        ? `Custom Scheduled CBT Exam (${pattern || 'JEE_MAIN'})`
+        : isMajor
         ? `Allen Leader Major Test 0${testNum - (count - 2)} (Full Syllabus CBT)`
         : `Allen Leader Minor Test 0${testNum} (Periodic Revision)`,
       scheduledDate: dateStr,
-      startTime: '09:00',
-      endTime: '12:00',
+      startTime: startTime || '09:00',
+      endTime: endTime || '12:00',
       pattern: pattern || 'JEE_MAIN',
       syllabus: syllabi[i % syllabi.length],
     });
   }
 
   return {
-    seriesTitle: `Allen Leader 6-Month Periodic CBT Test Series (${pattern || 'JEE_MAIN'})`,
-    description: `Structured fortnightly test series organized according to Kota coaching curriculum for ${prompt || 'JEE Aspirants'}.`,
+    seriesTitle: count === 1
+      ? `Scheduled CBT Exam Window`
+      : `Allen Leader Periodic CBT Test Series (${pattern || 'JEE_MAIN'})`,
+    description: `Structured test schedule organized for ${prompt || 'JEE Aspirants'}.`,
     tests,
   };
 }
@@ -978,11 +1077,21 @@ app.all(['/api/generate-test-schedule', '/generate-test-schedule', '/api/generat
     const prompt = req.body?.prompt || req.body?.command || req.query?.prompt || 'Create an Allen Leader 6-month test schedule with 8 periodic tests on Sundays';
     const pattern = req.body?.pattern || req.query?.pattern || 'JEE_MAIN';
     const numberOfTests = req.body?.numberOfTests || req.query?.numberOfTests || 8;
+    const requestedStartDate = req.body?.startDate || req.body?.currentDate;
+    const requestedStartTime = req.body?.startTime || '09:00';
+    const requestedEndTime = req.body?.endTime || '12:00';
 
     const apiKey = getGeminiApiKey();
     if (!apiKey) {
       console.log('[inspiro Scheduler] No API key present. Serving deterministic Kota coaching schedule.');
-      const fallbackData = generateFallbackTestSchedule(prompt, pattern, Number(numberOfTests));
+      const fallbackData = generateFallbackTestSchedule(
+        prompt,
+        pattern,
+        Number(numberOfTests),
+        requestedStartDate,
+        requestedStartTime,
+        requestedEndTime
+      );
       return res.json({
         success: true,
         data: fallbackData,
@@ -995,20 +1104,21 @@ app.all(['/api/generate-test-schedule', '/generate-test-schedule', '/api/generat
     const currentYear = today.getFullYear();
     const daysUntilSunday = (7 - today.getDay()) % 7 || 7;
     const nextSunday = new Date(today.getTime() + daysUntilSunday * 86400000).toISOString().split('T')[0];
+    const effectiveStartDate = requestedStartDate && requestedStartDate >= currentIso ? requestedStartDate : nextSunday;
 
     const systemInstruction = `You are the Master Academic Director for premier JEE coaching institutes (Allen Career Institute, FIITJEE, MathonGo).
-Your job is to generate a comprehensive, realistic, and highly organized 3 to 6 month Computer-Based Test (CBT) schedule for JEE Main / Advanced aspirants.
+Your job is to generate a comprehensive, realistic, and highly organized Computer-Based Test (CBT) schedule for JEE Main / Advanced aspirants.
 Follow strict coaching norms:
 1. Space tests regularly (e.g. alternate Sundays or every 2-3 weeks).
 2. Distribute the syllabus systematically from Class 11th fundamentals to advanced Class 12th topics, concluding with Full Syllabus / All India Mocks.
 3. CRITICAL CALENDAR REQUIREMENT:
    - Today's date is ${currentIso} (${currentYear}).
-   - The upcoming Sunday is ${nextSunday}.
-   - Every single test scheduledDate MUST be on or after ${nextSunday} in the year ${currentYear} (e.g. consecutive alternate Sundays).
+   - The first test MUST start on ${effectiveStartDate}.
+   - Every single test scheduledDate MUST be on or after ${effectiveStartDate} in the year ${currentYear}.
    - NEVER generate stale past dates from 2023 or 2024!
 4. For EVERY scheduled test:
    - Provide an authentic coaching title (e.g. "Allen Leader Minor Test 01 - Mechanics & Physical Chem").
-   - Set standard NTA live test time windows: "09:00" to "12:00" (Morning Shift) or "14:00" to "17:00" (Afternoon Shift).
+   - Set standard NTA live test time window: startTime: "${requestedStartTime}", endTime: "${requestedEndTime}".
    - For EACH of the 3 subjects (Physics, Chemistry, Mathematics), provide specific chapter & topic checklists so the student can track their revision before the test!
 5. COACHING MATERIAL PARSING DIRECTIVE:
    - If the user has pasted a table of contents, syllabus index, or chapters list from their coaching modules (e.g. Allen, FIITJEE, Resonance, MathonGo):
@@ -1018,7 +1128,7 @@ Follow strict coaching norms:
 
     try {
       const response = await generateContentWithFallback({
-        contents: `Generate a structured test series schedule based on user instructions: "${prompt}". Number of tests: ${numberOfTests}. Pattern: ${pattern}. Current date is ${currentIso} (${currentYear}).`,
+        contents: `Generate a structured test series schedule based on user instructions: "${prompt}". Number of tests: ${numberOfTests}. Pattern: ${pattern}. Start date is ${effectiveStartDate}. Live slot: ${requestedStartTime} to ${requestedEndTime}. Current date is ${currentIso} (${currentYear}).`,
         timeoutMs: 20000,
         config: {
           systemInstruction,
@@ -1062,8 +1172,9 @@ Follow strict coaching norms:
 
       const parsedData = cleanAndParseJSON(response.text);
 
-      // Post-processing safety: Verify dates are strictly present and in current or future calendar
+      // Post-processing safety: Verify dates are strictly present and set requested clock times
       if (parsedData.tests && Array.isArray(parsedData.tests)) {
+        const baseDate = new Date(`${effectiveStartDate}T12:00:00`);
         parsedData.tests.forEach((t: any, idx: number) => {
           const isStale =
             !t.scheduledDate ||
@@ -1073,9 +1184,11 @@ Follow strict coaching norms:
             t.scheduledDate.startsWith('2025');
 
           if (isStale) {
-            const testDate = new Date(today.getTime() + (daysUntilSunday + idx * 14) * 86400000);
+            const testDate = new Date(baseDate.getTime() + idx * 14 * 86400000);
             t.scheduledDate = testDate.toISOString().split('T')[0];
           }
+          if (requestedStartTime) t.startTime = requestedStartTime;
+          if (requestedEndTime) t.endTime = requestedEndTime;
         });
       }
 
@@ -1085,7 +1198,14 @@ Follow strict coaching norms:
       });
     } catch (aiErr: any) {
       console.warn('[inspiro Scheduler] AI schedule failed, using fallback coaching schedule:', aiErr.message);
-      const fallbackData = generateFallbackTestSchedule(prompt, pattern, Number(numberOfTests));
+      const fallbackData = generateFallbackTestSchedule(
+        prompt,
+        pattern,
+        Number(numberOfTests),
+        requestedStartDate,
+        requestedStartTime,
+        requestedEndTime
+      );
       return res.json({
         success: true,
         data: fallbackData,

@@ -66,7 +66,11 @@ export default function App() {
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
-      return stored ? JSON.parse(stored) : SAMPLE_SCHEDULED_TESTS;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      return SAMPLE_SCHEDULED_TESTS;
     } catch {
       return SAMPLE_SCHEDULED_TESTS;
     }
@@ -183,6 +187,11 @@ export default function App() {
   // Handler: Save newly extracted custom paper from PDF
   const handleSaveCustomPaper = (paper: ExamPaper) => {
     setCustomPapers((prev) => [paper, ...prev.filter((p) => p.id !== paper.id)]);
+  };
+
+  // Handler: Delete custom paper from repository
+  const handleDeleteCustomPaper = (paperId: string) => {
+    setCustomPapers((prev) => prev.filter((p) => p.id !== paperId));
   };
 
   // Handler: Log a mistake into the Mistake Notebook
@@ -302,6 +311,15 @@ export default function App() {
     setScheduledTests((prev) => prev.filter((t) => t.id !== testId));
   };
 
+  const handleClearAllScheduledTests = () => {
+    setScheduledTests([]);
+    try {
+      localStorage.removeItem('jee_scheduled_tests');
+    } catch (e) {
+      console.warn('Failed to clear scheduled tests from localStorage', e);
+    }
+  };
+
   // Routine Handlers
   const handleStartRoutineTask = (item: DailyRoutineItem) => {
     const paperToUse: ExamPaper =
@@ -383,6 +401,7 @@ export default function App() {
           savedAttempts={savedAttempts}
           savedCustomPapers={customPapers}
           onSaveCustomPaper={handleSaveCustomPaper}
+          onDeleteCustomPaper={handleDeleteCustomPaper}
           mistakes={mistakes}
           onRemoveMistake={handleRemoveMistake}
           onUpdateMistakeReason={handleUpdateMistakeReason}
@@ -393,6 +412,7 @@ export default function App() {
           onAttachPaper={handleAttachPaper}
           onAddCustomSchedule={handleAddCustomSchedule}
           onDeleteScheduledTest={handleDeleteScheduledTest}
+          onClearAllScheduledTests={handleClearAllScheduledTests}
           routineItems={routineItems}
           onStartRoutineTask={handleStartRoutineTask}
           onToggleRoutineComplete={handleToggleRoutineComplete}

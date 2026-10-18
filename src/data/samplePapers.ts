@@ -349,3 +349,6 @@ export const SAMPLE_JEE_ADVANCED_MOCK: ExamPaper = {
     },
   ],
 };
+
+export { SAMPLE_JEE_FIFTY_PART_1, SAMPLE_JEE_REMAINING_PART_2 } from './sampleSplitFiftyPapers';
+
