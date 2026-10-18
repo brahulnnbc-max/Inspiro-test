@@ -63,16 +63,26 @@ export default function App() {
   });
 
   // Persistent Scheduled Tests (3-6 Months Roadmap)
+  // Persistent Scheduled Tests (Locked Vibrant Electrostatics Series)
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const missingLockedTests = SAMPLE_SCHEDULED_TESTS.filter(
-            (st) => !parsed.some((p: any) => p.id === st.id)
+          // Strictly filter to keep only Vibrant Electrostatics tests and purge all others
+          const electroOnly = parsed.filter(
+            (t: any) =>
+              t.title?.includes('Electrostatics') ||
+              t.id?.includes('vibrant') ||
+              t.paperId?.includes('vibrant-electro')
           );
-          return [...missingLockedTests, ...parsed];
+          if (electroOnly.length > 0) {
+            const missing = SAMPLE_SCHEDULED_TESTS.filter(
+              (st) => !electroOnly.some((p: any) => p.id === st.id)
+            );
+            return [...electroOnly, ...missing];
+          }
         }
       }
       return SAMPLE_SCHEDULED_TESTS;

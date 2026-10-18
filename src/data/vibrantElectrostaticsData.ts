@@ -1,4 +1,9 @@
-import { ExamPaper, ScheduledTest, Question, QuestionOption } from '../types/exam';
+import { ExamPaper, ScheduledTest, Question } from '../types/exam';
+import { ELECTROSTATICS_PART_2_QUESTIONS } from './vibrantElectrostaticsPart2';
+import { ELECTROSTATICS_PART_3_QUESTIONS } from './vibrantElectrostaticsPart3';
+import { ELECTROSTATICS_PART_4_QUESTIONS } from './vibrantElectrostaticsPart4';
+import { ELECTROSTATICS_PART_5_QUESTIONS } from './vibrantElectrostaticsPart5';
+import { ELECTROSTATICS_PART_6_QUESTIONS } from './vibrantElectrostaticsPart6';
 
 // Helper for clean inline SVG diagrams with dark theme
 export const createElectroSvg = (svgContent: string): string => {
@@ -884,7 +889,7 @@ export const ELECTROSTATICS_PART_1_QUESTIONS: Question[] = [
 ];
 
 // =========================================================================
-// PAPERS DEFINITIONS & ALTERNATE-DAY LOCKED SCHEDULER (09:00 - 12:00)
+// PAPERS DEFINITIONS FOR ALL 6 TESTS (FULL MODULE)
 // =========================================================================
 
 export const VIBRANT_ELECTROSTATICS_PAPER_1: ExamPaper = {
@@ -897,14 +902,103 @@ export const VIBRANT_ELECTROSTATICS_PAPER_1: ExamPaper = {
   sections: [
     {
       id: 'physics',
-      name: 'PHYSICS (ELECTROSTATICS EXERCISE-I)',
+      name: 'PHYSICS (ELECTROSTATICS EXERCISE-I PART 1)',
       questions: ELECTROSTATICS_PART_1_QUESTIONS,
     },
   ],
 };
 
+export const VIBRANT_ELECTROSTATICS_PAPER_2: ExamPaper = {
+  id: 'vibrant-electro-paper-2',
+  title: 'Vibrant Kota Electrostatics - Test 02 (50 Q • 180 Mins)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 180,
+  totalMarks: 200,
+  createdAt: new Date().toISOString(),
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (ELECTROSTATICS EXERCISE-I PART 2 & EX-II)',
+      questions: ELECTROSTATICS_PART_2_QUESTIONS,
+    },
+  ],
+};
+
+export const VIBRANT_ELECTROSTATICS_PAPER_3: ExamPaper = {
+  id: 'vibrant-electro-paper-3',
+  title: 'Vibrant Kota Electrostatics - Test 03 (50 Q • 180 Mins)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 180,
+  totalMarks: 200,
+  createdAt: new Date().toISOString(),
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (EXERCISE-II ADVANCED & EX-III PYQ 2015-2022)',
+      questions: ELECTROSTATICS_PART_3_QUESTIONS,
+    },
+  ],
+};
+
+export const VIBRANT_ELECTROSTATICS_PAPER_4: ExamPaper = {
+  id: 'vibrant-electro-paper-4',
+  title: 'Vibrant Kota Electrostatics - Test 04 (50 Q • 180 Mins)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 180,
+  totalMarks: 200,
+  createdAt: new Date().toISOString(),
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (EXERCISE-III PYQ 2022-2024)',
+      questions: ELECTROSTATICS_PART_4_QUESTIONS,
+    },
+  ],
+};
+
+export const VIBRANT_ELECTROSTATICS_PAPER_5: ExamPaper = {
+  id: 'vibrant-electro-paper-5',
+  title: 'Vibrant Kota Electrostatics - Test 05 (50 Q • 180 Mins)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 180,
+  totalMarks: 200,
+  createdAt: new Date().toISOString(),
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (EXERCISE-III RECENT 2024-2025)',
+      questions: ELECTROSTATICS_PART_5_QUESTIONS,
+    },
+  ],
+};
+
+export const VIBRANT_ELECTROSTATICS_PAPER_6: ExamPaper = {
+  id: 'vibrant-electro-paper-6',
+  title: 'Vibrant Kota Electrostatics - Test 06 (Final 9 Q • 36 Mins)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 36, // 4 mins per question for remaining < 50 questions
+  totalMarks: 36,
+  createdAt: new Date().toISOString(),
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (FINAL ARCHIVE EXERCISE-III)',
+      questions: ELECTROSTATICS_PART_6_QUESTIONS,
+    },
+  ],
+};
+
+export const ALL_VIBRANT_ELECTROSTATICS_PAPERS: ExamPaper[] = [
+  VIBRANT_ELECTROSTATICS_PAPER_1,
+  VIBRANT_ELECTROSTATICS_PAPER_2,
+  VIBRANT_ELECTROSTATICS_PAPER_3,
+  VIBRANT_ELECTROSTATICS_PAPER_4,
+  VIBRANT_ELECTROSTATICS_PAPER_5,
+  VIBRANT_ELECTROSTATICS_PAPER_6,
+];
+
 /**
- * Returns strictly locked alternate-day tests starting at 9:00 AM.
+ * Returns strictly locked alternate-day tests (Day 1, Day 3, Day 5, Day 7, Day 9, Day 11) starting at 09:00 AM.
  * Cannot be rescheduled or edited (isLocked: true).
  */
 export function getVibrantElectrostaticsLockedTests(baseDateStr?: string): ScheduledTest[] {
@@ -923,59 +1017,110 @@ export function getVibrantElectrostaticsLockedTests(baseDateStr?: string): Sched
     return dateObj.toISOString().split('T')[0];
   };
 
-  const tests: ScheduledTest[] = [];
+  const testsConfig = [
+    {
+      dayNum: 1,
+      paper: VIBRANT_ELECTROSTATICS_PAPER_1,
+      startTime: '09:00',
+      endTime: '12:00',
+      durationMinutes: 180,
+      totalMarks: 200,
+      syllabus: [
+        { id: 'syl-1-1', subject: 'physics' as const, name: 'Coulomb\'s Law & Principle of Superposition', completed: false },
+        { id: 'syl-1-2', subject: 'physics' as const, name: 'Electric Field of Point Charges, Rings & Sheets', completed: false },
+        { id: 'syl-1-3', subject: 'physics' as const, name: 'Potential Energy & Equipotential Surfaces', completed: false },
+        { id: 'syl-1-4', subject: 'physics' as const, name: 'Dipoles in Uniform Fields & Dipole Moment', completed: false },
+      ],
+    },
+    {
+      dayNum: 3,
+      paper: VIBRANT_ELECTROSTATICS_PAPER_2,
+      startTime: '09:00',
+      endTime: '12:00',
+      durationMinutes: 180,
+      totalMarks: 200,
+      syllabus: [
+        { id: 'syl-2-1', subject: 'physics' as const, name: 'Concentric Spherical Shells & Earthing Problems', completed: false },
+        { id: 'syl-2-2', subject: 'physics' as const, name: 'Electrostatic Shielding & Cavity Mechanics', completed: false },
+        { id: 'syl-2-3', subject: 'physics' as const, name: 'Multiple Correct Advanced Questions', completed: false },
+        { id: 'syl-2-4', subject: 'physics' as const, name: 'Oscillations of Charges & Restoring Fields', completed: false },
+      ],
+    },
+    {
+      dayNum: 5,
+      paper: VIBRANT_ELECTROSTATICS_PAPER_3,
+      startTime: '09:00',
+      endTime: '12:00',
+      durationMinutes: 180,
+      totalMarks: 200,
+      syllabus: [
+        { id: 'syl-3-1', subject: 'physics' as const, name: 'Variable Charge Density Non-Uniform Spheres', completed: false },
+        { id: 'syl-3-2', subject: 'physics' as const, name: 'Flux Through Cylinders, Discs & Rectangles', completed: false },
+        { id: 'syl-3-3', subject: 'physics' as const, name: 'JEE Advanced Previous Years Questions (2015-2020)', completed: false },
+        { id: 'syl-3-4', subject: 'physics' as const, name: 'Equipotential Circles of Apollonius', completed: false },
+      ],
+    },
+    {
+      dayNum: 7,
+      paper: VIBRANT_ELECTROSTATICS_PAPER_4,
+      startTime: '09:00',
+      endTime: '12:00',
+      durationMinutes: 180,
+      totalMarks: 200,
+      syllabus: [
+        { id: 'syl-4-1', subject: 'physics' as const, name: 'JEE Main & Advanced 2021-2023 Comprehensive', completed: false },
+        { id: 'syl-4-2', subject: 'physics' as const, name: 'Conductor Surface Densities & Multi-Sheet Fields', completed: false },
+        { id: 'syl-4-3', subject: 'physics' as const, name: 'Torque & Work Done on Rotating Dipoles', completed: false },
+        { id: 'syl-4-4', subject: 'physics' as const, name: 'Coaxial Cylinders & Spherical Capacitance Shells', completed: false },
+      ],
+    },
+    {
+      dayNum: 9,
+      paper: VIBRANT_ELECTROSTATICS_PAPER_5,
+      startTime: '09:00',
+      endTime: '12:00',
+      durationMinutes: 180,
+      totalMarks: 200,
+      syllabus: [
+        { id: 'syl-5-1', subject: 'physics' as const, name: 'JEE Main 2024 & 2025 Master Collection', completed: false },
+        { id: 'syl-5-2', subject: 'physics' as const, name: 'Three-Axis Orthogonal Line Charge Equipotentials', completed: false },
+        { id: 'syl-5-3', subject: 'physics' as const, name: 'Boundary Conditions on Irregular Metallic Conductors', completed: false },
+      ],
+    },
+    {
+      dayNum: 11,
+      paper: VIBRANT_ELECTROSTATICS_PAPER_6,
+      startTime: '09:00',
+      endTime: '09:36',
+      durationMinutes: 36, // 4 mins per question for 9 questions
+      totalMarks: 36,
+      syllabus: [
+        { id: 'syl-6-1', subject: 'physics' as const, name: 'Final JEE Advanced 2025 Multi-Sheet & Grounding Archive', completed: false },
+        { id: 'syl-6-2', subject: 'physics' as const, name: 'Cylindrical Dielectric Flux & Diagonal Gaussian Cube', completed: false },
+      ],
+    },
+  ];
 
-  // Day 1: Test 1 (50 Questions, 180 Mins: 09:00 - 12:00)
-  const day1Date = new Date(d);
-  const date1Str = formatIso(day1Date);
+  return testsConfig.map((cfg, idx) => {
+    const testDate = new Date(d);
+    testDate.setDate(d.getDate() + (cfg.dayNum - 1));
+    const dateStr = formatIso(testDate);
 
-  tests.push({
-    id: 'locked-vibrant-test-day-1',
-    title: 'Vibrant Kota Electrostatics - Test 01 (50 Q • 180 Mins)',
-    pattern: 'JEE_MAIN',
-    scheduledDate: date1Str,
-    startTime: '09:00',
-    endTime: '12:00',
-    durationMinutes: 180,
-    totalMarks: 200,
-    status: 'UPCOMING_LOCKED',
-    isLocked: true,
-    paperId: VIBRANT_ELECTROSTATICS_PAPER_1.id,
-    paper: VIBRANT_ELECTROSTATICS_PAPER_1,
-    syllabus: [
-      {
-        id: 'syl-elec-1',
-        subject: 'physics',
-        name: 'Coulomb\'s Law & Superposition Principle',
-        completed: false,
-      },
-      {
-        id: 'syl-elec-2',
-        subject: 'physics',
-        name: 'Electric Field & Continuous Charge Systems (Rings, Sheets)',
-        completed: false,
-      },
-      {
-        id: 'syl-elec-3',
-        subject: 'physics',
-        name: 'Electric Potential, Work & Interaction Energy',
-        completed: false,
-      },
-      {
-        id: 'syl-elec-4',
-        subject: 'physics',
-        name: 'Electric Dipole Mechanics & Torque in Uniform Fields',
-        completed: false,
-      },
-      {
-        id: 'syl-elec-5',
-        subject: 'physics',
-        name: 'Conductors, Spherical Shells & Gauss\'s Law Flux',
-        completed: false,
-      },
-    ],
-    scheduledAt: Date.now(),
+    return {
+      id: `locked-vibrant-test-day-${cfg.dayNum}`,
+      title: cfg.paper.title,
+      pattern: 'JEE_MAIN' as const,
+      scheduledDate: dateStr,
+      startTime: cfg.startTime,
+      endTime: cfg.endTime,
+      durationMinutes: cfg.durationMinutes,
+      totalMarks: cfg.totalMarks,
+      status: 'UPCOMING_LOCKED' as const,
+      isLocked: true,
+      paperId: cfg.paper.id,
+      paper: cfg.paper,
+      syllabus: cfg.syllabus,
+      scheduledAt: Date.now() + idx,
+    };
   });
-
-  return tests;
 }
