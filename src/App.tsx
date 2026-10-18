@@ -18,6 +18,8 @@ import {
   SAMPLE_DAILY_ROUTINE,
   SAMPLE_TAGGED_RACE_QUESTIONS,
 } from './data/sampleSchedules';
+import { getVibrantElectrostaticsLockedTests } from './data/vibrantElectrostaticsData';
+import { getVibrantKinematicsLockedTests } from './data/vibrantKinematicsData';
 import { TestHub } from './components/TestHub';
 import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
@@ -62,26 +64,35 @@ export default function App() {
     }
   });
 
-  // Persistent Scheduled Tests (3-6 Months Roadmap)
-  // Persistent Scheduled Tests (Locked Vibrant Electrostatics Series)
+  // Persistent Scheduled Tests (Locked Vibrant Electrostatics + Kinematics Alternate-Day Series)
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Strictly filter to keep only Vibrant Electrostatics tests and purge all others
-          const electroOnly = parsed.filter(
+          // Strictly purge any legacy day-1 / day-3 kinematics tests
+          const filtered = parsed.filter(
             (t: any) =>
-              t.title?.includes('Electrostatics') ||
-              t.id?.includes('vibrant') ||
-              t.paperId?.includes('vibrant-electro')
+              t.id !== 'locked-vibrant-kinematics-day-1' &&
+              t.id !== 'locked-vibrant-kinematics-day-3' &&
+              (t.title?.includes('Electrostatics') ||
+               t.title?.includes('Kinematics') ||
+               t.id?.includes('vibrant') ||
+               t.paperId?.includes('vibrant'))
           );
-          if (electroOnly.length > 0) {
+          if (filtered.length > 0) {
             const missing = SAMPLE_SCHEDULED_TESTS.filter(
-              (st) => !electroOnly.some((p: any) => p.id === st.id)
+              (st) => !filtered.some((p: any) => p.id === st.id)
             );
-            return [...electroOnly, ...missing];
+            return [...filtered, ...missing]
+              .map((t: any) => {
+                const sample = SAMPLE_SCHEDULED_TESTS.find((st) => st.id === t.id);
+                return sample && (!t.paper || !t.paper.sections)
+                  ? { ...t, paper: sample.paper }
+                  : t;
+              })
+              .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
           }
         }
       }
@@ -90,6 +101,20 @@ export default function App() {
       return SAMPLE_SCHEDULED_TESTS;
     }
   });
+
+  // Re-align coaching roadmap fresh starting from tomorrow: Electrostatics Day 1-11, Kinematics Day 13-15
+  const handleResetCoachingSchedule = () => {
+    const fresh = [
+      ...getVibrantElectrostaticsLockedTests(),
+      ...getVibrantKinematicsLockedTests(),
+    ];
+    setScheduledTests(fresh);
+    try {
+      localStorage.setItem('jee_scheduled_tests', JSON.stringify(fresh));
+    } catch (e) {
+      console.warn('Failed to reset scheduled tests', e);
+    }
+  };
 
   // Persistent Daily Coaching Routine Checklist
   const [routineItems, setRoutineItems] = useState<DailyRoutineItem[]>(() => {
@@ -437,6 +462,7 @@ export default function App() {
           onRemoveTaggedQuestion={handleRemoveTaggedQuestion}
           onUpdateQuestionTags={handleUpdateQuestionTags}
           onToggleTagOnQuestion={handleToggleTagOnQuestion}
+          onResetCoachingSchedule={handleResetCoachingSchedule}
         />
       )}
 

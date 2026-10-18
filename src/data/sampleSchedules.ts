@@ -1,8 +1,12 @@
 import { ScheduledTest, DailyRoutineItem, TaggedQuestionEntry } from '../types/exam';
 import { SAMPLE_JEE_MAIN_MOCK } from './samplePapers';
 import { getVibrantElectrostaticsLockedTests } from './vibrantElectrostaticsData';
+import { getVibrantKinematicsLockedTests, VIBRANT_KINEMATICS_PAPER_1 } from './vibrantKinematicsData';
 
-export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = getVibrantElectrostaticsLockedTests();
+export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = [
+  ...getVibrantElectrostaticsLockedTests(),
+  ...getVibrantKinematicsLockedTests(),
+];
 
 export const SAMPLE_DAILY_ROUTINE: DailyRoutineItem[] = [
   // Week 1 Routine
@@ -12,14 +16,14 @@ export const SAMPLE_DAILY_ROUTINE: DailyRoutineItem[] = [
     title: 'Kinematics 1D & 2D Module Exercise 1 Sprint',
     chapterOrTopic: 'Kinematics (Vectors, Projectile, Relative Motion)',
     subject: 'physics',
-    scheduledDate: '2026-10-15', // Today
+    scheduledDate: '2026-10-18', // Today
     scheduledSlot: '19:00 - 20:00',
     durationMinutes: 50,
     questionCount: 25,
     isCompleted: false,
     weekNumber: 1,
     dayName: 'Monday',
-    paper: SAMPLE_JEE_MAIN_MOCK, // pre-linked for instant practice room!
+    paper: VIBRANT_KINEMATICS_PAPER_1, // pre-linked for instant practice room!
   },
   {
     id: 'rout-w1-tue',

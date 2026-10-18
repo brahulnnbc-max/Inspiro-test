@@ -20,6 +20,7 @@ import { AIMentorSchedulerChat } from './AIMentorSchedulerChat';
 import { MistakeNotebook } from './MistakeNotebook';
 import { AdminPanelModal } from './AdminPanelModal';
 import { ALL_VIBRANT_ELECTROSTATICS_PAPERS } from '../data/vibrantElectrostaticsData';
+import { ALL_VIBRANT_KINEMATICS_PAPERS } from '../data/vibrantKinematicsData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
   getTodayIso,
@@ -52,6 +53,7 @@ import {
   Bell,
   AlertTriangle,
   Shield,
+  RefreshCw,
 } from 'lucide-react';
 
 interface TestHubProps {
@@ -81,6 +83,7 @@ interface TestHubProps {
   onRemoveTaggedQuestion?: (id: string) => void;
   onUpdateQuestionTags?: (id: string, tags: QuestionTag[]) => void;
   onToggleTagOnQuestion?: (question: Question, tag: QuestionTag) => void;
+  onResetCoachingSchedule?: () => void;
 }
 
 export const TestHub: React.FC<TestHubProps> = ({
@@ -110,6 +113,7 @@ export const TestHub: React.FC<TestHubProps> = ({
   onRemoveTaggedQuestion = () => {},
   onUpdateQuestionTags = () => {},
   onToggleTagOnQuestion = () => {},
+  onResetCoachingSchedule,
 }) => {
   // Navigation Tabs for Students (Clean & focused)
   const [activeTab, setActiveTab] = useState<
@@ -119,9 +123,12 @@ export const TestHub: React.FC<TestHubProps> = ({
   // Admin Portal Modal State
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
-  // Available Mock Papers (Default JEE Main & Advanced + 50-Q Split CBT Papers + Custom Uploads)
+  // Available Mock Papers (Vibrant Kinematics + Vibrant Electrostatics + Custom Uploads)
   const allAvailablePapers: ExamPaper[] = useMemo(() => {
-    const list: ExamPaper[] = [...ALL_VIBRANT_ELECTROSTATICS_PAPERS];
+    const list: ExamPaper[] = [
+      ...ALL_VIBRANT_KINEMATICS_PAPERS,
+      ...ALL_VIBRANT_ELECTROSTATICS_PAPERS,
+    ];
     savedCustomPapers.forEach((cp) => {
       if (!list.some((p) => p.id === cp.id)) {
         list.push(cp);
@@ -802,14 +809,27 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
             {/* SUB-SECTION: UPCOMING 6-MONTH ROADMAP                    */}
             {/* ======================================================== */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <CalendarDays className="w-4 h-4 text-zinc-400" />
                   <h3 className="text-base font-bold font-display uppercase tracking-wider text-zinc-300">
                     Upcoming Tests (Up to 6 Months)
                   </h3>
                 </div>
-                <span className="text-xs font-mono text-zinc-500">{upcomingTests.length} Locked Tests</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {onResetCoachingSchedule && (
+                    <button
+                      type="button"
+                      onClick={onResetCoachingSchedule}
+                      className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Re-align Kota Series: Electrostatics (Days 1-11) followed onwards by Kinematics (Days 13 & 15)"
+                    >
+                      <RefreshCw className="w-3 h-3 text-amber-400" />
+                      <span>Re-align Coaching Roadmap</span>
+                    </button>
+                  )}
+                  <span className="text-xs font-mono text-zinc-500">{upcomingTests.length} Locked Tests</span>
+                </div>
               </div>
 
               {upcomingTests.length > 0 ? (
@@ -857,6 +877,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
             onSelectExamDirectly={onSelectExam}
             savedCustomPapers={savedCustomPapers}
             onSaveCustomPaper={onSaveCustomPaper}
+            onResetCoachingSchedule={onResetCoachingSchedule}
           />
         )}
 

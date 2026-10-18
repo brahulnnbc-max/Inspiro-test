@@ -32,6 +32,7 @@ import {
   Moon,
   CalendarCheck,
   Zap,
+  RefreshCw,
 } from 'lucide-react';
 import { splitQuestionsIntoFiftyChunks, schedulePapersOnAlternateDays } from '../utils/questionSplitter';
 import {
@@ -51,6 +52,7 @@ interface SchedulePlannerProps {
   onSelectExamDirectly: (paper: ExamPaper) => void;
   savedCustomPapers?: ExamPaper[];
   onSaveCustomPaper?: (paper: ExamPaper) => void;
+  onResetCoachingSchedule?: () => void;
 }
 
 export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
@@ -63,6 +65,7 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
   onSelectExamDirectly,
   savedCustomPapers = [],
   onSaveCustomPaper,
+  onResetCoachingSchedule,
 }) => {
   const [filter, setFilter] = useState<'ALL' | 'UPCOMING' | 'LIVE' | 'COMPLETED'>('ALL');
   const [commandText, setCommandText] = useState('');
@@ -1122,38 +1125,53 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
             </p>
           </div>
 
-          {/* Filter */}
-          <div className="flex items-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-semibold">
-            <button
-              onClick={() => setFilter('ALL')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filter === 'ALL'
-                  ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              All Tests ({scheduledTests.length})
-            </button>
-            <button
-              onClick={() => setFilter('LIVE')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filter === 'LIVE'
-                  ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Live Now
-            </button>
-            <button
-              onClick={() => setFilter('UPCOMING')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filter === 'UPCOMING'
-                  ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              Upcoming
-            </button>
+          {/* Controls: Re-align & Filters */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {onResetCoachingSchedule && (
+              <button
+                type="button"
+                onClick={onResetCoachingSchedule}
+                className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Re-align the complete Kota series: Electrostatics Day 1-11, Kinematics Day 13-15"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+                <span>Re-align Kota Roadmap (Electrostatics → Kinematics)</span>
+              </button>
+            )}
+
+            {/* Filter */}
+            <div className="flex items-center gap-1.5 p-1 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-semibold">
+              <button
+                onClick={() => setFilter('ALL')}
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  filter === 'ALL'
+                    ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                All Tests ({scheduledTests.length})
+              </button>
+              <button
+                onClick={() => setFilter('LIVE')}
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  filter === 'LIVE'
+                    ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Live Now
+              </button>
+              <button
+                onClick={() => setFilter('UPCOMING')}
+                className={`px-3 py-1.5 rounded-md transition-colors ${
+                  filter === 'UPCOMING'
+                    ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Upcoming
+              </button>
+            </div>
           </div>
         </div>
 
