@@ -1,4 +1,4 @@
-import { Question } from '../types/exam';
+import { Question } from '../types/exam.ts';
 
 export interface AiSolutionBreakdown {
   keyConcept: string;
