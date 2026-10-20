@@ -22,6 +22,9 @@ import { getVibrantElectrostaticsLockedTests } from './data/vibrantElectrostatic
 import { getVibrantKinematicsLockedTests } from './data/vibrantKinematicsData';
 import { getVibrantGeometricalOpticsLockedTests } from './data/vibrantGeometricalOpticsData';
 import { getVibrantVectors3DLockedTests } from './data/vibrantVectors3DData';
+import { getVibrantIntegrationLockedTests } from './data/vibrantIntegrationData';
+import { getVibrantModernPhysicsLockedTests } from './data/vibrantModernPhysicsData';
+import { getVibrantCurrentElectricityLockedTests } from './data/vibrantCurrentElectricityData';
 import { TestHub } from './components/TestHub';
 import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
@@ -75,10 +78,13 @@ export default function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // If stored tests do not have Vectors on Day 2 or have Optics on Day 2, refresh with fresh schedule
+          // If stored tests do not have Vectors on Day 2, have Optics on Day 2, missing Integration on Day 14, missing Modern Physics on Day 27, or missing Current Electricity on Day 39, refresh with fresh schedule
           const hasVectorsOnDay2 = parsed.some((t: any) => t.id === 'locked-vibrant-vectors3d-day-2');
           const hasOpticsOnDay2 = parsed.some((t: any) => t.id === 'locked-vibrant-optics-day-2');
-          if (!hasVectorsOnDay2 || hasOpticsOnDay2) {
+          const hasIntegrationOnDay14 = parsed.some((t: any) => t.id === 'locked-vibrant-integration-day-14');
+          const hasModernPhysicsOnDay27 = parsed.some((t: any) => t.id === 'locked-vibrant-modern-physics-day-27');
+          const hasCurrentElectricityOnDay39 = parsed.some((t: any) => t.id === 'locked-vibrant-current-electricity-day-39');
+          if (!hasVectorsOnDay2 || hasOpticsOnDay2 || !hasIntegrationOnDay14 || !hasModernPhysicsOnDay27 || !hasCurrentElectricityOnDay39) {
             return SAMPLE_SCHEDULED_TESTS;
           }
 
@@ -91,12 +97,21 @@ export default function App() {
                t.title?.includes('Kinematics') ||
                t.title?.includes('Optics') ||
                t.title?.includes('Vectors') ||
+               t.title?.includes('Integration') ||
+               t.title?.includes('Modern Physics') ||
+               t.title?.includes('Current Electricity') ||
                t.id?.includes('vibrant') ||
                t.id?.includes('optics') ||
                t.id?.includes('vectors') ||
+               t.id?.includes('integration') ||
+               t.id?.includes('modern-physics') ||
+               t.id?.includes('current-electricity') ||
                t.paperId?.includes('vibrant') ||
                t.paperId?.includes('optics') ||
-               t.paperId?.includes('vectors'))
+               t.paperId?.includes('vectors') ||
+               t.paperId?.includes('integration') ||
+               t.paperId?.includes('modern-physics') ||
+               t.paperId?.includes('current-electricity'))
           );
           if (filtered.length > 0) {
             const missing = SAMPLE_SCHEDULED_TESTS.filter(
@@ -121,13 +136,17 @@ export default function App() {
 
   // Re-align coaching roadmap fresh:
   // Physics Day 1 (Electrostatics 1), Math Day 2 (Vectors & 3-D 1), Physics Day 3 (Electrostatics 2), Math Day 4 (Vectors & 3-D 2), etc.
-  // Then Kinematics (Days 13, 15) and Geometrical Optics (Days 17, 19, 21, 23, 25)
+  // Physics: Kinematics (Days 13, 15), Geometrical Optics (Days 17, 19, 21, 23, 25), Modern Physics (Days 27, 29, 31, 33, 35, 37), Current Electricity (Days 39, 41, 43, 45, 47, 49)
+  // Mathematics: Indefinite & Definite Integration (Days 14, 16, 18, 20, 22, 24, 26)
   const handleResetCoachingSchedule = () => {
     const fresh = [
       ...getVibrantElectrostaticsLockedTests(),
       ...getVibrantVectors3DLockedTests(),
       ...getVibrantKinematicsLockedTests(),
       ...getVibrantGeometricalOpticsLockedTests(),
+      ...getVibrantIntegrationLockedTests(),
+      ...getVibrantModernPhysicsLockedTests(),
+      ...getVibrantCurrentElectricityLockedTests(),
     ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
     setScheduledTests(fresh);
     try {

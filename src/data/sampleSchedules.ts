@@ -4,12 +4,18 @@ import { getVibrantElectrostaticsLockedTests } from './vibrantElectrostaticsData
 import { getVibrantKinematicsLockedTests, VIBRANT_KINEMATICS_PAPER_1 } from './vibrantKinematicsData';
 import { getVibrantGeometricalOpticsLockedTests } from './vibrantGeometricalOpticsData';
 import { getVibrantVectors3DLockedTests } from './vibrantVectors3DData';
+import { getVibrantIntegrationLockedTests } from './vibrantIntegrationData';
+import { getVibrantModernPhysicsLockedTests } from './vibrantModernPhysicsData';
+import { getVibrantCurrentElectricityLockedTests } from './vibrantCurrentElectricityData';
 
 export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = [
   ...getVibrantElectrostaticsLockedTests(),
   ...getVibrantVectors3DLockedTests(),
   ...getVibrantKinematicsLockedTests(),
   ...getVibrantGeometricalOpticsLockedTests(),
+  ...getVibrantIntegrationLockedTests(),
+  ...getVibrantModernPhysicsLockedTests(),
+  ...getVibrantCurrentElectricityLockedTests(),
 ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
 
 export const SAMPLE_DAILY_ROUTINE: DailyRoutineItem[] = [

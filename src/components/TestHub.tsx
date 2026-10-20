@@ -24,6 +24,9 @@ import { ALL_VIBRANT_ELECTROSTATICS_PAPERS } from '../data/vibrantElectrostatics
 import { ALL_VIBRANT_KINEMATICS_PAPERS } from '../data/vibrantKinematicsData';
 import { ALL_VIBRANT_GEOMETRICAL_OPTICS_PAPERS } from '../data/vibrantGeometricalOpticsData';
 import { ALL_VIBRANT_VECTORS_3D_PAPERS } from '../data/vibrantVectors3DData';
+import { ALL_VIBRANT_INTEGRATION_PAPERS } from '../data/vibrantIntegrationData';
+import { ALL_VIBRANT_MODERN_PHYSICS_PAPERS } from '../data/vibrantModernPhysicsData';
+import { ALL_VIBRANT_CURRENT_ELECTRICITY_PAPERS } from '../data/vibrantCurrentElectricityData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
   getTodayIso,
@@ -138,12 +141,16 @@ export const TestHub: React.FC<TestHubProps> = ({
   // Admin Portal Modal State
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
-  // Available Mock Papers (Vibrant Kinematics + Electrostatics + Geometrical Optics + Custom Uploads)
+  // Available Mock Papers (Vibrant Kinematics + Electrostatics + Geometrical Optics + Vectors & 3-D + Integration + Custom Uploads)
   const allAvailablePapers: ExamPaper[] = useMemo(() => {
     const list: ExamPaper[] = [
       ...ALL_VIBRANT_KINEMATICS_PAPERS,
       ...ALL_VIBRANT_ELECTROSTATICS_PAPERS,
       ...ALL_VIBRANT_GEOMETRICAL_OPTICS_PAPERS,
+      ...ALL_VIBRANT_VECTORS_3D_PAPERS,
+      ...ALL_VIBRANT_INTEGRATION_PAPERS,
+      ...ALL_VIBRANT_MODERN_PHYSICS_PAPERS,
+      ...ALL_VIBRANT_CURRENT_ELECTRICITY_PAPERS,
     ];
     savedCustomPapers.forEach((cp) => {
       if (!list.some((p) => p.id === cp.id)) {
