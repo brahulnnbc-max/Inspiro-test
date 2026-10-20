@@ -2,6 +2,11 @@ import React, { useState, useRef } from 'react';
 import { ExamPaper, ExamPattern, SubjectId, DailyRoutineItem, RoutineType } from '../types/exam';
 import { SAMPLE_JEE_MAIN_MOCK } from '../data/samplePapers';
 import { VIBRANT_GEOMETRICAL_OPTICS_PAPER_1 } from '../data/vibrantGeometricalOpticsData';
+import { VIBRANT_MATRICES_PAPER_1 } from '../data/vibrantMatricesData';
+import { VIBRANT_DETERMINANT_PAPER_1 } from '../data/vibrantDeterminantData';
+import { VIBRANT_DIFF_EQ_AUC_PAPER_1 } from '../data/vibrantDiffEqAucData';
+import { VIBRANT_LIMIT_CONT_DIFF_PAPER_1 } from '../data/vibrantLimitContDiffData';
+import { VIBRANT_BINOMIAL_PAPER_1 } from '../data/vibrantBinomialData';
 import {
   BookOpen,
   UploadCloud,
@@ -66,6 +71,66 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
 
   // Pre-curated high-yield coaching modules
   const defaultModules: CuratedModule[] = [
+    {
+      id: 'mod-matrices',
+      title: 'Vibrant Kota: Matrices Mega XII Master Collection (150 Qs)',
+      subject: 'mathematics',
+      chapter: 'Matrices',
+      totalQuestions: 150,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'Allen Leader Ex-1',
+      paper: VIBRANT_MATRICES_PAPER_1,
+    },
+    {
+      id: 'mod-determinant',
+      title: 'Vibrant Kota: Determinant Mega XII Master Collection (140 Qs)',
+      subject: 'mathematics',
+      chapter: 'Determinant',
+      totalQuestions: 140,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'JEE Advanced',
+      paper: VIBRANT_DETERMINANT_PAPER_1,
+    },
+    {
+      id: 'mod-diffeq-auc',
+      title: 'Vibrant Kota: Differential Equation & AUC Mega XII (200 Qs)',
+      subject: 'mathematics',
+      chapter: 'Differential Equations & Area',
+      totalQuestions: 200,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'JEE Advanced',
+      paper: VIBRANT_DIFF_EQ_AUC_PAPER_1,
+    },
+    {
+      id: 'mod-lcd',
+      title: 'Vibrant Kota: Limit, Continuity & Differentiability (250 Qs)',
+      subject: 'mathematics',
+      chapter: 'Limit, Continuity & Differentiability',
+      totalQuestions: 250,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'Allen Leader Ex-1',
+      paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_1,
+    },
+    {
+      id: 'mod-binomial',
+      title: 'Vibrant Kota: Binomial Theorem Micro XI Collection (130 Qs)',
+      subject: 'mathematics',
+      chapter: 'Binomial Theorem',
+      totalQuestions: 130,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'JEE Main',
+      paper: VIBRANT_BINOMIAL_PAPER_1,
+    },
     {
       id: 'mod-geometrical-optics',
       title: 'Vibrant Kota: Geometrical Optics Master Collection (229 Qs)',

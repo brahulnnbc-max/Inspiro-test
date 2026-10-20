@@ -27,6 +27,11 @@ import { ALL_VIBRANT_VECTORS_3D_PAPERS } from '../data/vibrantVectors3DData';
 import { ALL_VIBRANT_INTEGRATION_PAPERS } from '../data/vibrantIntegrationData';
 import { ALL_VIBRANT_MODERN_PHYSICS_PAPERS } from '../data/vibrantModernPhysicsData';
 import { ALL_VIBRANT_CURRENT_ELECTRICITY_PAPERS } from '../data/vibrantCurrentElectricityData';
+import { ALL_VIBRANT_MATRICES_PAPERS } from '../data/vibrantMatricesData';
+import { ALL_VIBRANT_DETERMINANT_PAPERS } from '../data/vibrantDeterminantData';
+import { ALL_VIBRANT_DIFF_EQ_AUC_PAPERS } from '../data/vibrantDiffEqAucData';
+import { ALL_VIBRANT_LIMIT_CONT_DIFF_PAPERS } from '../data/vibrantLimitContDiffData';
+import { ALL_VIBRANT_BINOMIAL_PAPERS } from '../data/vibrantBinomialData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
   getTodayIso,
@@ -151,6 +156,11 @@ export const TestHub: React.FC<TestHubProps> = ({
       ...ALL_VIBRANT_INTEGRATION_PAPERS,
       ...ALL_VIBRANT_MODERN_PHYSICS_PAPERS,
       ...ALL_VIBRANT_CURRENT_ELECTRICITY_PAPERS,
+      ...ALL_VIBRANT_MATRICES_PAPERS,
+      ...ALL_VIBRANT_DETERMINANT_PAPERS,
+      ...ALL_VIBRANT_DIFF_EQ_AUC_PAPERS,
+      ...ALL_VIBRANT_LIMIT_CONT_DIFF_PAPERS,
+      ...ALL_VIBRANT_BINOMIAL_PAPERS,
     ];
     savedCustomPapers.forEach((cp) => {
       if (!list.some((p) => p.id === cp.id)) {

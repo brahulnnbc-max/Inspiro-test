@@ -25,6 +25,11 @@ import { getVibrantVectors3DLockedTests } from './data/vibrantVectors3DData';
 import { getVibrantIntegrationLockedTests } from './data/vibrantIntegrationData';
 import { getVibrantModernPhysicsLockedTests } from './data/vibrantModernPhysicsData';
 import { getVibrantCurrentElectricityLockedTests } from './data/vibrantCurrentElectricityData';
+import { getVibrantMatricesLockedTests } from './data/vibrantMatricesData';
+import { getVibrantDeterminantLockedTests } from './data/vibrantDeterminantData';
+import { getVibrantDiffEqAucLockedTests } from './data/vibrantDiffEqAucData';
+import { getVibrantLimitContDiffLockedTests } from './data/vibrantLimitContDiffData';
+import { getVibrantBinomialLockedTests } from './data/vibrantBinomialData';
 import { TestHub } from './components/TestHub';
 import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
@@ -78,13 +83,13 @@ export default function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // If stored tests do not have Vectors on Day 2, have Optics on Day 2, missing Integration on Day 14, missing Modern Physics on Day 27, or missing Current Electricity on Day 39, refresh with fresh schedule
-          const hasVectorsOnDay2 = parsed.some((t: any) => t.id === 'locked-vibrant-vectors3d-day-2');
-          const hasOpticsOnDay2 = parsed.some((t: any) => t.id === 'locked-vibrant-optics-day-2');
-          const hasIntegrationOnDay14 = parsed.some((t: any) => t.id === 'locked-vibrant-integration-day-14');
-          const hasModernPhysicsOnDay27 = parsed.some((t: any) => t.id === 'locked-vibrant-modern-physics-day-27');
-          const hasCurrentElectricityOnDay39 = parsed.some((t: any) => t.id === 'locked-vibrant-current-electricity-day-39');
-          if (!hasVectorsOnDay2 || hasOpticsOnDay2 || !hasIntegrationOnDay14 || !hasModernPhysicsOnDay27 || !hasCurrentElectricityOnDay39) {
+          // If stored tests do not have new math chapters, refresh with fresh schedule
+          const hasMatricesOnDay28 = parsed.some((t: any) => t.id === 'locked-vibrant-matrices-day-28');
+          const hasDeterminantOnDay36 = parsed.some((t: any) => t.id === 'locked-vibrant-determinant-day-36');
+          const hasDiffEqOnDay44 = parsed.some((t: any) => t.id === 'locked-vibrant-diffeq-auc-day-44');
+          const hasLcdOnDay54 = parsed.some((t: any) => t.id === 'locked-vibrant-lcd-day-54');
+          const hasBinomialOnDay66 = parsed.some((t: any) => t.id === 'locked-vibrant-binomial-day-66');
+          if (!hasMatricesOnDay28 || !hasDeterminantOnDay36 || !hasDiffEqOnDay44 || !hasLcdOnDay54 || !hasBinomialOnDay66) {
             return SAMPLE_SCHEDULED_TESTS;
           }
 
@@ -92,26 +97,7 @@ export default function App() {
           const filtered = parsed.filter(
             (t: any) =>
               t.id !== 'locked-vibrant-kinematics-day-1' &&
-              t.id !== 'locked-vibrant-kinematics-day-3' &&
-              (t.title?.includes('Electrostatics') ||
-               t.title?.includes('Kinematics') ||
-               t.title?.includes('Optics') ||
-               t.title?.includes('Vectors') ||
-               t.title?.includes('Integration') ||
-               t.title?.includes('Modern Physics') ||
-               t.title?.includes('Current Electricity') ||
-               t.id?.includes('vibrant') ||
-               t.id?.includes('optics') ||
-               t.id?.includes('vectors') ||
-               t.id?.includes('integration') ||
-               t.id?.includes('modern-physics') ||
-               t.id?.includes('current-electricity') ||
-               t.paperId?.includes('vibrant') ||
-               t.paperId?.includes('optics') ||
-               t.paperId?.includes('vectors') ||
-               t.paperId?.includes('integration') ||
-               t.paperId?.includes('modern-physics') ||
-               t.paperId?.includes('current-electricity'))
+              t.id !== 'locked-vibrant-kinematics-day-3'
           );
           if (filtered.length > 0) {
             const missing = SAMPLE_SCHEDULED_TESTS.filter(
@@ -135,9 +121,8 @@ export default function App() {
   });
 
   // Re-align coaching roadmap fresh:
-  // Physics Day 1 (Electrostatics 1), Math Day 2 (Vectors & 3-D 1), Physics Day 3 (Electrostatics 2), Math Day 4 (Vectors & 3-D 2), etc.
-  // Physics: Kinematics (Days 13, 15), Geometrical Optics (Days 17, 19, 21, 23, 25), Modern Physics (Days 27, 29, 31, 33, 35, 37), Current Electricity (Days 39, 41, 43, 45, 47, 49)
-  // Mathematics: Indefinite & Definite Integration (Days 14, 16, 18, 20, 22, 24, 26)
+  // Physics: Electrostatics, Kinematics, Geometrical Optics, Modern Physics, Current Electricity
+  // Mathematics: Vectors & 3-D, Integration, Matrices, Determinant, Differential Eq & AUC, Limit/Cont/Diff, Binomial Theorem
   const handleResetCoachingSchedule = () => {
     const fresh = [
       ...getVibrantElectrostaticsLockedTests(),
@@ -147,6 +132,11 @@ export default function App() {
       ...getVibrantIntegrationLockedTests(),
       ...getVibrantModernPhysicsLockedTests(),
       ...getVibrantCurrentElectricityLockedTests(),
+      ...getVibrantMatricesLockedTests(),
+      ...getVibrantDeterminantLockedTests(),
+      ...getVibrantDiffEqAucLockedTests(),
+      ...getVibrantLimitContDiffLockedTests(),
+      ...getVibrantBinomialLockedTests(),
     ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
     setScheduledTests(fresh);
     try {
