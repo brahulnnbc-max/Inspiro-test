@@ -988,6 +988,31 @@ export const VIBRANT_ELECTROSTATICS_PAPER_6: ExamPaper = {
   ],
 };
 
+export const ALL_259_ELECTROSTATICS_QUESTIONS: Question[] = [
+  ...ELECTROSTATICS_PART_1_QUESTIONS,
+  ...ELECTROSTATICS_PART_2_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 50 + idx + 1, id: `elec-all-${50 + idx + 1}` })),
+  ...ELECTROSTATICS_PART_3_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 100 + idx + 1, id: `elec-all-${100 + idx + 1}` })),
+  ...ELECTROSTATICS_PART_4_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 150 + idx + 1, id: `elec-all-${150 + idx + 1}` })),
+  ...ELECTROSTATICS_PART_5_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 200 + idx + 1, id: `elec-all-${200 + idx + 1}` })),
+  ...ELECTROSTATICS_PART_6_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 250 + idx + 1, id: `elec-all-${250 + idx + 1}` })),
+];
+
+export const VIBRANT_ELECTROSTATICS_COMPLETE_PAPER: ExamPaper = {
+  id: 'vibrant-electro-complete-259',
+  title: 'Vibrant Kota Physics - Electrostatics Complete Series (259 Qs Master Archive)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 1036, // 259 questions * 4 mins
+  totalMarks: 1036,
+  createdAt: new Date().toISOString(),
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (COMPLETE ELECTROSTATICS 259 QUESTIONS)',
+      questions: ALL_259_ELECTROSTATICS_QUESTIONS,
+    },
+  ],
+};
+
 export const ALL_VIBRANT_ELECTROSTATICS_PAPERS: ExamPaper[] = [
   VIBRANT_ELECTROSTATICS_PAPER_1,
   VIBRANT_ELECTROSTATICS_PAPER_2,
@@ -995,6 +1020,7 @@ export const ALL_VIBRANT_ELECTROSTATICS_PAPERS: ExamPaper[] = [
   VIBRANT_ELECTROSTATICS_PAPER_4,
   VIBRANT_ELECTROSTATICS_PAPER_5,
   VIBRANT_ELECTROSTATICS_PAPER_6,
+  VIBRANT_ELECTROSTATICS_COMPLETE_PAPER,
 ];
 
 /**

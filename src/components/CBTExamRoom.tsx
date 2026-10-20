@@ -32,6 +32,12 @@ import {
   Zap,
   Flame,
   ZoomIn,
+  ZoomOut,
+  PauseCircle,
+  Pause,
+  FileText,
+  Columns,
+  RotateCcw,
 } from 'lucide-react';
 
 interface CBTExamRoomProps {
@@ -69,17 +75,17 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }
   }, [isDarkMode]);
 
-  // Session Data restoration (LOOPHOLE 1 & LOOPHOLE 2 FIX)
+  // Session Data restoration (Preserves exact remaining seconds for paused/escaped sessions!)
   const [sessionData] = useState(() => {
     const now = Date.now();
 
-    // 1. Try to restore in-progress session if student refreshed or navigated away
+    // 1. Try to restore in-progress session if student refreshed or navigated away or paused
     if (!isReattempt) {
       try {
         const stored = localStorage.getItem(sessionStorageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.scheduledEndTimestamp) {
+          if (parsed && (parsed.secondsRemaining !== undefined || parsed.scheduledEndTimestamp)) {
             return parsed;
           }
         }
@@ -91,9 +97,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     // 2. Fresh session creation
     let targetEndMs = now + paper.durationMinutes * 60 * 1000;
 
-    // LOOPHOLE 1: If joining a scheduled locked test during its live shift window,
-    // anchor timer strictly to the official window end time (e.g. 12:00:00).
-    // Late joiners get strictly remaining time, not a fresh 3 hours!
+    // If joining a live shift window for a scheduled test
     if (!isReattempt && scheduledTest?.scheduledDate && scheduledTest?.endTime) {
       try {
         const [endH, endM] = scheduledTest.endTime.split(':').map(Number);
@@ -101,7 +105,6 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         scheduledEndDate.setHours(endH, endM, 0, 0);
         const winEndMs = scheduledEndDate.getTime();
 
-        // If the window is in the future
         if (winEndMs > now) {
           targetEndMs = winEndMs;
         }
@@ -143,11 +146,17 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     sessionData.activeQuestionIndex || 0
   );
 
-  // Examination state (strictly tied to wall-clock time)
+  // Examination state: preserves remaining time frame so escaping does not expire multi-hour tests!
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
+    if (typeof sessionData.secondsRemaining === 'number' && sessionData.secondsRemaining > 0) {
+      return sessionData.secondsRemaining;
+    }
     const now = Date.now();
-    const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
-    return Math.max(0, Math.min(paper.durationMinutes * 60, diff));
+    if (sessionData.scheduledEndTimestamp) {
+      const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
+      if (diff > 0) return Math.min(paper.durationMinutes * 60, diff);
+    }
+    return paper.durationMinutes * 60;
   });
 
   const [answers, setAnswers] = useState<Record<string, any>>(sessionData.answers || {});
@@ -177,6 +186,8 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
+  const [questionImageZoom, setQuestionImageZoom] = useState<number>(1);
+  const [isInvertedPaper, setIsInvertedPaper] = useState<boolean>(false);
 
   // Active section reference
   const currentSection = useMemo(() => {
@@ -221,26 +232,23 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     setStatuses(initialStatuses);
   }, [paper, statuses]);
 
-  // Track time spent per active question & overall countdown (strictly tied to wall-clock time)
+  // Track time spent per active question & countdown timer
+  // Preserves remaining time frame so students can pause or escape and resume with the same remaining time!
   useEffect(() => {
-    // If time already expired while student was away, submit immediately!
-    const checkNow = Date.now();
-    const initialRemaining = Math.floor((sessionData.scheduledEndTimestamp - checkNow) / 1000);
-    if (initialRemaining <= 0) {
+    if (secondsRemaining <= 0) {
       handleFinalSubmit();
       return;
     }
 
     const timer = setInterval(() => {
-      const now = Date.now();
-      const currentRemaining = Math.max(0, Math.floor((sessionData.scheduledEndTimestamp - now) / 1000));
-      setSecondsRemaining(currentRemaining);
-
-      if (currentRemaining <= 0) {
-        clearInterval(timer);
-        handleFinalSubmit();
-        return;
-      }
+      setSecondsRemaining((prev) => {
+        const next = Math.max(0, prev - 1);
+        if (next <= 0) {
+          clearInterval(timer);
+          handleFinalSubmit();
+        }
+        return next;
+      });
 
       if (currentQuestion) {
         setTimeSpent((prev) => ({
@@ -251,9 +259,9 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentQuestion, sessionData.scheduledEndTimestamp]);
+  }, [currentQuestion]);
 
-  // LOOPHOLE 2 FIX: Continuously sync active exam answers & progress to localStorage
+  // Continuously sync active exam answers & secondsRemaining progress to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -261,6 +269,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         JSON.stringify({
           scheduledEndTimestamp: sessionData.scheduledEndTimestamp,
           startedAt,
+          secondsRemaining,
           answers,
           statuses,
           timeSpent,
@@ -271,7 +280,30 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     } catch (e) {
       // quota or private mode
     }
-  }, [answers, statuses, timeSpent, activeSectionId, activeQuestionIndex, sessionData.scheduledEndTimestamp, startedAt, sessionStorageKey]);
+  }, [answers, statuses, timeSpent, activeSectionId, activeQuestionIndex, secondsRemaining, startedAt, sessionStorageKey, sessionData.scheduledEndTimestamp]);
+
+  // Explicit Pause & Exit Handler: Saves state cleanly with preserved time frame
+  const handlePauseAndExit = () => {
+    try {
+      localStorage.setItem(
+        sessionStorageKey,
+        JSON.stringify({
+          scheduledEndTimestamp: sessionData.scheduledEndTimestamp,
+          startedAt,
+          secondsRemaining,
+          answers,
+          statuses,
+          timeSpent,
+          activeSectionId,
+          activeQuestionIndex,
+          pausedAt: Date.now(),
+        })
+      );
+    } catch (e) {
+      console.warn('Failed to save paused exam session', e);
+    }
+    onExit();
+  };
 
   // Format seconds into HH:MM:SS
   const formattedTimer = useMemo(() => {

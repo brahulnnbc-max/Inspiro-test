@@ -345,3 +345,45 @@ export function getLiveTestWindowStatus(test: ScheduledTest, now: Date = new Dat
   };
 }
 
+/**
+ * Detects collisions and realigns any scheduled test list so that EVERY test
+ * is strictly placed on an ALTERNATE day (Day 1, Day 3, Day 5, Day 7, Day 9...).
+ * Eliminates duplicate dates, prevents overlapping windows, and locks the tests.
+ */
+export function realignToStrictAlternateDays(
+  tests: ScheduledTest[],
+  baseDateStr?: string
+): ScheduledTest[] {
+  const base = new Date();
+  if (baseDateStr) {
+    const parsed = new Date(baseDateStr);
+    if (!isNaN(parsed.getTime())) base.setTime(parsed.getTime());
+  } else {
+    // Tomorrow as Day 1
+    base.setDate(base.getDate() + 1);
+  }
+  base.setHours(9, 0, 0, 0);
+
+  return tests.map((test, idx) => {
+    const dayOffset = idx * 2;
+    const testDate = new Date(base);
+    testDate.setDate(base.getDate() + dayOffset);
+    const dateStr = getIsoDate(testDate);
+
+    const dur = test.durationMinutes || 180;
+    const totalM = 9 * 60 + dur;
+    const endH = Math.floor(totalM / 60) % 24;
+    const endM = totalM % 60;
+    const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+    return {
+      ...test,
+      scheduledDate: dateStr,
+      startTime: '09:00',
+      endTime: endTime,
+      isLocked: true,
+      status: test.status === 'COMPLETED' ? 'COMPLETED' : ('UPCOMING_LOCKED' as const),
+    };
+  });
+}
+
