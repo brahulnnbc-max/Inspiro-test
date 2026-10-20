@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ExamPaper, ExamPattern, SubjectId, DailyRoutineItem, RoutineType } from '../types/exam';
 import { SAMPLE_JEE_MAIN_MOCK } from '../data/samplePapers';
+import { VIBRANT_GEOMETRICAL_OPTICS_PAPER_1 } from '../data/vibrantGeometricalOpticsData';
 import {
   BookOpen,
   UploadCloud,
@@ -65,6 +66,18 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
 
   // Pre-curated high-yield coaching modules
   const defaultModules: CuratedModule[] = [
+    {
+      id: 'mod-geometrical-optics',
+      title: 'Vibrant Kota: Geometrical Optics Master Collection (229 Qs)',
+      subject: 'physics',
+      chapter: 'Geometrical Optics',
+      totalQuestions: 229,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'Allen Leader Ex-1',
+      paper: VIBRANT_GEOMETRICAL_OPTICS_PAPER_1,
+    },
     {
       id: 'mod-kinematics',
       title: 'Allen Mechanics: Kinematics 1D & 2D (Exercise 1 & 2)',

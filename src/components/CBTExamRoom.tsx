@@ -36,6 +36,8 @@ import {
 
 interface CBTExamRoomProps {
   paper: ExamPaper;
+  scheduledTest?: any;
+  isReattempt?: boolean;
   initialMode?: UIMode;
   onSubmitExam: (attempt: StudentAttempt) => void;
   onExit: () => void;
@@ -44,11 +46,16 @@ interface CBTExamRoomProps {
 
 export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   paper,
+  scheduledTest = null,
+  isReattempt = false,
   initialMode = 'NTA_OFFICIAL',
   onSubmitExam,
   onExit,
   onToggleTag,
 }) => {
+  // Session storage key for real-time exam state preservation
+  const sessionStorageKey = `jee_live_session_${paper.id}`;
+
   // Mode toggle: Official NTA vs Modern MathonGo
   const [uiMode, setUiMode] = useState<UIMode>(initialMode);
   // Default to day mode (false) in NTA Official for authentic government exam terminal appearance, toggleable to dark mode
@@ -62,20 +69,91 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }
   }, [isDarkMode]);
 
-  // Active section & question indices
-  const [activeSectionId, setActiveSectionId] = useState<SubjectId>(
-    paper.sections[0]?.id || 'physics'
-  );
-  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+  // Session Data restoration (LOOPHOLE 1 & LOOPHOLE 2 FIX)
+  const [sessionData] = useState(() => {
+    const now = Date.now();
 
-  // Examination state
-  const [secondsRemaining, setSecondsRemaining] = useState(
-    paper.durationMinutes * 60
+    // 1. Try to restore in-progress session if student refreshed or navigated away
+    if (!isReattempt) {
+      try {
+        const stored = localStorage.getItem(sessionStorageKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.scheduledEndTimestamp) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore session from localStorage', e);
+      }
+    }
+
+    // 2. Fresh session creation
+    let targetEndMs = now + paper.durationMinutes * 60 * 1000;
+
+    // LOOPHOLE 1: If joining a scheduled locked test during its live shift window,
+    // anchor timer strictly to the official window end time (e.g. 12:00:00).
+    // Late joiners get strictly remaining time, not a fresh 3 hours!
+    if (!isReattempt && scheduledTest?.scheduledDate && scheduledTest?.endTime) {
+      try {
+        const [endH, endM] = scheduledTest.endTime.split(':').map(Number);
+        const scheduledEndDate = new Date(scheduledTest.scheduledDate);
+        scheduledEndDate.setHours(endH, endM, 0, 0);
+        const winEndMs = scheduledEndDate.getTime();
+
+        // If the window is in the future
+        if (winEndMs > now) {
+          targetEndMs = winEndMs;
+        }
+      } catch (err) {
+        console.warn('Error computing live window end time', err);
+      }
+    }
+
+    const initialSec = Math.max(1, Math.min(
+      paper.durationMinutes * 60,
+      Math.floor((targetEndMs - now) / 1000)
+    ));
+
+    const freshSession = {
+      scheduledEndTimestamp: targetEndMs,
+      startedAt: now,
+      secondsRemaining: initialSec,
+      answers: {},
+      statuses: {},
+      timeSpent: {},
+      activeSectionId: paper.sections[0]?.id || 'physics',
+      activeQuestionIndex: 0,
+    };
+
+    try {
+      localStorage.setItem(sessionStorageKey, JSON.stringify(freshSession));
+    } catch (e) {
+      console.warn('Failed to save session to localStorage', e);
+    }
+
+    return freshSession;
+  });
+
+  // Active section & question indices (restored if previously active)
+  const [activeSectionId, setActiveSectionId] = useState<SubjectId>(
+    sessionData.activeSectionId || paper.sections[0]?.id || 'physics'
   );
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [statuses, setStatuses] = useState<Record<string, QuestionStatus>>({});
-  const [timeSpent, setTimeSpent] = useState<Record<string, number>>({});
-  const [startedAt] = useState<number>(Date.now());
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(
+    sessionData.activeQuestionIndex || 0
+  );
+
+  // Examination state (strictly tied to wall-clock time)
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
+    const now = Date.now();
+    const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
+    return Math.max(0, Math.min(paper.durationMinutes * 60, diff));
+  });
+
+  const [answers, setAnswers] = useState<Record<string, any>>(sessionData.answers || {});
+  const [statuses, setStatuses] = useState<Record<string, QuestionStatus>>(sessionData.statuses || {});
+  const [timeSpent, setTimeSpent] = useState<Record<string, number>>(sessionData.timeSpent || {});
+  const [startedAt] = useState<number>(sessionData.startedAt || Date.now());
   const [questionTags, setQuestionTags] = useState<Record<string, QuestionTag[]>>({});
 
   const handleToggleTag = (tag: QuestionTag) => {
@@ -126,8 +204,9 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     });
   }, [currentSection, activeSubSection]);
 
-  // Initialize questions as NOT_VISITED except the initial one (NOT_ANSWERED)
+  // Initialize questions as NOT_VISITED except the initial one (if not restored from existing session)
   useEffect(() => {
+    if (Object.keys(statuses).length > 0) return;
     const initialStatuses: Record<string, QuestionStatus> = {};
     paper.sections.forEach((sec) => {
       sec.questions.forEach((q) => {
@@ -140,19 +219,28 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       initialStatuses[firstQ.id] = 'NOT_ANSWERED';
     }
     setStatuses(initialStatuses);
-  }, [paper]);
+  }, [paper, statuses]);
 
-  // Track time spent per active question & overall countdown
+  // Track time spent per active question & overall countdown (strictly tied to wall-clock time)
   useEffect(() => {
+    // If time already expired while student was away, submit immediately!
+    const checkNow = Date.now();
+    const initialRemaining = Math.floor((sessionData.scheduledEndTimestamp - checkNow) / 1000);
+    if (initialRemaining <= 0) {
+      handleFinalSubmit();
+      return;
+    }
+
     const timer = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleFinalSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
+      const now = Date.now();
+      const currentRemaining = Math.max(0, Math.floor((sessionData.scheduledEndTimestamp - now) / 1000));
+      setSecondsRemaining(currentRemaining);
+
+      if (currentRemaining <= 0) {
+        clearInterval(timer);
+        handleFinalSubmit();
+        return;
+      }
 
       if (currentQuestion) {
         setTimeSpent((prev) => ({
@@ -163,7 +251,27 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentQuestion]);
+  }, [currentQuestion, sessionData.scheduledEndTimestamp]);
+
+  // LOOPHOLE 2 FIX: Continuously sync active exam answers & progress to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        sessionStorageKey,
+        JSON.stringify({
+          scheduledEndTimestamp: sessionData.scheduledEndTimestamp,
+          startedAt,
+          answers,
+          statuses,
+          timeSpent,
+          activeSectionId,
+          activeQuestionIndex,
+        })
+      );
+    } catch (e) {
+      // quota or private mode
+    }
+  }, [answers, statuses, timeSpent, activeSectionId, activeQuestionIndex, sessionData.scheduledEndTimestamp, startedAt, sessionStorageKey]);
 
   // Format seconds into HH:MM:SS
   const formattedTimer = useMemo(() => {
@@ -280,6 +388,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
 
   // Handle final submission
   const handleFinalSubmit = () => {
+    try {
+      localStorage.removeItem(sessionStorageKey);
+    } catch (e) {
+      console.warn('Failed to clean up exam session', e);
+    }
     const attempt: StudentAttempt = {
       id: `attempt-${Date.now()}`,
       examId: paper.id,

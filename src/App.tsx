@@ -20,6 +20,8 @@ import {
 } from './data/sampleSchedules';
 import { getVibrantElectrostaticsLockedTests } from './data/vibrantElectrostaticsData';
 import { getVibrantKinematicsLockedTests } from './data/vibrantKinematicsData';
+import { getVibrantGeometricalOpticsLockedTests } from './data/vibrantGeometricalOpticsData';
+import { getVibrantVectors3DLockedTests } from './data/vibrantVectors3DData';
 import { TestHub } from './components/TestHub';
 import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
@@ -31,6 +33,8 @@ type AppView = 'HUB' | 'INSTRUCTIONS' | 'CBT_ROOM' | 'ANALYTICS';
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>('HUB');
   const [selectedPaper, setSelectedPaper] = useState<ExamPaper | null>(null);
+  const [activeScheduledTest, setActiveScheduledTest] = useState<ScheduledTest | null>(null);
+  const [isReattemptMode, setIsReattemptMode] = useState<boolean>(false);
   const [selectedMode, setSelectedMode] = useState<UIMode>('NTA_OFFICIAL');
   const [activeAttempt, setActiveAttempt] = useState<StudentAttempt | null>(null);
 
@@ -71,6 +75,13 @@ export default function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // If stored tests do not have Vectors on Day 2 or have Optics on Day 2, refresh with fresh schedule
+          const hasVectorsOnDay2 = parsed.some((t: any) => t.id === 'locked-vibrant-vectors3d-day-2');
+          const hasOpticsOnDay2 = parsed.some((t: any) => t.id === 'locked-vibrant-optics-day-2');
+          if (!hasVectorsOnDay2 || hasOpticsOnDay2) {
+            return SAMPLE_SCHEDULED_TESTS;
+          }
+
           // Strictly purge any legacy day-1 / day-3 kinematics tests
           const filtered = parsed.filter(
             (t: any) =>
@@ -78,8 +89,14 @@ export default function App() {
               t.id !== 'locked-vibrant-kinematics-day-3' &&
               (t.title?.includes('Electrostatics') ||
                t.title?.includes('Kinematics') ||
+               t.title?.includes('Optics') ||
+               t.title?.includes('Vectors') ||
                t.id?.includes('vibrant') ||
-               t.paperId?.includes('vibrant'))
+               t.id?.includes('optics') ||
+               t.id?.includes('vectors') ||
+               t.paperId?.includes('vibrant') ||
+               t.paperId?.includes('optics') ||
+               t.paperId?.includes('vectors'))
           );
           if (filtered.length > 0) {
             const missing = SAMPLE_SCHEDULED_TESTS.filter(
@@ -102,12 +119,16 @@ export default function App() {
     }
   });
 
-  // Re-align coaching roadmap fresh starting from tomorrow: Electrostatics Day 1-11, Kinematics Day 13-15
+  // Re-align coaching roadmap fresh:
+  // Physics Day 1 (Electrostatics 1), Math Day 2 (Vectors & 3-D 1), Physics Day 3 (Electrostatics 2), Math Day 4 (Vectors & 3-D 2), etc.
+  // Then Kinematics (Days 13, 15) and Geometrical Optics (Days 17, 19, 21, 23, 25)
   const handleResetCoachingSchedule = () => {
     const fresh = [
       ...getVibrantElectrostaticsLockedTests(),
+      ...getVibrantVectors3DLockedTests(),
       ...getVibrantKinematicsLockedTests(),
-    ];
+      ...getVibrantGeometricalOpticsLockedTests(),
+    ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
     setScheduledTests(fresh);
     try {
       localStorage.setItem('jee_scheduled_tests', JSON.stringify(fresh));
@@ -333,7 +354,21 @@ export default function App() {
         title: test.title,
       };
 
+    setActiveScheduledTest(test);
+    setIsReattemptMode(false);
     setSelectedPaper(paperToUse);
+    setCurrentView('INSTRUCTIONS');
+  };
+
+  const handleReattemptExam = (paper: ExamPaper, test?: ScheduledTest) => {
+    try {
+      localStorage.removeItem(`jee_live_session_${paper.id}`);
+    } catch (e) {
+      console.warn(e);
+    }
+    setActiveScheduledTest(test || null);
+    setIsReattemptMode(true);
+    setSelectedPaper(paper);
     setCurrentView('INSTRUCTIONS');
   };
 
@@ -463,6 +498,7 @@ export default function App() {
           onUpdateQuestionTags={handleUpdateQuestionTags}
           onToggleTagOnQuestion={handleToggleTagOnQuestion}
           onResetCoachingSchedule={handleResetCoachingSchedule}
+          onReattemptTest={handleReattemptExam}
         />
       )}
 
@@ -479,6 +515,8 @@ export default function App() {
       {currentView === 'CBT_ROOM' && selectedPaper && (
         <CBTExamRoom
           paper={selectedPaper}
+          scheduledTest={activeScheduledTest}
+          isReattempt={isReattemptMode}
           initialMode={selectedMode}
           onSubmitExam={handleSubmitExam}
           onExit={() => setCurrentView('HUB')}

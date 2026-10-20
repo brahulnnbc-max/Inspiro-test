@@ -19,8 +19,11 @@ import { SchedulePlanner } from './SchedulePlanner';
 import { AIMentorSchedulerChat } from './AIMentorSchedulerChat';
 import { MistakeNotebook } from './MistakeNotebook';
 import { AdminPanelModal } from './AdminPanelModal';
+import { SAMPLE_JEE_MAIN_MOCK } from '../data/samplePapers';
 import { ALL_VIBRANT_ELECTROSTATICS_PAPERS } from '../data/vibrantElectrostaticsData';
 import { ALL_VIBRANT_KINEMATICS_PAPERS } from '../data/vibrantKinematicsData';
+import { ALL_VIBRANT_GEOMETRICAL_OPTICS_PAPERS } from '../data/vibrantGeometricalOpticsData';
+import { ALL_VIBRANT_VECTORS_3D_PAPERS } from '../data/vibrantVectors3DData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
   getTodayIso,
@@ -54,11 +57,15 @@ import {
   AlertTriangle,
   Shield,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
 } from 'lucide-react';
 
 interface TestHubProps {
   onSelectExam: (paper: ExamPaper) => void;
   onViewAttempt: (attempt: StudentAttempt, paper: ExamPaper) => void;
+  onReattemptTest?: (paper: ExamPaper, test?: ScheduledTest) => void;
   savedAttempts: StudentAttempt[];
   savedCustomPapers: ExamPaper[];
   onSaveCustomPaper: (paper: ExamPaper) => void;
@@ -89,6 +96,7 @@ interface TestHubProps {
 export const TestHub: React.FC<TestHubProps> = ({
   onSelectExam,
   onViewAttempt,
+  onReattemptTest,
   savedAttempts = [],
   savedCustomPapers = [],
   onSaveCustomPaper,
@@ -120,14 +128,22 @@ export const TestHub: React.FC<TestHubProps> = ({
     'TESTS' | 'ROUTINE' | 'MODULES' | 'RACE' | 'MENTOR' | 'MISTAKES' | 'HISTORY' | 'SCHEDULE'
   >('TESTS');
 
+  // Filter for Homepage CBT Tests view matching Schedule Section
+  const [homeFilter, setHomeFilter] = useState<'ALL' | 'LIVE' | 'TOMORROW' | 'UPCOMING' | 'COMPLETED'>('ALL');
+  const [expandedTopicTestIds, setExpandedTopicTestIds] = useState<Record<string, boolean>>({});
+  const toggleTopicExpand = (id: string) => {
+    setExpandedTopicTestIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   // Admin Portal Modal State
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
-  // Available Mock Papers (Vibrant Kinematics + Vibrant Electrostatics + Custom Uploads)
+  // Available Mock Papers (Vibrant Kinematics + Electrostatics + Geometrical Optics + Custom Uploads)
   const allAvailablePapers: ExamPaper[] = useMemo(() => {
     const list: ExamPaper[] = [
       ...ALL_VIBRANT_KINEMATICS_PAPERS,
       ...ALL_VIBRANT_ELECTROSTATICS_PAPERS,
+      ...ALL_VIBRANT_GEOMETRICAL_OPTICS_PAPERS,
     ];
     savedCustomPapers.forEach((cp) => {
       if (!list.some((p) => p.id === cp.id)) {
@@ -228,6 +244,31 @@ export const TestHub: React.FC<TestHubProps> = ({
       activeReminders: reminders,
     };
   }, [scheduledTests, todayStr, tomorrowStr, currentTime]);
+
+  // Unified homepage filter matching Schedule Section
+  const filteredHomeTests = useMemo(() => {
+    const sorted = [...scheduledTests].sort((a, b) =>
+      a.scheduledDate.localeCompare(b.scheduledDate)
+    );
+
+    if (homeFilter === 'ALL') return sorted;
+    if (homeFilter === 'LIVE') {
+      return sorted.filter((t) => {
+        const info = getLiveTestWindowStatus(t, currentTime);
+        return info.isLive || t.status === 'LIVE_NOW';
+      });
+    }
+    if (homeFilter === 'TOMORROW') {
+      return sorted.filter((t) => t.scheduledDate === tomorrowStr && t.status !== 'COMPLETED');
+    }
+    if (homeFilter === 'UPCOMING') {
+      return sorted.filter((t) => t.scheduledDate > tomorrowStr && t.status !== 'COMPLETED');
+    }
+    if (homeFilter === 'COMPLETED') {
+      return sorted.filter((t) => t.status === 'COMPLETED');
+    }
+    return sorted;
+  }, [scheduledTests, homeFilter, currentTime, tomorrowStr]);
 
   // Overall Stats
   const totalCompletedCount = savedAttempts.length;
@@ -537,326 +578,250 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
         </div>
 
         {/* ======================================================== */}
-        {/* TAB 1: STUDENT CBT TESTS & AVAILABLE MOCKS               */}
+        {/* TAB 1: LIVE, TOMORROW & UPCOMING CBT TESTS (LOCKED)      */}
         {/* ======================================================== */}
         {activeTab === 'TESTS' && (
-          <div className="space-y-7">
-            {/* Alternate Day 50-Question Schedule Status Banner */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-red-950/60 via-zinc-950 to-black border border-red-600/40 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-red-600/20 border border-red-500/50 flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5 text-red-500" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider font-display">
-                      50-Question Section CBT Schedule Active
-                    </span>
-                    <span className="px-2 py-0.2 rounded text-[10px] font-mono font-black bg-red-600 text-white">
-                      ALTERNATE DAYS (09:00 - 12:00)
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    Tests locked at 180 mins for 50 questions & (Questions × 4 mins) for remaining questions with scrambled MCQs, diagrams & verified solutions.
-                  </p>
-                </div>
+          <div className="space-y-6">
+            {/* Header & Filter Controls matching Schedule Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base md:text-lg font-bold font-display text-white flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-red-500 fill-red-500" />
+                  Live & Upcoming CBT Test Series
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Strictly locked official NTA & MathonGo CBT mode. Tests unlock only during their scheduled live window.
+                </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => setActiveTab('SCHEDULE')}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                  <span>View Calendar</span>
-                </button>
-                <button
-                  onClick={() => setIsAdminModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>Chunk & Schedule</span>
-                </button>
+
+              {/* Controls: Re-align & Filters */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {onResetCoachingSchedule && (
+                  <button
+                    type="button"
+                    onClick={onResetCoachingSchedule}
+                    className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Re-align full series: Day 1 Physics (Electrostatics), Day 2 Math (Vectors & 3-D), Day 13 Kinematics, Day 17 Geometrical Optics"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Re-align Series</span>
+                  </button>
+                )}
+
+                {/* Filter tabs matching schedule section */}
+                <div className="flex items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-semibold overflow-x-auto">
+                  <button
+                    onClick={() => setHomeFilter('ALL')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      homeFilter === 'ALL'
+                        ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    All Tests ({scheduledTests.length})
+                  </button>
+                  <button
+                    onClick={() => setHomeFilter('LIVE')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      homeFilter === 'LIVE'
+                        ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Live Now ({todayTests.filter(t => t.windowInfo.isLive).length})
+                  </button>
+                  <button
+                    onClick={() => setHomeFilter('TOMORROW')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      homeFilter === 'TOMORROW'
+                        ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Tomorrow ({tomorrowTests.length})
+                  </button>
+                  <button
+                    onClick={() => setHomeFilter('UPCOMING')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      homeFilter === 'UPCOMING'
+                        ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Upcoming ({upcomingTests.length})
+                  </button>
+                  <button
+                    onClick={() => setHomeFilter('COMPLETED')}
+                    className={`px-3 py-1.5 rounded-md transition-colors ${
+                      homeFilter === 'COMPLETED'
+                        ? 'bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Completed ({completedTests.length})
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* SUB-SECTION 1: AVAILABLE CBT MOCK EXAMS (STUDENT PORTAL) */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Play className="w-4 h-4 text-red-500 fill-current" />
-                  <h3 className="text-base font-bold font-display uppercase tracking-wider text-white">
-                    Available CBT Mock Exam Papers
-                  </h3>
-                </div>
-                <span className="text-xs font-mono text-zinc-400">
-                  {allAvailablePapers.length} Paper(s) Ready
-                </span>
-              </div>
+            {/* Test Cards List matching schedule section */}
+            <div className="space-y-4">
+              {filteredHomeTests.length > 0 ? (
+                filteredHomeTests.map((test, index) => {
+                  const windowInfo = getLiveTestWindowStatus(test, currentTime);
+                  const isExpanded = !!expandedTopicTestIds[test.id];
+                  const completedTopics = test.syllabus.filter((t) => t.completed).length;
+                  const isLive = windowInfo.isLive || test.status === 'LIVE_NOW';
+                  const isTomorrow = test.scheduledDate === tomorrowStr;
+                  const isCompleted = test.status === 'COMPLETED';
+                  const isMissed = windowInfo.status === 'MISSED';
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {allAvailablePapers.map((paper) => {
-                  const qCount = paper.sections.reduce(
-                    (acc, s) => acc + (s.questions?.length || 0),
-                    0
-                  );
-                  const isMain = paper.pattern === 'JEE_MAIN';
                   return (
                     <div
-                      key={paper.id}
-                      className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col justify-between space-y-4 group"
-                    >
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <span
-                            className={`px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                              isMain
-                                ? 'bg-red-600/20 border border-red-500/40 text-red-400'
-                                : 'bg-purple-600/20 border border-purple-500/40 text-purple-400'
-                            }`}
-                          >
-                            {paper.pattern}
-                          </span>
-                          <span className="text-xs font-mono text-zinc-400">
-                            {paper.durationMinutes}m • {paper.totalMarks} Marks
-                          </span>
-                        </div>
-
-                        <h4 className="text-base font-bold text-white group-hover:text-red-400 transition-colors line-clamp-2">
-                          {paper.title}
-                        </h4>
-
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          {paper.sections.map((sec) => (
-                            <span
-                              key={sec.id}
-                              className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 capitalize font-medium"
-                            >
-                              {sec.name} ({sec.questions?.length || 0})
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="text-[11px] font-mono text-zinc-500 pt-0.5">
-                          {qCount} Questions • {isMain ? '+4 / -1 Marking' : '+4 / -2 Advanced Pattern'}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => onSelectExam(paper)}
-                        className="w-full py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-500 text-white flex items-center justify-center gap-2 shadow-[0_0_12px_rgba(220,38,38,0.3)] transition-all cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>START EXAMINATION</span>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* ======================================================== */}
-            {/* SUB-SECTION: TODAY'S LIVE TEST (STRICT DURATION CHECK)   */}
-            {/* ======================================================== */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
-                <h3 className="text-base font-bold font-display uppercase tracking-wider text-red-500">
-                  Today's Scheduled Test ({todayStr})
-                </h3>
-              </div>
-
-              {todayTests.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {todayTests.map(({ test, windowInfo }) => (
-                    <div
                       key={test.id}
-                      className={`p-5 rounded-2xl border-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 transition-all ${
-                        windowInfo.isLive
+                      className={`rounded-xl border p-5 md:p-6 shadow-xl space-y-4 transition-all ${
+                        isLive
                           ? 'bg-gradient-to-r from-red-950/50 via-zinc-950 to-black border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)]'
-                          : 'bg-zinc-950 border-zinc-800'
+                          : isTomorrow
+                          ? 'bg-zinc-950 border-amber-600/40 hover:border-amber-500/60'
+                          : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                       }`}
                     >
-                      <div className="space-y-2 max-w-2xl">
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              windowInfo.isLive
-                                ? 'bg-red-600 text-white animate-pulse'
-                                : 'bg-zinc-800 text-zinc-300'
-                            }`}
-                          >
-                            {windowInfo.message}
-                          </span>
-                          <span className="text-xs font-mono text-zinc-400">
-                            Slot: {test.startTime} - {test.endTime}
-                          </span>
+                      {/* Header row */}
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-300 uppercase">
+                              Test #{index + 1}
+                            </span>
+
+                            {isLive ? (
+                              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-red-600 text-white shadow-[0_0_8px_rgba(220,38,38,0.6)] animate-pulse">
+                                ● LIVE WINDOW
+                              </span>
+                            ) : isTomorrow ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                Opens Tomorrow @ {test.startTime}
+                              </span>
+                            ) : isCompleted ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/50">
+                                ✓ COMPLETED
+                              </span>
+                            ) : isMissed ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800">
+                                ❌ CLOSED / MISSED
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1">
+                                <Lock className="w-2.5 h-2.5" />
+                                Locked (Opens {test.scheduledDate})
+                              </span>
+                            )}
+
+                            <span className="text-xs font-mono text-zinc-400">
+                              Slot: {test.startTime} - {test.endTime}
+                            </span>
+                          </div>
+
+                          <h4 className="font-bold text-base md:text-lg text-white">
+                            {test.title}
+                          </h4>
+
+                          <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 font-mono">
+                            <span>Date: {test.scheduledDate}</span>
+                            <span>Duration: {test.durationMinutes} Mins</span>
+                            <span>Marks: {test.totalMarks}</span>
+                            <span>
+                              Syllabus: {completedTopics}/{test.syllabus.length} Revised
+                            </span>
+                          </div>
                         </div>
 
-                        <h4 className="text-lg md:text-xl font-bold font-display text-white">
-                          {test.title}
-                        </h4>
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-2 md:pt-0 shrink-0">
+                          {test.syllabus.length > 0 && (
+                            <button
+                              onClick={() => toggleTopicExpand(test.id)}
+                              className="px-3 py-1.5 text-xs font-semibold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <span>Syllabus Checklist</span>
+                              {isExpanded ? (
+                                <ChevronUp className="w-3.5 h-3.5" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
 
-                        <div className="flex items-center gap-3 text-xs font-mono text-zinc-400">
-                          <span>{test.durationMinutes} Mins</span>
-                          <span>•</span>
-                          <span>{test.totalMarks} Marks</span>
-                          <span>•</span>
-                          <span className="text-emerald-400 flex items-center gap-1">
-                            <Lock className="w-3 h-3" />
-                            Locked & Committed
-                          </span>
+                          {isLive ? (
+                            <button
+                              onClick={() => onEnterLiveTest(test)}
+                              className="px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.6)] animate-pulse flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Play className="w-3.5 h-3.5 fill-current" />
+                              <span>Take Live Test</span>
+                            </button>
+                          ) : isCompleted || isMissed ? (
+                            <button
+                              onClick={() => {
+                                const paper = test.paper || savedCustomPapers.find(p => p.id === test.paperId) || { ...SAMPLE_JEE_MAIN_MOCK, id: test.paperId || test.id, title: test.title };
+                                if (onReattemptTest) onReattemptTest(paper, test);
+                                else onSelectExam(paper);
+                              }}
+                              className="px-4 py-2 text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Reattempt Test</span>
+                            </button>
+                          ) : (
+                            <div
+                              className="px-4 py-2 text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1.5 select-none"
+                              title="Test is locked until scheduled start window"
+                            >
+                              <Lock className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Locked Until Window</span>
+                            </div>
+                          )}
                         </div>
+                      </div>
 
-                        {test.syllabus && test.syllabus.length > 0 && (
-                          <div className="pt-1 flex flex-wrap gap-1.5">
-                            {test.syllabus.map((top) => (
-                              <button
-                                key={top.id}
-                                onClick={() => onToggleTopic(test.id, top.id)}
-                                className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
-                                  top.completed
-                                    ? 'bg-emerald-950 border-emerald-600/60 text-emerald-300 line-through'
-                                    : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                      {/* Expandable Syllabus Checklist */}
+                      {isExpanded && test.syllabus.length > 0 && (
+                        <div className="pt-3 border-t border-zinc-800 space-y-3">
+                          <div className="text-xs font-semibold text-zinc-400">
+                            Topics covered in this exam:
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            {test.syllabus.map((topic) => (
+                              <label
+                                key={topic.id}
+                                onClick={() => onToggleTopic(test.id, topic.id)}
+                                className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center gap-2.5 transition-colors ${
+                                  topic.completed
+                                    ? 'bg-red-950/40 border-red-800 text-white'
+                                    : 'bg-black/60 border-zinc-800 text-zinc-300'
                                 }`}
                               >
-                                {top.completed ? '✓ ' : '○ '}
-                                {top.name}
-                              </button>
+                                <input
+                                  type="checkbox"
+                                  checked={topic.completed}
+                                  onChange={() => {}}
+                                  className="w-3.5 h-3.5 text-red-600 rounded bg-zinc-900 border-zinc-700"
+                                />
+                                <span className={topic.completed ? 'line-through text-zinc-400' : ''}>
+                                  {topic.name}
+                                </span>
+                              </label>
                             ))}
                           </div>
-                        )}
-                      </div>
-
-                      {/* Start Live Test (Strict Duration Condition) */}
-                      <div className="shrink-0 w-full md:w-auto text-right">
-                        {windowInfo.canEnter ? (
-                          <button
-                            onClick={() => onEnterLiveTest(test)}
-                            className="w-full md:w-auto px-6 py-3 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-500 text-white transition-all flex items-center justify-center gap-2 shadow-[0_0_18px_rgba(220,38,38,0.5)] cursor-pointer"
-                          >
-                            <Play className="w-4 h-4 fill-current" />
-                            <span>START LIVE TEST NOW</span>
-                          </button>
-                        ) : (
-                          <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 text-center">
-                            <div className="text-xs font-mono text-amber-400 font-semibold flex items-center justify-center gap-1.5">
-                              <Lock className="w-3.5 h-3.5" />
-                              <span>{windowInfo.message}</span>
-                            </div>
-                            <div className="text-[10px] text-zinc-500 mt-1">
-                              Will unlock automatically at {test.startTime}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-5 rounded-xl bg-zinc-950 border border-zinc-800/80 text-xs text-zinc-500 text-center">
-                  No live test scheduled for today. You can paste questions above to schedule one.
-                </div>
-              )}
-            </div>
-
-            {/* ======================================================== */}
-            {/* SUB-SECTION: TOMORROW'S TEST                             */}
-            {/* ======================================================== */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-                <h3 className="text-base font-bold font-display uppercase tracking-wider text-amber-400">
-                  Tomorrow's Scheduled Test ({tomorrowStr})
-                </h3>
-              </div>
-
-              {tomorrowTests.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {tomorrowTests.map(({ test }) => (
-                    <div
-                      key={test.id}
-                      className="p-4 rounded-xl bg-zinc-950 border border-amber-600/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase">
-                            Opens Tomorrow at {test.startTime}
-                          </span>
-                          <span className="text-xs font-mono text-zinc-400">
-                            {test.startTime} - {test.endTime}
-                          </span>
                         </div>
-                        <h4 className="text-base font-bold text-white">{test.title}</h4>
-                        <div className="text-xs font-mono text-zinc-400">
-                          {test.durationMinutes} Mins • {test.totalMarks} Marks • Rescheduling Disabled
-                        </div>
-                      </div>
-
-                      <div className="text-xs font-mono text-zinc-500">
-                        🔒 Locked in calendar
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })
               ) : (
-                <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-500 text-center">
-                  No test scheduled for tomorrow.
-                </div>
-              )}
-            </div>
-
-            {/* ======================================================== */}
-            {/* SUB-SECTION: UPCOMING 6-MONTH ROADMAP                    */}
-            {/* ======================================================== */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-zinc-400" />
-                  <h3 className="text-base font-bold font-display uppercase tracking-wider text-zinc-300">
-                    Upcoming Tests (Up to 6 Months)
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {onResetCoachingSchedule && (
-                    <button
-                      type="button"
-                      onClick={onResetCoachingSchedule}
-                      className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-                      title="Re-align Kota Series: Electrostatics (Days 1-11) followed onwards by Kinematics (Days 13 & 15)"
-                    >
-                      <RefreshCw className="w-3 h-3 text-amber-400" />
-                      <span>Re-align Coaching Roadmap</span>
-                    </button>
-                  )}
-                  <span className="text-xs font-mono text-zinc-500">{upcomingTests.length} Locked Tests</span>
-                </div>
-              </div>
-
-              {upcomingTests.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {upcomingTests.map(({ test }, idx) => (
-                    <div
-                      key={test.id}
-                      className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1.5"
-                    >
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-mono font-bold text-red-400">{test.scheduledDate}</span>
-                        <span className="font-mono text-zinc-500 text-[11px]">{test.startTime} - {test.endTime}</span>
-                      </div>
-                      <h4 className="text-sm font-bold text-white line-clamp-1">{test.title}</h4>
-                      <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1">
-                        <span className="flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-emerald-500" />
-                          Committed (No Edit)
-                        </span>
-                        <span>#{idx + 1}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-500 text-center">
-                  No upcoming tests scheduled beyond tomorrow. Schedule alternate days or weekly tests above.
+                <div className="p-8 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-500 text-center">
+                  No tests found under the "{homeFilter}" filter.
                 </div>
               )}
             </div>
@@ -992,10 +957,24 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-red-400 font-mono">
-                          Locked in History
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const paper =
+                              test.paper ||
+                              savedCustomPapers.find((p) => p.id === test.paperId) || {
+                                ...SAMPLE_JEE_MAIN_MOCK,
+                                id: test.paperId || test.id,
+                                title: test.title,
+                              };
+                            if (onReattemptTest) onReattemptTest(paper, test);
+                            else onSelectExam(paper);
+                          }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Reattempt / Practice</span>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1047,13 +1026,25 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => onViewAttempt(attempt, paper)}
-                          className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <BarChart3 className="w-3.5 h-3.5" />
-                          <span>View Analysis</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              if (onReattemptTest) onReattemptTest(paper);
+                              else onSelectExam(paper);
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-amber-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Reattempt Exam</span>
+                          </button>
+                          <button
+                            onClick={() => onViewAttempt(attempt, paper)}
+                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <BarChart3 className="w-3.5 h-3.5" />
+                            <span>View Analysis</span>
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

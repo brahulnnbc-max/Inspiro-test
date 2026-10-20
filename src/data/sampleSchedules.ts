@@ -2,11 +2,15 @@ import { ScheduledTest, DailyRoutineItem, TaggedQuestionEntry } from '../types/e
 import { SAMPLE_JEE_MAIN_MOCK } from './samplePapers';
 import { getVibrantElectrostaticsLockedTests } from './vibrantElectrostaticsData';
 import { getVibrantKinematicsLockedTests, VIBRANT_KINEMATICS_PAPER_1 } from './vibrantKinematicsData';
+import { getVibrantGeometricalOpticsLockedTests } from './vibrantGeometricalOpticsData';
+import { getVibrantVectors3DLockedTests } from './vibrantVectors3DData';
 
 export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = [
   ...getVibrantElectrostaticsLockedTests(),
+  ...getVibrantVectors3DLockedTests(),
   ...getVibrantKinematicsLockedTests(),
-];
+  ...getVibrantGeometricalOpticsLockedTests(),
+].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
 
 export const SAMPLE_DAILY_ROUTINE: DailyRoutineItem[] = [
   // Week 1 Routine
