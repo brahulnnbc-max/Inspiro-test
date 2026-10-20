@@ -841,6 +841,7 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
               </button>
             </div>
           </div>
+        </div>
 
           {/* Question List */}
           <div className="space-y-4">
