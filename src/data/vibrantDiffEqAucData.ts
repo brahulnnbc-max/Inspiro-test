@@ -94,8 +94,16 @@ export const ALL_VIBRANT_DIFF_EQ_AUC_PAPERS: ExamPaper[] = [
   VIBRANT_DIFF_EQ_AUC_COMPLETE_PAPER,
 ];
 
-export function getVibrantDiffEqAucLockedTests(baseDateStr: string = '2026-10-18'): ScheduledTest[] {
-  const d = new Date(baseDateStr);
+export function getVibrantDiffEqAucLockedTests(baseDateStr?: string): ScheduledTest[] {
+  const d = new Date();
+  if (!baseDateStr) {
+    d.setDate(d.getDate() + 1);
+  } else {
+    const parsed = new Date(baseDateStr);
+    if (!isNaN(parsed.getTime())) {
+      d.setTime(parsed.getTime());
+    }
+  }
   const formatIso = (date: Date) => date.toISOString().split('T')[0];
 
   const testsConfig = [

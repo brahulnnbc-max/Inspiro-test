@@ -76,8 +76,16 @@ export const ALL_VIBRANT_MATRICES_PAPERS: ExamPaper[] = [
   VIBRANT_MATRICES_COMPLETE_PAPER,
 ];
 
-export function getVibrantMatricesLockedTests(baseDateStr: string = '2026-10-18'): ScheduledTest[] {
-  const d = new Date(baseDateStr);
+export function getVibrantMatricesLockedTests(baseDateStr?: string): ScheduledTest[] {
+  const d = new Date();
+  if (!baseDateStr) {
+    d.setDate(d.getDate() + 1);
+  } else {
+    const parsed = new Date(baseDateStr);
+    if (!isNaN(parsed.getTime())) {
+      d.setTime(parsed.getTime());
+    }
+  }
   const formatIso = (date: Date) => date.toISOString().split('T')[0];
 
   const testsConfig = [

@@ -89,6 +89,12 @@ export default function App() {
           const hasDiffEqOnDay44 = parsed.some((t: any) => t.id === 'locked-vibrant-diffeq-auc-day-44');
           const hasLcdOnDay54 = parsed.some((t: any) => t.id === 'locked-vibrant-lcd-day-54');
           const hasBinomialOnDay66 = parsed.some((t: any) => t.id === 'locked-vibrant-binomial-day-66');
+          // Check if cached tests have any duplicate dates (collisions)
+          const datesSet = new Set(parsed.map((t: any) => t.scheduledDate));
+          if (datesSet.size !== parsed.length) {
+            return SAMPLE_SCHEDULED_TESTS;
+          }
+
           if (!hasMatricesOnDay28 || !hasDeterminantOnDay36 || !hasDiffEqOnDay44 || !hasLcdOnDay54 || !hasBinomialOnDay66) {
             return SAMPLE_SCHEDULED_TESTS;
           }
