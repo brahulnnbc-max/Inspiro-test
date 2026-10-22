@@ -18,19 +18,8 @@ import {
   SAMPLE_DAILY_ROUTINE,
   SAMPLE_TAGGED_RACE_QUESTIONS,
   SCHEDULE_BASE_DATE,
+  buildMasterAlternateSchedule,
 } from './data/sampleSchedules';
-import { getVibrantElectrostaticsLockedTests } from './data/vibrantElectrostaticsData';
-import { getVibrantKinematicsLockedTests } from './data/vibrantKinematicsData';
-import { getVibrantGeometricalOpticsLockedTests } from './data/vibrantGeometricalOpticsData';
-import { getVibrantVectors3DLockedTests } from './data/vibrantVectors3DData';
-import { getVibrantIntegrationLockedTests } from './data/vibrantIntegrationData';
-import { getVibrantModernPhysicsLockedTests } from './data/vibrantModernPhysicsData';
-import { getVibrantCurrentElectricityLockedTests } from './data/vibrantCurrentElectricityData';
-import { getVibrantMatricesLockedTests } from './data/vibrantMatricesData';
-import { getVibrantDeterminantLockedTests } from './data/vibrantDeterminantData';
-import { getVibrantDiffEqAucLockedTests } from './data/vibrantDiffEqAucData';
-import { getVibrantLimitContDiffLockedTests } from './data/vibrantLimitContDiffData';
-import { getVibrantBinomialLockedTests } from './data/vibrantBinomialData';
 import { TestHub } from './components/TestHub';
 import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
@@ -102,20 +91,7 @@ export default function App() {
   // Physics: Electrostatics, Kinematics, Geometrical Optics, Modern Physics, Current Electricity
   // Mathematics: Vectors & 3-D, Integration, Matrices, Determinant, Differential Eq & AUC, Limit/Cont/Diff, Binomial Theorem
   const handleResetCoachingSchedule = () => {
-    const fresh = [
-      ...getVibrantElectrostaticsLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantVectors3DLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantKinematicsLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantGeometricalOpticsLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantIntegrationLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantModernPhysicsLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantCurrentElectricityLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantMatricesLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantDeterminantLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantDiffEqAucLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantLimitContDiffLockedTests(SCHEDULE_BASE_DATE),
-      ...getVibrantBinomialLockedTests(SCHEDULE_BASE_DATE),
-    ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+    const fresh = buildMasterAlternateSchedule(SCHEDULE_BASE_DATE);
     setScheduledTests(fresh);
     try {
       localStorage.setItem('jee_scheduled_tests', JSON.stringify(fresh));

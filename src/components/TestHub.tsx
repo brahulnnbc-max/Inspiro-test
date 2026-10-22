@@ -812,7 +812,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                             {test.syllabus.map((topic) => (
                               <label
                                 key={topic.id}
-                                onClick={() => onToggleTopic(test.id, topic.id)}
+                                onClick={() => onToggleTopic(test.id, topic.id || '')}
                                 className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center gap-2.5 transition-colors ${
                                   topic.completed
                                     ? 'bg-red-950/40 border-red-800 text-white'
@@ -1010,14 +1010,14 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
               {savedAttempts.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
                   {savedAttempts.map((attempt) => {
-                    const paper =
+                    const paper: ExamPaper =
                       savedCustomPapers.find((p) => p.id === attempt.examId) ||
                       scheduledTests.find((t) => t.paperId === attempt.examId)?.paper || {
                         id: attempt.examId,
-                        title: attempt.examTitle,
-                        pattern: attempt.pattern,
+                        title: attempt.examTitle || 'JEE CBT Mock Test',
+                        pattern: (attempt.pattern as any) || 'JEE_MAIN',
                         durationMinutes: 180,
-                        totalMarks: attempt.totalMarks,
+                        totalMarks: attempt.totalMarks || 300,
                         sections: [],
                       };
 
@@ -1032,7 +1032,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                               COMPLETED
                             </span>
                             <span className="text-xs font-mono text-zinc-500">
-                              {new Date(attempt.submittedAt).toLocaleDateString()}
+                              {new Date(attempt.submittedAt || Date.now()).toLocaleDateString()}
                             </span>
                           </div>
                           <h4 className="text-sm font-bold text-white">{attempt.examTitle}</h4>
