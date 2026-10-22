@@ -195,12 +195,16 @@ export default function App() {
     }
   }, [scheduledTests]);
 
-  // Handler: Select an exam from the hub -> Go to Instructions
-  const handleSelectExam = (paper: ExamPaper) => {
+  // Handler: Select an exam from the hub -> Go to Instructions (or direct to CBT_ROOM if resuming)
+  const handleSelectExam = (paper: ExamPaper, directToRoom = false) => {
     setActiveScheduledTest(null);
     setIsReattemptMode(false);
     setSelectedPaper(paper);
-    setCurrentView('INSTRUCTIONS');
+    if (directToRoom) {
+      setCurrentView('CBT_ROOM');
+    } else {
+      setCurrentView('INSTRUCTIONS');
+    }
   };
 
   // Handler: Start examination after reading instructions

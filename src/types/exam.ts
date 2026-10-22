@@ -1,5 +1,7 @@
 export type ExamPattern = 'JEE_MAIN' | 'JEE_ADVANCED';
 
+export type SubjectId = 'physics' | 'chemistry' | 'mathematics' | string;
+
 export type QuestionType =
   | 'SINGLE_CORRECT'
   | 'MULTIPLE_CORRECT'
@@ -13,10 +15,27 @@ export type QuestionStatus =
   | 'MARKED_FOR_REVIEW'
   | 'ANSWERED_AND_MARKED_FOR_REVIEW';
 
-export type SubjectId = 'physics' | 'chemistry' | 'mathematics';
+export type UIMode = 'NTA_OFFICIAL' | 'MATHONGO_MODERN' | 'MATHANGO';
+
+export type QuestionTag = 'HARD' | 'TRICKY' | 'DOUBT' | 'RACE_STAR' | 'REVISE' | string;
+
+export type MistakeReason =
+  | 'CALCULATION_ERROR'
+  | 'CONCEPT_GAP'
+  | 'MISREAD_QUESTION'
+  | 'TIME_PRESSURE'
+  | 'GUESS'
+  | string;
+
+export type RoutineType =
+  | 'MODULE_PRACTICE'
+  | 'REAL_TEST'
+  | 'DAILY_RACE'
+  | 'MISTAKE_REVISION'
+  | 'CBT_MOCK';
 
 export interface QuestionOption {
-  id: string; // 'A', 'B', 'C', 'D'
+  id: string; // 'A' | 'B' | 'C' | 'D'
   labelLatex: string;
 }
 
@@ -24,15 +43,16 @@ export interface Question {
   id: string;
   sectionId: SubjectId;
   questionNumber: number;
-  type: QuestionType;
+  type: QuestionType | string;
   promptLatex: string;
-  diagramDescription?: string;
-  imageUrl?: string;
   options?: QuestionOption[];
-  correctAnswer?: string; // 'A', 'B', 'C', 'D' or '25' or 'A,C'
+  correctAnswer: string;
   explanationLatex?: string;
   positiveMarks: number;
   negativeMarks: number;
+  imageUrl?: string;
+  diagramDescription?: string;
+  imageIndex?: number;
 }
 
 export interface ExamSection {
@@ -44,71 +64,108 @@ export interface ExamSection {
 export interface ExamPaper {
   id: string;
   title: string;
-  pattern: ExamPattern;
+  pattern: ExamPattern | string;
   durationMinutes: number;
   totalMarks: number;
-  sections: ExamSection[];
   createdAt?: string;
+  sections: ExamSection[];
 }
 
-export type QuestionTag = 'DOUBT' | 'HARD' | 'TRICKY' | 'RACE_STAR';
+export interface StudentAttempt {
+  id?: string;
+  examId: string;
+  examTitle?: string;
+  paper?: ExamPaper;
+  startTime?: number;
+  startedAt?: number;
+  endTime?: number;
+  submittedAt?: number;
+  timeSpentSeconds: Record<string, number>;
+  answers: Record<string, any>;
+  statuses: Record<string, QuestionStatus>;
+  questionTags?: Record<string, QuestionTag[]>;
+  score?: number;
+  totalMarks?: number;
+  totalPossibleMarks?: number;
+  accuracyPercentage?: number;
+  mode?: UIMode;
+  pattern?: ExamPattern | string;
+}
+
+export interface SyllabusTopic {
+  id?: string;
+  subject: SubjectId;
+  name: string;
+  completed?: boolean;
+}
+
+export interface ScheduledTest {
+  id: string;
+  title: string;
+  pattern: ExamPattern | string;
+  scheduledDate: string; // YYYY-MM-DD
+  startTime: string; // '09:00'
+  endTime: string; // '12:00'
+  durationMinutes?: number;
+  totalMarks?: number;
+  paperId?: string;
+  paper?: ExamPaper;
+  status?: 'UPCOMING_LOCKED' | 'READY' | 'COMPLETED' | 'MISSED' | string;
+  isLocked?: boolean;
+  scheduledAt?: number;
+  syllabus?: SyllabusTopic[];
+}
+
+export interface DailyRoutineItem {
+  id: string;
+  type: RoutineType | string;
+  title: string;
+  chapterOrTopic: string;
+  subject: SubjectId;
+  scheduledDate: string;
+  scheduledSlot: string;
+  durationMinutes: number;
+  questionCount: number;
+  isCompleted: boolean;
+  weekNumber: number;
+  dayName: string;
+  paperId?: string;
+  paper?: ExamPaper;
+}
 
 export interface TaggedQuestionEntry {
-  id: string; // e.g. `tag-${question.id}`
+  id: string;
   question: Question;
   examId: string;
   examTitle: string;
   subject: SubjectId;
   tags: QuestionTag[];
-  userAnswer?: any;
-  correctAnswer?: string;
+  correctAnswer: string;
   addedAt: number;
-  lastPracticedAt?: number;
   practiceCount: number;
   notes?: string;
 }
 
-export interface StudentAttempt {
-  id: string;
-  examId: string;
-  examTitle: string;
-  pattern: ExamPattern;
-  totalMarks: number;
-  startedAt: number;
-  submittedAt: number;
-  timeSpentSeconds: Record<string, number>; // questionId -> seconds
-  answers: Record<string, any>; // questionId -> 'A' | '12.5' | ['A','B']
-  statuses: Record<string, QuestionStatus>;
-  questionTags?: Record<string, QuestionTag[]>; // questionId -> tags
-}
-
-export type UIMode = 'NTA_OFFICIAL' | 'MATHANGO';
-
-export type MistakeReason =
-  | 'CALCULATION_ERROR'
-  | 'CONCEPT_GAP'
-  | 'MISREAD_QUESTION'
-  | 'TIME_PRESSURE'
-  | 'GUESS';
-
 export interface MistakeEntry {
   id: string;
   question: Question;
-  examTitle: string;
-  userAnswer: any;
-  correctAnswer: string;
-  reason?: MistakeReason;
+  reason: MistakeReason;
+  timestamp?: number;
+  createdAt?: number;
   notes?: string;
-  timeSpentSeconds: number;
-  createdAt: number;
+  examTitle?: string;
+  studentAnswer?: any;
+  userAnswer?: any;
+  timeSpentSeconds?: number;
+  correctAnswer?: string;
 }
 
 export interface RemedialQuestion {
   id: string;
-  type: 'SINGLE_CORRECT' | 'NUMERICAL';
-  historicalTag: string; // e.g. "JEE Main 2023 Shift 1 Variant"
+  type: 'SINGLE_CORRECT' | 'NUMERICAL' | string;
+  historicalTag: string;
   promptLatex: string;
-  options?: { id: string; labelLatex: string }[];
+  options?: QuestionOption[];
   correctAnswer: string;
   solutionLatex: string;
 }
@@ -118,56 +175,3 @@ export interface RemedialPack {
   conceptSummary: string;
   remedialQuestions: RemedialQuestion[];
 }
-
-export interface SyllabusTopic {
-  id: string;
-  subject: SubjectId;
-  name: string;
-  completed: boolean;
-}
-
-export type LiveWindowStatus =
-  | 'UPCOMING_LOCKED'
-  | 'LIVE_NOW'
-  | 'MISSED_PRACTICE'
-  | 'COMPLETED';
-
-export interface ScheduledTest {
-  id: string;
-  title: string;
-  pattern: ExamPattern;
-  scheduledDate: string; // "YYYY-MM-DD"
-  startTime: string; // "09:00"
-  endTime: string; // "12:00"
-  durationMinutes: number;
-  totalMarks: number;
-  syllabus: SyllabusTopic[];
-  paperId?: string;
-  paper?: ExamPaper;
-  status: LiveWindowStatus;
-  score?: number;
-  isLocked?: boolean; // Strictly committed, cannot be rescheduled or edited
-  scheduledAt?: number;
-}
-
-export type RoutineType = 'MODULE_PRACTICE' | 'REAL_TEST';
-
-export interface DailyRoutineItem {
-  id: string;
-  type: RoutineType;
-  title: string;
-  chapterOrTopic: string;
-  subject: SubjectId;
-  scheduledDate: string; // "YYYY-MM-DD"
-  scheduledSlot: string; // e.g. "19:00 - 20:00"
-  durationMinutes: number;
-  questionCount: number;
-  paperId?: string;
-  paper?: ExamPaper;
-  isCompleted: boolean;
-  score?: number;
-  accuracy?: number;
-  weekNumber: number;
-  dayName: string; // "Monday", "Tuesday", etc.
-}
-

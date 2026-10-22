@@ -71,7 +71,7 @@ import {
 } from 'lucide-react';
 
 interface TestHubProps {
-  onSelectExam: (paper: ExamPaper) => void;
+  onSelectExam: (paper: ExamPaper, directToRoom?: boolean) => void;
   onViewAttempt: (attempt: StudentAttempt, paper: ExamPaper) => void;
   onReattemptTest?: (paper: ExamPaper, test?: ScheduledTest) => void;
   savedAttempts: StudentAttempt[];
@@ -885,6 +885,8 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
             onAddCustomPaper={onSaveCustomPaper}
             onAddRoutineItems={onAddCustomRoutine}
             savedCustomPapers={savedCustomPapers}
+            savedAttempts={savedAttempts}
+            onViewAttempt={onViewAttempt}
           />
         )}
 
