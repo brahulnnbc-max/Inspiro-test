@@ -33,6 +33,26 @@ export function estimateMathonGoPercentile(
     return estimateJEEAdvancedRank(rawScore, maxMarks);
   }
 
+  // Fix 0 percentile for unattempted / zero score tests
+  if (rawScore <= 0) {
+    return {
+      percentile: 0.0,
+      percentileString: '0.00 %ile (Unattempted / 0 Marks)',
+      percentileRange: '0.00 %ile',
+      estimatedRank: 0,
+      rankRange: 'N/A',
+      categoryCutoffStatus: 'Not Qualified (0 Marks Scored)',
+      targetColleges: ['Attempt practice questions to unlock college predictions'],
+      nextMilestone: {
+        targetPercentile: 90.0,
+        marksNeeded: 100,
+        rankJump: 1000000,
+        advice: 'Attempt questions during the practice or mock session to estimate your percentile and rank.',
+      },
+      shiftDifficulty,
+    };
+  }
+
   // JEE Main: Normalize raw score to standard 300-mark paper
   const safeMax = maxMarks > 0 ? maxMarks : 300;
   const normalizedScore = (rawScore / safeMax) * 300;

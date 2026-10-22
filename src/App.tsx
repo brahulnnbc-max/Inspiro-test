@@ -17,6 +17,7 @@ import {
   SAMPLE_SCHEDULED_TESTS,
   SAMPLE_DAILY_ROUTINE,
   SAMPLE_TAGGED_RACE_QUESTIONS,
+  SCHEDULE_BASE_DATE,
 } from './data/sampleSchedules';
 import { getVibrantElectrostaticsLockedTests } from './data/vibrantElectrostaticsData';
 import { getVibrantKinematicsLockedTests } from './data/vibrantKinematicsData';
@@ -82,43 +83,12 @@ export default function App() {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Collision check: if cached tests contain any duplicate dates, immediately discard and use fresh schedule
+        if (Array.isArray(parsed) && parsed.length === SAMPLE_SCHEDULED_TESTS.length) {
+          // Date collision & base-date check: must start exactly from SCHEDULE_BASE_DATE with zero collisions
           const datesSet = new Set(parsed.map((t: any) => t.scheduledDate));
-          if (datesSet.size !== parsed.length) {
-            return SAMPLE_SCHEDULED_TESTS;
-          }
-
-          // If stored tests do not have new math chapters or are missing cropped images, refresh with fresh schedule
-          const hasMatricesOnDay28 = parsed.some((t: any) => t.id === 'locked-vibrant-matrices-day-28');
-          const hasDeterminantOnDay36 = parsed.some((t: any) => t.id === 'locked-vibrant-determinant-day-36');
-          const hasDiffEqOnDay44 = parsed.some((t: any) => t.id === 'locked-vibrant-diffeq-auc-day-44');
-          const hasLcdOnDay54 = parsed.some((t: any) => t.id === 'locked-vibrant-lcd-day-54');
-          const hasBinomialOnDay66 = parsed.some((t: any) => t.id === 'locked-vibrant-binomial-day-66');
-          const hasCroppedMath = parsed.some((t: any) => t.paper?.sections?.[0]?.questions?.[0]?.imageUrl?.includes('module_crops'));
-
-          if (!hasMatricesOnDay28 || !hasDeterminantOnDay36 || !hasDiffEqOnDay44 || !hasLcdOnDay54 || !hasBinomialOnDay66 || !hasCroppedMath) {
-            return SAMPLE_SCHEDULED_TESTS;
-          }
-
-          // Strictly purge any legacy day-1 / day-3 kinematics tests
-          const filtered = parsed.filter(
-            (t: any) =>
-              t.id !== 'locked-vibrant-kinematics-day-1' &&
-              t.id !== 'locked-vibrant-kinematics-day-3'
-          );
-          if (filtered.length > 0) {
-            const missing = SAMPLE_SCHEDULED_TESTS.filter(
-              (st) => !filtered.some((p: any) => p.id === st.id)
-            );
-            return [...filtered, ...missing]
-              .map((t: any) => {
-                const sample = SAMPLE_SCHEDULED_TESTS.find((st) => st.id === t.id);
-                return sample && (!t.paper || !t.paper.sections)
-                  ? { ...t, paper: sample.paper }
-                  : t;
-              })
-              .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+          const startsToday = parsed[0]?.scheduledDate === SCHEDULE_BASE_DATE;
+          if (datesSet.size === parsed.length && startsToday) {
+            return parsed;
           }
         }
       }
@@ -133,18 +103,18 @@ export default function App() {
   // Mathematics: Vectors & 3-D, Integration, Matrices, Determinant, Differential Eq & AUC, Limit/Cont/Diff, Binomial Theorem
   const handleResetCoachingSchedule = () => {
     const fresh = [
-      ...getVibrantElectrostaticsLockedTests(),
-      ...getVibrantVectors3DLockedTests(),
-      ...getVibrantKinematicsLockedTests(),
-      ...getVibrantGeometricalOpticsLockedTests(),
-      ...getVibrantIntegrationLockedTests(),
-      ...getVibrantModernPhysicsLockedTests(),
-      ...getVibrantCurrentElectricityLockedTests(),
-      ...getVibrantMatricesLockedTests(),
-      ...getVibrantDeterminantLockedTests(),
-      ...getVibrantDiffEqAucLockedTests(),
-      ...getVibrantLimitContDiffLockedTests(),
-      ...getVibrantBinomialLockedTests(),
+      ...getVibrantElectrostaticsLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantVectors3DLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantKinematicsLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantGeometricalOpticsLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantIntegrationLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantModernPhysicsLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantCurrentElectricityLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantMatricesLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantDeterminantLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantDiffEqAucLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantLimitContDiffLockedTests(SCHEDULE_BASE_DATE),
+      ...getVibrantBinomialLockedTests(SCHEDULE_BASE_DATE),
     ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
     setScheduledTests(fresh);
     try {
@@ -227,6 +197,8 @@ export default function App() {
 
   // Handler: Select an exam from the hub -> Go to Instructions
   const handleSelectExam = (paper: ExamPaper) => {
+    setActiveScheduledTest(null);
+    setIsReattemptMode(false);
     setSelectedPaper(paper);
     setCurrentView('INSTRUCTIONS');
   };
@@ -242,15 +214,23 @@ export default function App() {
     setSavedAttempts((prev) => [attempt, ...prev]);
     setActiveAttempt(attempt);
 
-    // If this attempt matches a scheduled test, mark it as COMPLETED
-    setScheduledTests((prev) =>
-      prev.map((t) => {
-        if (t.paperId === attempt.examId || t.title === attempt.examTitle) {
-          return { ...t, status: 'COMPLETED', score: attempt.totalMarks };
-        }
-        return t;
-      })
-    );
+    // CRITICAL FIX: Only mark a scheduled test as COMPLETED if activeScheduledTest is explicitly set
+    // AND the attempt is NOT a module marathon or module practice test
+    if (
+      activeScheduledTest &&
+      !attempt.examId.startsWith('module-marathon-') &&
+      !attempt.examId.startsWith('mod-')
+    ) {
+      setScheduledTests((prev) =>
+        prev.map((t) => {
+          if (t.id === activeScheduledTest.id) {
+            return { ...t, status: 'COMPLETED', score: attempt.totalMarks };
+          }
+          return t;
+        })
+      );
+      setActiveScheduledTest(null);
+    }
 
     setCurrentView('ANALYTICS');
   };

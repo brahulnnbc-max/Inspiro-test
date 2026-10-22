@@ -32,6 +32,7 @@ import {
   Zap,
   Flame,
   ZoomIn,
+  Pause,
 } from 'lucide-react';
 
 interface CBTExamRoomProps {
@@ -69,18 +70,33 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }
   }, [isDarkMode]);
 
-  // Session Data restoration (LOOPHOLE 1 & LOOPHOLE 2 FIX)
+  // Flag to identify open module marathon / practice test vs strict scheduled CBT
+  const isModulePractice =
+    paper.id.startsWith('module-marathon-') ||
+    paper.id.startsWith('mod-') ||
+    scheduledTest === null;
+
+  // Session Data restoration (LOOPHOLE 1 & LOOPHOLE 2 FIX + MARATHON RESUME)
   const [sessionData] = useState(() => {
     const now = Date.now();
 
-    // 1. Try to restore in-progress session if student refreshed or navigated away
+    // 1. Try to restore in-progress session if student refreshed, navigated away, or escaped
     if (!isReattempt) {
       try {
         const stored = localStorage.getItem(sessionStorageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.scheduledEndTimestamp) {
-            return parsed;
+          if (parsed) {
+            // For open module marathons: restore exact remaining timestamp & question
+            if (isModulePractice && typeof parsed.secondsRemaining === 'number' && parsed.secondsRemaining > 0) {
+              return {
+                ...parsed,
+                scheduledEndTimestamp: now + parsed.secondsRemaining * 1000,
+              };
+            }
+            if (!isModulePractice && parsed.scheduledEndTimestamp) {
+              return parsed;
+            }
           }
         }
       } catch (e) {
@@ -91,17 +107,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     // 2. Fresh session creation
     let targetEndMs = now + paper.durationMinutes * 60 * 1000;
 
-    // LOOPHOLE 1: If joining a scheduled locked test during its live shift window,
-    // anchor timer strictly to the official window end time (e.g. 12:00:00).
-    // Late joiners get strictly remaining time, not a fresh 3 hours!
-    if (!isReattempt && scheduledTest?.scheduledDate && scheduledTest?.endTime) {
+    // Anchor timer strictly to official shift window ONLY for live scheduled tests
+    if (!isModulePractice && !isReattempt && scheduledTest?.scheduledDate && scheduledTest?.endTime) {
       try {
         const [endH, endM] = scheduledTest.endTime.split(':').map(Number);
         const scheduledEndDate = new Date(scheduledTest.scheduledDate);
         scheduledEndDate.setHours(endH, endM, 0, 0);
         const winEndMs = scheduledEndDate.getTime();
 
-        // If the window is in the future
         if (winEndMs > now) {
           targetEndMs = winEndMs;
         }
@@ -110,10 +123,13 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       }
     }
 
-    const initialSec = Math.max(1, Math.min(
-      paper.durationMinutes * 60,
-      Math.floor((targetEndMs - now) / 1000)
-    ));
+    const initialSec = Math.max(
+      1,
+      Math.min(
+        paper.durationMinutes * 60,
+        Math.floor((targetEndMs - now) / 1000)
+      )
+    );
 
     const freshSession = {
       scheduledEndTimestamp: targetEndMs,
@@ -135,7 +151,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     return freshSession;
   });
 
-  // Active section & question indices (restored if previously active)
+  // Active section & question indices (restored to exact question left)
   const [activeSectionId, setActiveSectionId] = useState<SubjectId>(
     sessionData.activeSectionId || paper.sections[0]?.id || 'physics'
   );
@@ -143,8 +159,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     sessionData.activeQuestionIndex || 0
   );
 
-  // Examination state (strictly tied to wall-clock time)
+  // Examination timer state (strictly tied to remaining seconds for module practice)
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
+    if (isModulePractice && typeof sessionData.secondsRemaining === 'number') {
+      return Math.max(0, Math.min(paper.durationMinutes * 60, sessionData.secondsRemaining));
+    }
     const now = Date.now();
     const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
     return Math.max(0, Math.min(paper.durationMinutes * 60, diff));

@@ -13,19 +13,21 @@ import { getVibrantDiffEqAucLockedTests } from './vibrantDiffEqAucData';
 import { getVibrantLimitContDiffLockedTests } from './vibrantLimitContDiffData';
 import { getVibrantBinomialLockedTests } from './vibrantBinomialData';
 
+export const SCHEDULE_BASE_DATE = '2026-10-21';
+
 export const SAMPLE_SCHEDULED_TESTS: ScheduledTest[] = [
-  ...getVibrantElectrostaticsLockedTests(),
-  ...getVibrantVectors3DLockedTests(),
-  ...getVibrantKinematicsLockedTests(),
-  ...getVibrantGeometricalOpticsLockedTests(),
-  ...getVibrantIntegrationLockedTests(),
-  ...getVibrantModernPhysicsLockedTests(),
-  ...getVibrantCurrentElectricityLockedTests(),
-  ...getVibrantMatricesLockedTests(),
-  ...getVibrantDeterminantLockedTests(),
-  ...getVibrantDiffEqAucLockedTests(),
-  ...getVibrantLimitContDiffLockedTests(),
-  ...getVibrantBinomialLockedTests(),
+  ...getVibrantElectrostaticsLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantVectors3DLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantKinematicsLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantGeometricalOpticsLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantIntegrationLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantModernPhysicsLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantCurrentElectricityLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantMatricesLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantDeterminantLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantDiffEqAucLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantLimitContDiffLockedTests(SCHEDULE_BASE_DATE),
+  ...getVibrantBinomialLockedTests(SCHEDULE_BASE_DATE),
 ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
 
 export const SAMPLE_DAILY_ROUTINE: DailyRoutineItem[] = [
