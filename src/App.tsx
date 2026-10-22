@@ -13,12 +13,10 @@ import {
   QuestionTag,
 } from './types/exam';
 import { SAMPLE_JEE_MAIN_MOCK } from './data/samplePapers';
-import { realignToStrictAlternateDays } from './utils/scheduleCalculator';
 import {
   SAMPLE_SCHEDULED_TESTS,
   SAMPLE_DAILY_ROUTINE,
   SAMPLE_TAGGED_RACE_QUESTIONS,
-  buildPristineAlternateDaySchedule,
 } from './data/sampleSchedules';
 import { getVibrantElectrostaticsLockedTests } from './data/vibrantElectrostaticsData';
 import { getVibrantKinematicsLockedTests } from './data/vibrantKinematicsData';
@@ -78,25 +76,50 @@ export default function App() {
     }
   });
 
-  // Persistent Scheduled Tests (Strictly Locked Alternate-Day Series with Zero Collisions)
-  // Scheduled tests: strictly non-overlapping alternate days with 1-day rest between EVERY test!
+  // Persistent Scheduled Tests (Locked Vibrant Electrostatics + Kinematics Alternate-Day Series)
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Collision check: if cached tests contain any duplicate dates, immediately discard and use fresh schedule
           const datesSet = new Set(parsed.map((t: any) => t.scheduledDate));
-          // If any tests share the same date or overlap, automatically realign to strict alternate days!
           if (datesSet.size !== parsed.length) {
-            const sanitized = realignToStrictAlternateDays(parsed);
-            try {
-              localStorage.setItem('jee_scheduled_tests', JSON.stringify(sanitized));
-            } catch {}
-            return sanitized;
+            return SAMPLE_SCHEDULED_TESTS;
           }
-          // Ensure locked flag is maintained
-          return parsed.map((t: any) => ({ ...t, isLocked: true }));
+
+          // If stored tests do not have new math chapters or are missing cropped images, refresh with fresh schedule
+          const hasMatricesOnDay28 = parsed.some((t: any) => t.id === 'locked-vibrant-matrices-day-28');
+          const hasDeterminantOnDay36 = parsed.some((t: any) => t.id === 'locked-vibrant-determinant-day-36');
+          const hasDiffEqOnDay44 = parsed.some((t: any) => t.id === 'locked-vibrant-diffeq-auc-day-44');
+          const hasLcdOnDay54 = parsed.some((t: any) => t.id === 'locked-vibrant-lcd-day-54');
+          const hasBinomialOnDay66 = parsed.some((t: any) => t.id === 'locked-vibrant-binomial-day-66');
+          const hasCroppedMath = parsed.some((t: any) => t.paper?.sections?.[0]?.questions?.[0]?.imageUrl?.includes('module_crops'));
+
+          if (!hasMatricesOnDay28 || !hasDeterminantOnDay36 || !hasDiffEqOnDay44 || !hasLcdOnDay54 || !hasBinomialOnDay66 || !hasCroppedMath) {
+            return SAMPLE_SCHEDULED_TESTS;
+          }
+
+          // Strictly purge any legacy day-1 / day-3 kinematics tests
+          const filtered = parsed.filter(
+            (t: any) =>
+              t.id !== 'locked-vibrant-kinematics-day-1' &&
+              t.id !== 'locked-vibrant-kinematics-day-3'
+          );
+          if (filtered.length > 0) {
+            const missing = SAMPLE_SCHEDULED_TESTS.filter(
+              (st) => !filtered.some((p: any) => p.id === st.id)
+            );
+            return [...filtered, ...missing]
+              .map((t: any) => {
+                const sample = SAMPLE_SCHEDULED_TESTS.find((st) => st.id === t.id);
+                return sample && (!t.paper || !t.paper.sections)
+                  ? { ...t, paper: sample.paper }
+                  : t;
+              })
+              .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
+          }
         }
       }
       return SAMPLE_SCHEDULED_TESTS;
@@ -106,9 +129,23 @@ export default function App() {
   });
 
   // Re-align coaching roadmap fresh:
-  // Strictly alternate days (Day 1, Day 3, Day 5, Day 7, Day 9...) with 1-day rest between EVERY test!
+  // Physics: Electrostatics, Kinematics, Geometrical Optics, Modern Physics, Current Electricity
+  // Mathematics: Vectors & 3-D, Integration, Matrices, Determinant, Differential Eq & AUC, Limit/Cont/Diff, Binomial Theorem
   const handleResetCoachingSchedule = () => {
-    const fresh = buildPristineAlternateDaySchedule();
+    const fresh = [
+      ...getVibrantElectrostaticsLockedTests(),
+      ...getVibrantVectors3DLockedTests(),
+      ...getVibrantKinematicsLockedTests(),
+      ...getVibrantGeometricalOpticsLockedTests(),
+      ...getVibrantIntegrationLockedTests(),
+      ...getVibrantModernPhysicsLockedTests(),
+      ...getVibrantCurrentElectricityLockedTests(),
+      ...getVibrantMatricesLockedTests(),
+      ...getVibrantDeterminantLockedTests(),
+      ...getVibrantDiffEqAucLockedTests(),
+      ...getVibrantLimitContDiffLockedTests(),
+      ...getVibrantBinomialLockedTests(),
+    ].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate));
     setScheduledTests(fresh);
     try {
       localStorage.setItem('jee_scheduled_tests', JSON.stringify(fresh));

@@ -924,20 +924,20 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
                         </div>
 
                         {q.imageUrl && (
-                          <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col items-center">
+                          <div className="p-3.5 bg-white rounded-xl border border-slate-300 dark:border-zinc-700 flex flex-col items-center max-w-3xl mx-auto shadow-md">
                             <img
                               src={q.imageUrl}
-                              alt={`Diagram for Question ${q.questionNumber}`}
-                              className="max-h-72 w-auto object-contain rounded-lg cursor-zoom-in"
+                              alt={`Question ${q.questionNumber}`}
+                              className="max-h-[500px] w-auto max-w-full object-contain rounded cursor-zoom-in filter contrast-[1.05]"
                               onClick={() => setZoomedImg(q.imageUrl || null)}
                             />
                             <button
                               type="button"
                               onClick={() => setZoomedImg(q.imageUrl || null)}
-                              className="mt-2 text-[11px] font-semibold text-zinc-400 hover:text-white flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-800 hover:border-red-600 transition-colors shadow-xs"
+                              className="mt-2 text-[11px] font-semibold text-slate-700 dark:text-zinc-300 hover:text-black dark:hover:text-white flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 hover:border-red-600 transition-colors shadow-xs"
                             >
-                              <ZoomIn className="w-3.5 h-3.5 text-red-500" />
-                              <span>Inspect Diagram Fullscreen</span>
+                              <ZoomIn className="w-3.5 h-3.5 text-red-600" />
+                              <span>Inspect Question Fullscreen</span>
                             </button>
                           </div>
                         )}

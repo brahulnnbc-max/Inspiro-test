@@ -1,18 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { ExamPaper, ExamPattern, SubjectId, DailyRoutineItem, RoutineType } from '../types/exam';
 import { SAMPLE_JEE_MAIN_MOCK } from '../data/samplePapers';
-import { VIBRANT_GEOMETRICAL_OPTICS_COMPLETE_PAPER } from '../data/vibrantGeometricalOpticsData';
-import { VIBRANT_MATRICES_COMPLETE_PAPER } from '../data/vibrantMatricesData';
-import { VIBRANT_DETERMINANT_COMPLETE_PAPER } from '../data/vibrantDeterminantData';
-import { VIBRANT_DIFF_EQ_AUC_COMPLETE_PAPER } from '../data/vibrantDiffEqAucData';
-import { VIBRANT_LIMIT_CONT_DIFF_COMPLETE_PAPER } from '../data/vibrantLimitContDiffData';
-import { VIBRANT_BINOMIAL_COMPLETE_PAPER } from '../data/vibrantBinomialData';
-import { VIBRANT_ELECTROSTATICS_COMPLETE_PAPER } from '../data/vibrantElectrostaticsData';
-import { VIBRANT_CURRENT_ELECTRICITY_COMPLETE_PAPER } from '../data/vibrantCurrentElectricityData';
-import { VIBRANT_MODERN_PHYSICS_COMPLETE_PAPER } from '../data/vibrantModernPhysicsData';
-import { VIBRANT_VECTORS_3D_COMPLETE_PAPER } from '../data/vibrantVectors3DData';
-import { VIBRANT_INTEGRATION_COMPLETE_PAPER } from '../data/vibrantIntegrationData';
-import { VIBRANT_KINEMATICS_COMPLETE_PAPER } from '../data/vibrantKinematicsData';
+import { VIBRANT_GEOMETRICAL_OPTICS_PAPER_1 } from '../data/vibrantGeometricalOpticsData';
+import { VIBRANT_MATRICES_PAPER_1 } from '../data/vibrantMatricesData';
+import { VIBRANT_DETERMINANT_PAPER_1 } from '../data/vibrantDeterminantData';
+import { VIBRANT_DIFF_EQ_AUC_PAPER_1 } from '../data/vibrantDiffEqAucData';
+import { VIBRANT_LIMIT_CONT_DIFF_PAPER_1 } from '../data/vibrantLimitContDiffData';
+import { VIBRANT_BINOMIAL_PAPER_1 } from '../data/vibrantBinomialData';
 import {
   BookOpen,
   UploadCloud,
@@ -30,7 +24,6 @@ import {
   FileText,
   AlertCircle,
   HelpCircle,
-  RotateCcw,
 } from 'lucide-react';
 
 interface ModulePracticeSectionProps {
@@ -77,186 +70,196 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
   const [solutionFile, setSolutionFile] = useState<File | null>(null);
 
   // Pre-curated high-yield coaching modules
-  // Pre-curated high-yield coaching modules: All chapter questions in ONE unlocked test series (4 min/question)
   const defaultModules: CuratedModule[] = [
     {
       id: 'mod-matrices',
-      title: 'Vibrant Kota: Matrices Mega XII Master Collection (All 150 Qs)',
+      title: 'Vibrant Kota: Matrices Mega XII Master Collection (150 Qs)',
       subject: 'mathematics',
       chapter: 'Matrices',
       totalQuestions: 150,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 600, // 150 * 4 = 600 mins (10 hours)
-      sprintQuestionCount: 150,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'Allen Leader Ex-1',
-      paper: {
-        ...VIBRANT_MATRICES_COMPLETE_PAPER,
-        durationMinutes: 600,
-      },
+      paper: VIBRANT_MATRICES_PAPER_1,
     },
     {
       id: 'mod-determinant',
-      title: 'Vibrant Kota: Determinant Mega XII Master Collection (All 140 Qs)',
+      title: 'Vibrant Kota: Determinant Mega XII Master Collection (140 Qs)',
       subject: 'mathematics',
       chapter: 'Determinant',
       totalQuestions: 140,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 560, // 140 * 4 = 560 mins (9h 20m)
-      sprintQuestionCount: 140,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'JEE Advanced',
-      paper: {
-        ...VIBRANT_DETERMINANT_COMPLETE_PAPER,
-        durationMinutes: 560,
-      },
+      paper: VIBRANT_DETERMINANT_PAPER_1,
     },
     {
       id: 'mod-diffeq-auc',
-      title: 'Vibrant Kota: Differential Equation & AUC Mega XII (All 200 Qs)',
+      title: 'Vibrant Kota: Differential Equation & AUC Mega XII (200 Qs)',
       subject: 'mathematics',
       chapter: 'Differential Equations & Area',
       totalQuestions: 200,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 800, // 200 * 4 = 800 mins (13h 20m)
-      sprintQuestionCount: 200,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'JEE Advanced',
-      paper: {
-        ...VIBRANT_DIFF_EQ_AUC_COMPLETE_PAPER,
-        durationMinutes: 800,
-      },
+      paper: VIBRANT_DIFF_EQ_AUC_PAPER_1,
     },
     {
       id: 'mod-lcd',
-      title: 'Vibrant Kota: Limit, Continuity & Differentiability (All 250 Qs)',
+      title: 'Vibrant Kota: Limit, Continuity & Differentiability (250 Qs)',
       subject: 'mathematics',
       chapter: 'Limit, Continuity & Differentiability',
       totalQuestions: 250,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 1000, // 250 * 4 = 1000 mins (16h 40m)
-      sprintQuestionCount: 250,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'Allen Leader Ex-1',
-      paper: {
-        ...VIBRANT_LIMIT_CONT_DIFF_COMPLETE_PAPER,
-        durationMinutes: 1000,
-      },
+      paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_1,
     },
     {
       id: 'mod-binomial',
-      title: 'Vibrant Kota: Binomial Theorem Micro XI Collection (All 130 Qs)',
+      title: 'Vibrant Kota: Binomial Theorem Micro XI Collection (130 Qs)',
       subject: 'mathematics',
       chapter: 'Binomial Theorem',
       totalQuestions: 130,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 520, // 130 * 4 = 520 mins (8h 40m)
-      sprintQuestionCount: 130,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'JEE Main',
-      paper: {
-        ...VIBRANT_BINOMIAL_COMPLETE_PAPER,
-        durationMinutes: 520,
-      },
+      paper: VIBRANT_BINOMIAL_PAPER_1,
     },
     {
       id: 'mod-geometrical-optics',
-      title: 'Vibrant Kota: Geometrical Optics Master Collection (All 229 Qs)',
+      title: 'Vibrant Kota: Geometrical Optics Master Collection (229 Qs)',
       subject: 'physics',
       chapter: 'Geometrical Optics',
       totalQuestions: 229,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 916, // 229 * 4 = 916 mins (15h 16m)
-      sprintQuestionCount: 229,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'Allen Leader Ex-1',
-      paper: {
-        ...VIBRANT_GEOMETRICAL_OPTICS_COMPLETE_PAPER,
-        durationMinutes: 916,
-      },
-    },
-    {
-      id: 'mod-electrostatics',
-      title: 'Vibrant Kota: Electrostatics Master Collection (All 259 Qs)',
-      subject: 'physics',
-      chapter: 'Electrostatics',
-      totalQuestions: 259,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 1036, // 259 * 4 = 1036 mins (17h 16m)
-      sprintQuestionCount: 259,
-      difficulty: 'JEE Advanced',
-      paper: {
-        ...VIBRANT_ELECTROSTATICS_COMPLETE_PAPER,
-        durationMinutes: 1036,
-      },
-    },
-    {
-      id: 'mod-current-electricity',
-      title: 'Vibrant Kota: Current Electricity Master Collection (All 224 Qs)',
-      subject: 'physics',
-      chapter: 'Current Electricity',
-      totalQuestions: 224,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 896, // 224 * 4 = 896 mins (14h 56m)
-      sprintQuestionCount: 224,
-      difficulty: 'Allen Leader Ex-1',
-      paper: {
-        ...VIBRANT_CURRENT_ELECTRICITY_COMPLETE_PAPER,
-        durationMinutes: 896,
-      },
-    },
-    {
-      id: 'mod-modern-physics',
-      title: 'Vibrant Kota: Modern Physics Master Collection (All 243 Qs)',
-      subject: 'physics',
-      chapter: 'Modern Physics',
-      totalQuestions: 243,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 972, // 243 * 4 = 972 mins (16h 12m)
-      sprintQuestionCount: 243,
-      difficulty: 'JEE Main',
-      paper: {
-        ...VIBRANT_MODERN_PHYSICS_COMPLETE_PAPER,
-        durationMinutes: 972,
-      },
-    },
-    {
-      id: 'mod-vectors-3d',
-      title: 'Vibrant Kota: Vectors & 3-D Geometry Master Archive (All 113 Qs)',
-      subject: 'mathematics',
-      chapter: 'Vectors & 3D Geometry',
-      totalQuestions: 113,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 452, // 113 * 4 = 452 mins (7h 32m)
-      sprintQuestionCount: 113,
-      difficulty: 'JEE Advanced',
-      paper: {
-        ...VIBRANT_VECTORS_3D_COMPLETE_PAPER,
-        durationMinutes: 452,
-      },
-    },
-    {
-      id: 'mod-integration',
-      title: 'Vibrant Kota: Indefinite & Definite Integration (All 185 Qs)',
-      subject: 'mathematics',
-      chapter: 'Integration',
-      totalQuestions: 185,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 740, // 185 * 4 = 740 mins (12h 20m)
-      sprintQuestionCount: 185,
-      difficulty: 'JEE Advanced',
-      paper: {
-        ...VIBRANT_INTEGRATION_COMPLETE_PAPER,
-        durationMinutes: 740,
-      },
+      paper: VIBRANT_GEOMETRICAL_OPTICS_PAPER_1,
     },
     {
       id: 'mod-kinematics',
-      title: 'Vibrant Kota: Kinematics 1D & 2D Master Collection (All 88 Qs)',
+      title: 'Allen Mechanics: Kinematics 1D & 2D (Exercise 1 & 2)',
       subject: 'physics',
       chapter: 'Kinematics',
-      totalQuestions: 88,
-      solvedQuestions: 0,
-      sprintDurationMinutes: 352, // 88 * 4 = 352 mins (5h 52m)
-      sprintQuestionCount: 88,
+      totalQuestions: 75,
+      solvedQuestions: 35,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
       difficulty: 'Allen Leader Ex-1',
       paper: {
-        ...VIBRANT_KINEMATICS_COMPLETE_PAPER,
-        durationMinutes: 352,
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-kinematics',
+        title: 'Kinematics Module Practice Sprint 01',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-nlm',
+      title: 'Laws of Motion, Pulley Systems & Friction Sprint',
+      subject: 'physics',
+      chapter: "Newton's Laws of Motion",
+      totalQuestions: 60,
+      solvedQuestions: 20,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 20,
+      difficulty: 'JEE Main',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-nlm',
+        title: 'NLM & Friction Module Practice Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-thermo',
+      title: 'Thermodynamics & Heat Transfer Masterclass',
+      subject: 'physics',
+      chapter: 'Thermodynamics',
+      totalQuestions: 70,
+      solvedQuestions: 45,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'JEE Advanced',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-thermo',
+        title: 'Thermodynamics CBT Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-goc',
+      title: 'General Organic Chemistry (GOC) & Isomerism Exercises',
+      subject: 'chemistry',
+      chapter: 'General Organic Chemistry',
+      totalQuestions: 80,
+      solvedQuestions: 50,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'Allen Leader Ex-1',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-goc',
+        title: 'GOC Module Timed Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-chemical-bonding',
+      title: 'Chemical Bonding, Molecular Orbital Theory & Dipole Moments',
+      subject: 'chemistry',
+      chapter: 'Chemical Bonding',
+      totalQuestions: 65,
+      solvedQuestions: 30,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 25,
+      difficulty: 'JEE Main',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-bonding',
+        title: 'Chemical Bonding Module Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-calculus',
+      title: 'Definite Integration & Area Under Curves Problem Set',
+      subject: 'mathematics',
+      chapter: 'Definite Integration',
+      totalQuestions: 90,
+      solvedQuestions: 25,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 20,
+      difficulty: 'JEE Advanced',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-calculus',
+        title: 'Definite Integration CBT Sprint',
+        durationMinutes: 50,
+      },
+    },
+    {
+      id: 'mod-coordinate',
+      title: 'Conic Sections: Parabola, Ellipse & Hyperbola Drills',
+      subject: 'mathematics',
+      chapter: 'Coordinate Geometry',
+      totalQuestions: 75,
+      solvedQuestions: 40,
+      sprintDurationMinutes: 50,
+      sprintQuestionCount: 20,
+      difficulty: 'JEE Main',
+      paper: {
+        ...SAMPLE_JEE_MAIN_MOCK,
+        id: 'mod-paper-conics',
+        title: 'Conic Sections Practice Sprint',
+        durationMinutes: 50,
       },
     },
   ];
@@ -678,52 +681,20 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredModules.map((mod) => {
-            const hrs = Math.floor(mod.sprintDurationMinutes / 60);
-            const mins = mod.sprintDurationMinutes % 60;
-            const timeStr = hrs > 0 ? `${hrs}h ${mins > 0 ? mins + 'm' : ''}` : `${mins}m`;
-
-            // Check for existing saved in-progress session in localStorage
-            const sessionKey = `jee_live_session_${mod.paper.id}`;
-            let savedSession: any = null;
-            try {
-              const raw = localStorage.getItem(sessionKey);
-              if (raw) savedSession = JSON.parse(raw);
-            } catch {}
-
-            const hasActiveSession = !!savedSession;
-            const answeredCount = savedSession?.answers ? Object.keys(savedSession.answers).length : 0;
-            const remSeconds = savedSession?.secondsRemaining !== undefined
-              ? savedSession.secondsRemaining
-              : (savedSession?.scheduledEndTimestamp ? Math.max(0, Math.floor((savedSession.scheduledEndTimestamp - Date.now()) / 1000)) : null);
-            const remH = remSeconds !== null ? Math.floor(remSeconds / 3600) : 0;
-            const remM = remSeconds !== null ? Math.floor((remSeconds % 3600) / 60) : 0;
-
-            const progress = mod.totalQuestions > 0 ? Math.round((answeredCount / mod.totalQuestions) * 100) : 0;
-
-            const handleRestartFresh = (e: React.MouseEvent) => {
-              e.stopPropagation();
-              try {
-                localStorage.removeItem(sessionKey);
-              } catch {}
-              onStartExam(mod.paper);
-            };
+            const progress = Math.round((mod.solvedQuestions / mod.totalQuestions) * 100);
 
             return (
               <div
                 key={mod.id}
-                className={`bg-zinc-950 rounded-2xl p-5 border shadow-xl transition-all flex flex-col justify-between gap-4 group ${
-                  hasActiveSession
-                    ? 'border-amber-500/80 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
-                    : 'border-zinc-800 hover:border-red-600/70 hover:shadow-[0_0_20px_rgba(220,38,38,0.2)]'
-                }`}
+                className="bg-zinc-950 rounded-2xl p-5 border border-zinc-800 hover:border-red-600/70 shadow-xl hover:shadow-[0_0_20px_rgba(220,38,38,0.2)] transition-all flex flex-col justify-between gap-4 group"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-red-950/60 text-red-400 border border-red-800/80">
                       {mod.subject}
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-2 py-0.5 rounded-md font-mono">
-                      🔓 UNLOCKED
+                    <span className="text-[10px] font-semibold text-zinc-400 font-mono">
+                      {mod.difficulty}
                     </span>
                   </div>
 
@@ -735,43 +706,18 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
                     Chapter: <span className="font-medium text-zinc-200">{mod.chapter}</span>
                   </p>
 
-                  {/* Active In-Progress Banner */}
-                  {hasActiveSession ? (
-                    <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-600/60 text-amber-200 text-xs space-y-1">
-                      <div className="flex items-center justify-between font-bold text-[11px]">
-                        <span className="flex items-center gap-1.5 text-amber-400">
-                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                          Session In Progress
-                        </span>
-                        <span className="font-mono text-white">
-                          {remH}h {remM}m Left
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-amber-300/80">
-                        {answeredCount} / {mod.totalQuestions} questions solved ({progress}%)
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/80 text-[11px] text-zinc-300 flex items-center justify-between font-mono">
-                      <span>Rate: 4 min/Q</span>
-                      <span className="text-white font-bold">{mod.totalQuestions} × 4m = {timeStr}</span>
-                    </div>
-                  )}
-
                   {/* Progress bar */}
                   <div className="space-y-1 pt-1">
                     <div className="flex items-center justify-between text-[10px] text-zinc-400 font-mono">
-                      <span>{hasActiveSession ? 'Active Session Progress:' : 'All Questions Included:'}</span>
+                      <span>Module Progress:</span>
                       <span className="font-bold text-white">
-                        {hasActiveSession ? `${answeredCount} / ${mod.totalQuestions} Qs (${progress}%)` : `${mod.totalQuestions} Questions`}
+                        {mod.solvedQuestions} / {mod.totalQuestions} Qs ({progress}%)
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          hasActiveSession ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-red-600 shadow-[0_0_8px_#dc2626]'
-                        }`}
-                        style={{ width: `${hasActiveSession ? progress : 100}%` }}
+                        className="h-full bg-red-600 rounded-full transition-all shadow-[0_0_8px_#dc2626]"
+                        style={{ width: `${progress}%` }}
                       />
                     </div>
                   </div>
@@ -780,45 +726,32 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
                 {/* Sprints Details & Action Buttons */}
                 <div className="pt-3 border-t border-zinc-800 space-y-2">
                   <div className="flex items-center justify-between text-xs text-zinc-400">
-                    <span className="flex items-center gap-1 font-mono text-zinc-200">
+                    <span className="flex items-center gap-1 font-mono">
                       <Clock className="w-3.5 h-3.5 text-red-400" />
-                      {timeStr} ({mod.sprintDurationMinutes} mins)
+                      {mod.sprintDurationMinutes} mins
                     </span>
-                    <span className="font-mono font-semibold text-emerald-400">
-                      All {mod.totalQuestions} Qs Unlocked
+                    <span className="font-mono font-semibold text-zinc-200">
+                      {mod.sprintQuestionCount} Questions / Sprint
                     </span>
                   </div>
 
-                  {hasActiveSession ? (
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={handleRestartFresh}
-                        className="px-3 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                        title="Discard paused session and restart fresh with full time"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
-                        Restart
-                      </button>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => handleScheduleCuratedSprint(mod)}
+                      className="px-3 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      Schedule
+                    </button>
 
-                      <button
-                        onClick={() => onStartExam(mod.paper)}
-                        className="px-3 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(245,158,11,0.5)] cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        Resume Test
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-2 pt-1">
-                      <button
-                        onClick={() => onStartExam(mod.paper)}
-                        className="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-[0_0_12px_rgba(220,38,38,0.4)] cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Start Unlocked Chapter Test ({mod.totalQuestions} Qs • {timeStr})</span>
-                      </button>
-                    </div>
-                  )}
+                    <button
+                      onClick={() => onStartExam(mod.paper)}
+                      className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(220,38,38,0.4)]"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      Practice Now
+                    </button>
+                  </div>
                 </div>
               </div>
             );

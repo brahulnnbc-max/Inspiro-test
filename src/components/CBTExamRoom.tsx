@@ -32,12 +32,6 @@ import {
   Zap,
   Flame,
   ZoomIn,
-  ZoomOut,
-  PauseCircle,
-  Pause,
-  FileText,
-  Columns,
-  RotateCcw,
 } from 'lucide-react';
 
 interface CBTExamRoomProps {
@@ -75,17 +69,17 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }
   }, [isDarkMode]);
 
-  // Session Data restoration (Preserves exact remaining seconds for paused/escaped sessions!)
+  // Session Data restoration (LOOPHOLE 1 & LOOPHOLE 2 FIX)
   const [sessionData] = useState(() => {
     const now = Date.now();
 
-    // 1. Try to restore in-progress session if student refreshed or navigated away or paused
+    // 1. Try to restore in-progress session if student refreshed or navigated away
     if (!isReattempt) {
       try {
         const stored = localStorage.getItem(sessionStorageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed && (parsed.secondsRemaining !== undefined || parsed.scheduledEndTimestamp)) {
+          if (parsed && parsed.scheduledEndTimestamp) {
             return parsed;
           }
         }
@@ -97,7 +91,9 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     // 2. Fresh session creation
     let targetEndMs = now + paper.durationMinutes * 60 * 1000;
 
-    // If joining a live shift window for a scheduled test
+    // LOOPHOLE 1: If joining a scheduled locked test during its live shift window,
+    // anchor timer strictly to the official window end time (e.g. 12:00:00).
+    // Late joiners get strictly remaining time, not a fresh 3 hours!
     if (!isReattempt && scheduledTest?.scheduledDate && scheduledTest?.endTime) {
       try {
         const [endH, endM] = scheduledTest.endTime.split(':').map(Number);
@@ -105,6 +101,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         scheduledEndDate.setHours(endH, endM, 0, 0);
         const winEndMs = scheduledEndDate.getTime();
 
+        // If the window is in the future
         if (winEndMs > now) {
           targetEndMs = winEndMs;
         }
@@ -146,17 +143,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     sessionData.activeQuestionIndex || 0
   );
 
-  // Examination state: preserves remaining time frame so escaping does not expire multi-hour tests!
+  // Examination state (strictly tied to wall-clock time)
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
-    if (typeof sessionData.secondsRemaining === 'number' && sessionData.secondsRemaining > 0) {
-      return sessionData.secondsRemaining;
-    }
     const now = Date.now();
-    if (sessionData.scheduledEndTimestamp) {
-      const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
-      if (diff > 0) return Math.min(paper.durationMinutes * 60, diff);
-    }
-    return paper.durationMinutes * 60;
+    const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
+    return Math.max(0, Math.min(paper.durationMinutes * 60, diff));
   });
 
   const [answers, setAnswers] = useState<Record<string, any>>(sessionData.answers || {});
@@ -186,8 +177,6 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   const [isMobilePaletteOpen, setIsMobilePaletteOpen] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
-  const [questionImageZoom, setQuestionImageZoom] = useState<number>(1);
-  const [isInvertedPaper, setIsInvertedPaper] = useState<boolean>(false);
 
   // Active section reference
   const currentSection = useMemo(() => {
@@ -232,23 +221,26 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     setStatuses(initialStatuses);
   }, [paper, statuses]);
 
-  // Track time spent per active question & countdown timer
-  // Preserves remaining time frame so students can pause or escape and resume with the same remaining time!
+  // Track time spent per active question & overall countdown (strictly tied to wall-clock time)
   useEffect(() => {
-    if (secondsRemaining <= 0) {
+    // If time already expired while student was away, submit immediately!
+    const checkNow = Date.now();
+    const initialRemaining = Math.floor((sessionData.scheduledEndTimestamp - checkNow) / 1000);
+    if (initialRemaining <= 0) {
       handleFinalSubmit();
       return;
     }
 
     const timer = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        const next = Math.max(0, prev - 1);
-        if (next <= 0) {
-          clearInterval(timer);
-          handleFinalSubmit();
-        }
-        return next;
-      });
+      const now = Date.now();
+      const currentRemaining = Math.max(0, Math.floor((sessionData.scheduledEndTimestamp - now) / 1000));
+      setSecondsRemaining(currentRemaining);
+
+      if (currentRemaining <= 0) {
+        clearInterval(timer);
+        handleFinalSubmit();
+        return;
+      }
 
       if (currentQuestion) {
         setTimeSpent((prev) => ({
@@ -259,9 +251,9 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentQuestion]);
+  }, [currentQuestion, sessionData.scheduledEndTimestamp]);
 
-  // Continuously sync active exam answers & secondsRemaining progress to localStorage
+  // LOOPHOLE 2 FIX: Continuously sync active exam answers & progress to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -269,7 +261,6 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         JSON.stringify({
           scheduledEndTimestamp: sessionData.scheduledEndTimestamp,
           startedAt,
-          secondsRemaining,
           answers,
           statuses,
           timeSpent,
@@ -280,30 +271,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     } catch (e) {
       // quota or private mode
     }
-  }, [answers, statuses, timeSpent, activeSectionId, activeQuestionIndex, secondsRemaining, startedAt, sessionStorageKey, sessionData.scheduledEndTimestamp]);
-
-  // Explicit Pause & Exit Handler: Saves state cleanly with preserved time frame
-  const handlePauseAndExit = () => {
-    try {
-      localStorage.setItem(
-        sessionStorageKey,
-        JSON.stringify({
-          scheduledEndTimestamp: sessionData.scheduledEndTimestamp,
-          startedAt,
-          secondsRemaining,
-          answers,
-          statuses,
-          timeSpent,
-          activeSectionId,
-          activeQuestionIndex,
-          pausedAt: Date.now(),
-        })
-      );
-    } catch (e) {
-      console.warn('Failed to save paused exam session', e);
-    }
-    onExit();
-  };
+  }, [answers, statuses, timeSpent, activeSectionId, activeQuestionIndex, sessionData.scheduledEndTimestamp, startedAt, sessionStorageKey]);
 
   // Format seconds into HH:MM:SS
   const formattedTimer = useMemo(() => {
@@ -1105,19 +1073,19 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                 </div>
 
                 {currentQuestion.imageUrl && (
-                  <div className="my-3 p-2.5 rounded-xl border border-zinc-700/60 bg-black/40 dark:bg-black/60 flex flex-col items-center group max-w-lg mx-auto shadow-sm">
+                  <div className="my-3 p-3.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white flex flex-col items-center group max-w-3xl mx-auto shadow-md">
                     <img
                       src={currentQuestion.imageUrl}
-                      alt={`Diagram for Question ${currentQuestion.questionNumber}`}
-                      className="max-h-80 w-auto object-contain rounded-lg cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.02]"
+                      alt={`Question ${currentQuestion.questionNumber}`}
+                      className="max-h-[520px] w-auto max-w-full object-contain rounded cursor-zoom-in filter contrast-[1.05] transition-transform duration-200 group-hover:scale-[1.01]"
                       onClick={() => setZoomedImageUrl(currentQuestion.imageUrl || null)}
                     />
                     <button
                       type="button"
                       onClick={() => setZoomedImageUrl(currentQuestion.imageUrl || null)}
-                      className="mt-2 text-[11px] font-semibold text-zinc-400 hover:text-white flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-800 hover:border-red-600 transition-colors shadow-xs"
+                      className="mt-2.5 text-[11px] font-semibold text-slate-700 dark:text-zinc-300 hover:text-black dark:hover:text-white flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 hover:border-red-600 transition-colors shadow-xs"
                     >
-                      <ZoomIn className="w-3.5 h-3.5 text-red-500" />
+                      <ZoomIn className="w-3.5 h-3.5 text-red-600" />
                       <span>Click to Enlarge / Fullscreen</span>
                     </button>
                   </div>

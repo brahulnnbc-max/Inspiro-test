@@ -122,3 +122,5 @@ const BINOMIAL_ANSWERS = {
 };
 
 console.log('Answer dictionaries configured successfully.');
+
+module.exports = { MATRICES_ANSWERS, DETERMINANT_ANSWERS, BINOMIAL_ANSWERS };
