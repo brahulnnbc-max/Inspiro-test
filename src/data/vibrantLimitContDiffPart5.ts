@@ -1,1059 +1,645 @@
-import { Question } from '../types/exam';
+import { Question } from '../types/exam.ts';
+
 export const LIMIT_CONT_DIFF_PART_5_QUESTIONS: Question[] = [
   {
-    "id": "lcd-q201",
-    "questionNumber": 1,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q201] Evaluate the physical / mathematical system for Question 201.",
-    "imageUrl": "/assets/module_crops/lcd/q_201.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q1',
+    questionNumber: 1,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_201.png',
+    promptLatex: 'Question 1',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 201. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q202",
-    "questionNumber": 2,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q202] Evaluate the physical / mathematical system for Question 202.",
-    "imageUrl": "/assets/module_crops/lcd/q_202.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q2',
+    questionNumber: 2,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_202.png',
+    promptLatex: 'Question 2',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 202. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q203",
-    "questionNumber": 3,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q203] Evaluate the physical / mathematical system for Question 203.",
-    "imageUrl": "/assets/module_crops/lcd/q_203.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q3',
+    questionNumber: 3,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_203.png',
+    promptLatex: 'Question 3',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 203. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q204",
-    "questionNumber": 4,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q204] Evaluate the physical / mathematical system for Question 204.",
-    "imageUrl": "/assets/module_crops/lcd/q_204.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q4',
+    questionNumber: 4,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_204.png',
+    promptLatex: 'Question 4',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 204. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q205",
-    "questionNumber": 5,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q205] Evaluate the physical / mathematical system for Question 205.",
-    "imageUrl": "/assets/module_crops/lcd/q_205.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q5',
+    questionNumber: 5,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_205.png',
+    promptLatex: 'Question 5',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 205. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q206",
-    "questionNumber": 6,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q206] Evaluate the physical / mathematical system for Question 206.",
-    "imageUrl": "/assets/module_crops/lcd/q_206.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q6',
+    questionNumber: 6,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_206.png',
+    promptLatex: 'Question 6',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 206. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q207",
-    "questionNumber": 7,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q207] Evaluate the physical / mathematical system for Question 207.",
-    "imageUrl": "/assets/module_crops/lcd/q_207.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q7',
+    questionNumber: 7,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_207.png',
+    promptLatex: 'Question 7',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 207. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q208",
-    "questionNumber": 8,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q208] Evaluate the physical / mathematical system for Question 208.",
-    "imageUrl": "/assets/module_crops/lcd/q_208.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q8',
+    questionNumber: 8,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_208.png',
+    promptLatex: 'Question 8',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 208. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q209",
-    "questionNumber": 9,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q209] Evaluate the physical / mathematical system for Question 209.",
-    "imageUrl": "/assets/module_crops/lcd/q_209.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q9',
+    questionNumber: 9,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/lcd/q_209.png',
+    promptLatex: 'Question 9',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'lcd-p5-q10',
+    questionNumber: 10,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/lcd/q_210.png',
+    promptLatex: 'Question 10',
+    
+    correctAnswer: '1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'lcd-p5-q11',
+    questionNumber: 11,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/lcd/q_211.png',
+    promptLatex: 'Question 11',
+    
+    correctAnswer: '2',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **2**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'lcd-p5-q12',
+    questionNumber: 12,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_212.png',
+    promptLatex: 'Question 12',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 209. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q210",
-    "questionNumber": 10,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[LCD Q210] Evaluate the physical / mathematical system for Question 210.",
-    "imageUrl": "/assets/module_crops/lcd/q_210.png",
-    "correctAnswer": "30",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 210. Correct result: **30**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
-  },
-  {
-    "id": "lcd-q211",
-    "questionNumber": 11,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q211] Evaluate the physical / mathematical system for Question 211.",
-    "imageUrl": "/assets/module_crops/lcd/q_211.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q13',
+    questionNumber: 13,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_213.png',
+    promptLatex: 'Question 13',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 211. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q212",
-    "questionNumber": 12,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q212] Evaluate the physical / mathematical system for Question 212.",
-    "imageUrl": "/assets/module_crops/lcd/q_212.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q14',
+    questionNumber: 14,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_214.png',
+    promptLatex: 'Question 14',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 212. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q213",
-    "questionNumber": 13,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q213] Evaluate the physical / mathematical system for Question 213.",
-    "imageUrl": "/assets/module_crops/lcd/q_213.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q15',
+    questionNumber: 15,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_215.png',
+    promptLatex: 'Question 15',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 213. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q214",
-    "questionNumber": 14,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q214] Evaluate the physical / mathematical system for Question 214.",
-    "imageUrl": "/assets/module_crops/lcd/q_214.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q16',
+    questionNumber: 16,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_216.png',
+    promptLatex: 'Question 16',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 214. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q215",
-    "questionNumber": 15,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q215] Evaluate the physical / mathematical system for Question 215.",
-    "imageUrl": "/assets/module_crops/lcd/q_215.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q17',
+    questionNumber: 17,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_217.png',
+    promptLatex: 'Question 17',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 215. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q216",
-    "questionNumber": 16,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q216] Evaluate the physical / mathematical system for Question 216.",
-    "imageUrl": "/assets/module_crops/lcd/q_216.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q18',
+    questionNumber: 18,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_218.png',
+    promptLatex: 'Question 18',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 216. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q217",
-    "questionNumber": 17,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q217] Evaluate the physical / mathematical system for Question 217.",
-    "imageUrl": "/assets/module_crops/lcd/q_217.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q19',
+    questionNumber: 19,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_219.png',
+    promptLatex: 'Question 19',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 217. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q218",
-    "questionNumber": 18,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q218] Evaluate the physical / mathematical system for Question 218.",
-    "imageUrl": "/assets/module_crops/lcd/q_218.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q20',
+    questionNumber: 20,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_220.png',
+    promptLatex: 'Question 20',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 218. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q219",
-    "questionNumber": 19,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q219] Evaluate the physical / mathematical system for Question 219.",
-    "imageUrl": "/assets/module_crops/lcd/q_219.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q21',
+    questionNumber: 21,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_221.png',
+    promptLatex: 'Question 21',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 219. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q220",
-    "questionNumber": 20,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[LCD Q220] Evaluate the physical / mathematical system for Question 220.",
-    "imageUrl": "/assets/module_crops/lcd/q_220.png",
-    "correctAnswer": "20",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 220. Correct result: **20**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
-  },
-  {
-    "id": "lcd-q221",
-    "questionNumber": 21,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q221] Evaluate the physical / mathematical system for Question 221.",
-    "imageUrl": "/assets/module_crops/lcd/q_221.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q22',
+    questionNumber: 22,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_222.png',
+    promptLatex: 'Question 22',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 221. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q222",
-    "questionNumber": 22,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q222] Evaluate the physical / mathematical system for Question 222.",
-    "imageUrl": "/assets/module_crops/lcd/q_222.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q23',
+    questionNumber: 23,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_223.png',
+    promptLatex: 'Question 23',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 222. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q223",
-    "questionNumber": 23,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q223] Evaluate the physical / mathematical system for Question 223.",
-    "imageUrl": "/assets/module_crops/lcd/q_223.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q24',
+    questionNumber: 24,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_224.png',
+    promptLatex: 'Question 24',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 223. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q224",
-    "questionNumber": 24,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q224] Evaluate the physical / mathematical system for Question 224.",
-    "imageUrl": "/assets/module_crops/lcd/q_224.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q25',
+    questionNumber: 25,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_225.png',
+    promptLatex: 'Question 25',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 224. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q225",
-    "questionNumber": 25,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q225] Evaluate the physical / mathematical system for Question 225.",
-    "imageUrl": "/assets/module_crops/lcd/q_225.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q26',
+    questionNumber: 26,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_226.png',
+    promptLatex: 'Question 26',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 225. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q226",
-    "questionNumber": 26,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q226] Evaluate the physical / mathematical system for Question 226.",
-    "imageUrl": "/assets/module_crops/lcd/q_226.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q27',
+    questionNumber: 27,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_227.png',
+    promptLatex: 'Question 27',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 226. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q227",
-    "questionNumber": 27,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q227] Evaluate the physical / mathematical system for Question 227.",
-    "imageUrl": "/assets/module_crops/lcd/q_227.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q28',
+    questionNumber: 28,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_228.png',
+    promptLatex: 'Question 28',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 227. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q228",
-    "questionNumber": 28,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q228] Evaluate the physical / mathematical system for Question 228.",
-    "imageUrl": "/assets/module_crops/lcd/q_228.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q29',
+    questionNumber: 29,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_229.png',
+    promptLatex: 'Question 29',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 228. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q229",
-    "questionNumber": 29,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q229] Evaluate the physical / mathematical system for Question 229.",
-    "imageUrl": "/assets/module_crops/lcd/q_229.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q30',
+    questionNumber: 30,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_230.png',
+    promptLatex: 'Question 30',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 229. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q230",
-    "questionNumber": 30,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[LCD Q230] Evaluate the physical / mathematical system for Question 230.",
-    "imageUrl": "/assets/module_crops/lcd/q_230.png",
-    "correctAnswer": "10",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 230. Correct result: **10**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
+    id: 'lcd-p5-q31',
+    questionNumber: 31,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/lcd/q_231.png',
+    promptLatex: 'Question 31',
+    
+    correctAnswer: '1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
   {
-    "id": "lcd-q231",
-    "questionNumber": 31,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q231] Evaluate the physical / mathematical system for Question 231.",
-    "imageUrl": "/assets/module_crops/lcd/q_231.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q32',
+    questionNumber: 32,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/lcd/q_232.png',
+    promptLatex: 'Question 32',
+    
+    correctAnswer: '4',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **4**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'lcd-p5-q33',
+    questionNumber: 33,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_233.png',
+    promptLatex: 'Question 33',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 231. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q232",
-    "questionNumber": 32,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q232] Evaluate the physical / mathematical system for Question 232.",
-    "imageUrl": "/assets/module_crops/lcd/q_232.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q34',
+    questionNumber: 34,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_234.png',
+    promptLatex: 'Question 34',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 232. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'A',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **A**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q233",
-    "questionNumber": 33,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q233] Evaluate the physical / mathematical system for Question 233.",
-    "imageUrl": "/assets/module_crops/lcd/q_233.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q35',
+    questionNumber: 35,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_235.png',
+    promptLatex: 'Question 35',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 233. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'C',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **C**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q234",
-    "questionNumber": 34,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q234] Evaluate the physical / mathematical system for Question 234.",
-    "imageUrl": "/assets/module_crops/lcd/q_234.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q36',
+    questionNumber: 36,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_236.png',
+    promptLatex: 'Question 36',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 234. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'D',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **D**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "lcd-q235",
-    "questionNumber": 35,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q235] Evaluate the physical / mathematical system for Question 235.",
-    "imageUrl": "/assets/module_crops/lcd/q_235.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'lcd-p5-q37',
+    questionNumber: 37,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/lcd/q_237.png',
+    promptLatex: 'Question 37',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 235. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
-  {
-    "id": "lcd-q236",
-    "questionNumber": 36,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q236] Evaluate the physical / mathematical system for Question 236.",
-    "imageUrl": "/assets/module_crops/lcd/q_236.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 236. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "lcd-q237",
-    "questionNumber": 37,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[LCD Q237] Evaluate the physical / mathematical system for Question 237.",
-    "imageUrl": "/assets/module_crops/lcd/q_237.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 237. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  }
 ];

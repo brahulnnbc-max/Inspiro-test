@@ -1145,9 +1145,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                 </div>
 
                 {/* Question Prompt with KaTeX */}
-                <div className="text-sm md:text-base leading-relaxed">
-                  <MathRenderer content={currentQuestion.promptLatex} />
-                </div>
+                {(!currentQuestion.imageUrl || (currentQuestion.promptLatex && !currentQuestion.promptLatex.match(/^Question\s+\d+$/i))) && (
+                  <div className="text-sm md:text-base leading-relaxed">
+                    <MathRenderer content={currentQuestion.promptLatex} />
+                  </div>
+                )}
 
                 {currentQuestion.imageUrl && (
                   <div className="my-3 p-3.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white flex flex-col items-center group max-w-3xl mx-auto shadow-md">
@@ -1260,12 +1262,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                                   <div className="w-2 h-2 rounded-full bg-white" />
                                 ) : null}
                               </div>
-                              <span className="font-bold text-xs pt-0.5 text-slate-500 shrink-0">
-                                ({optionNum})
+                              <span className="font-bold text-xs pt-0.5 text-slate-700 dark:text-zinc-300 shrink-0">
+                                ({option.id})
                               </span>
-                              <div className="flex-1 text-xs md:text-sm pt-0.5">
-                                <MathRenderer content={option.labelLatex} />
-                              </div>
+                              {option.labelLatex && !option.labelLatex.match(/^\(?([A-D]|[1-4])\)?$/i) && (
+                                <div className="flex-1 text-xs md:text-sm pt-0.5">
+                                  <MathRenderer content={option.labelLatex} />
+                                </div>
+                              )}
                             </div>
                           );
                         })}

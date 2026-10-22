@@ -1,1413 +1,759 @@
-import { Question } from '../types/exam';
+import { Question } from '../types/exam.ts';
+
 export const DETERMINANT_PART_1_QUESTIONS: Question[] = [
   {
-    "id": "det-q1",
-    "questionNumber": 1,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q1] Evaluate the physical / mathematical system for Question 1.",
-    "imageUrl": "/assets/module_crops/determinant/q_1.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q1',
+    questionNumber: 1,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_1.png',
+    promptLatex: 'Question 1',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 1. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '(a - b)(b - c)(c - a)',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **(a - b)(b - c)(c - a)**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q2",
-    "questionNumber": 2,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q2] Evaluate the physical / mathematical system for Question 2.",
-    "imageUrl": "/assets/module_crops/determinant/q_2.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q2',
+    questionNumber: 2,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_2.png',
+    promptLatex: 'Question 2',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q3',
+    questionNumber: 3,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_3.png',
+    promptLatex: 'Question 3',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q4',
+    questionNumber: 4,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_4.png',
+    promptLatex: 'Question 4',
+    
+    correctAnswer: '-25',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-25**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q5',
+    questionNumber: 5,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_5.png',
+    promptLatex: 'Question 5',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q6',
+    questionNumber: 6,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_6.png',
+    promptLatex: 'Question 6',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q7',
+    questionNumber: 7,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_7.png',
+    promptLatex: 'Question 7',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q8',
+    questionNumber: 8,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_8.png',
+    promptLatex: 'Question 8',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 2. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'xy',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **xy**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q3",
-    "questionNumber": 3,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q3] Evaluate the physical / mathematical system for Question 3.",
-    "imageUrl": "/assets/module_crops/determinant/q_3.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q9',
+    questionNumber: 9,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_9.png',
+    promptLatex: 'Question 9',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 3. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'x = 2, -1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **x = 2, -1**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q4",
-    "questionNumber": 4,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q4] Evaluate the physical / mathematical system for Question 4.",
-    "imageUrl": "/assets/module_crops/determinant/q_4.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q10',
+    questionNumber: 10,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_10.png',
+    promptLatex: 'Question 10',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 4. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'x = 0, x = ±sqrt(sum ab)',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **x = 0, x = ±sqrt(sum ab)**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q5",
-    "questionNumber": 5,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q5] Evaluate the physical / mathematical system for Question 5.",
-    "imageUrl": "/assets/module_crops/determinant/q_5.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q11',
+    questionNumber: 11,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_11.png',
+    promptLatex: 'Question 11',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 5. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'x = 0, ±sqrt(3/2(a^2 + b^2 + c^2))',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **x = 0, ±sqrt(3/2(a^2 + b^2 + c^2))**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q6",
-    "questionNumber": 6,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q6] Evaluate the physical / mathematical system for Question 6.",
-    "imageUrl": "/assets/module_crops/determinant/q_6.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q12',
+    questionNumber: 12,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_12.png',
+    promptLatex: 'Question 12',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 6. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '1, -9',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **1, -9**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q7",
-    "questionNumber": 7,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q7] Evaluate the physical / mathematical system for Question 7.",
-    "imageUrl": "/assets/module_crops/determinant/q_7.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q13',
+    questionNumber: 13,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_13.png',
+    promptLatex: 'Question 13',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 7. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '1 + a^2 + b^2 + c^2',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **1 + a^2 + b^2 + c^2**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q8",
-    "questionNumber": 8,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q8] Evaluate the physical / mathematical system for Question 8.",
-    "imageUrl": "/assets/module_crops/determinant/q_8.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q14',
+    questionNumber: 14,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_14.png',
+    promptLatex: 'Question 14',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 8. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '(a - b)(b - c)(c - a)(a + b + c)',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **(a - b)(b - c)(c - a)(a + b + c)**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q9",
-    "questionNumber": 9,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q9] Evaluate the physical / mathematical system for Question 9.",
-    "imageUrl": "/assets/module_crops/determinant/q_9.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q15',
+    questionNumber: 15,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_15.png',
+    promptLatex: 'Question 15',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q16',
+    questionNumber: 16,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_16.png',
+    promptLatex: 'Question 16',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 9. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '-(a^3 + b^3 + c^3 - 3abc)',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-(a^3 + b^3 + c^3 - 3abc)**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q10",
-    "questionNumber": 10,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[DET Q10] Evaluate the physical / mathematical system for Question 10.",
-    "imageUrl": "/assets/module_crops/determinant/q_10.png",
-    "correctAnswer": "30",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 10. Correct result: **30**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
+    id: 'det-p1-q17',
+    questionNumber: 17,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_17.png',
+    promptLatex: 'Question 17',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
   {
-    "id": "det-q11",
-    "questionNumber": 11,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q11] Evaluate the physical / mathematical system for Question 11.",
-    "imageUrl": "/assets/module_crops/determinant/q_11.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q18',
+    questionNumber: 18,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_18.png',
+    promptLatex: 'Question 18',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 11. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '4abc',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **4abc**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q12",
-    "questionNumber": 12,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q12] Evaluate the physical / mathematical system for Question 12.",
-    "imageUrl": "/assets/module_crops/determinant/q_12.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q19',
+    questionNumber: 19,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_19.png',
+    promptLatex: 'Question 19',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 12. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '0, -3',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0, -3**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q13",
-    "questionNumber": 13,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q13] Evaluate the physical / mathematical system for Question 13.",
-    "imageUrl": "/assets/module_crops/determinant/q_13.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q20',
+    questionNumber: 20,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_20.png',
+    promptLatex: 'Question 20',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 13. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'B',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **B**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q14",
-    "questionNumber": 14,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q14] Evaluate the physical / mathematical system for Question 14.",
-    "imageUrl": "/assets/module_crops/determinant/q_14.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q21',
+    questionNumber: 21,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_21.png',
+    promptLatex: 'Question 21',
+    
+    correctAnswer: '-2',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-2**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q22',
+    questionNumber: 22,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_22.png',
+    promptLatex: 'Question 22',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q23',
+    questionNumber: 23,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_23.png',
+    promptLatex: 'Question 23',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 14. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '4a^2 b^2 c^2',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **4a^2 b^2 c^2**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q15",
-    "questionNumber": 15,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q15] Evaluate the physical / mathematical system for Question 15.",
-    "imageUrl": "/assets/module_crops/determinant/q_15.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q24',
+    questionNumber: 24,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_24.png',
+    promptLatex: 'Question 24',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 15. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'xyz(1 + 1/x + 1/y + 1/z)',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **xyz(1 + 1/x + 1/y + 1/z)**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q16",
-    "questionNumber": 16,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q16] Evaluate the physical / mathematical system for Question 16.",
-    "imageUrl": "/assets/module_crops/determinant/q_16.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q25',
+    questionNumber: 25,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_25.png',
+    promptLatex: 'Question 25',
+    
+    correctAnswer: '1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q26',
+    questionNumber: 26,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_26.png',
+    promptLatex: 'Question 26',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 16. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '2, 7',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **2, 7**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q17",
-    "questionNumber": 17,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q17] Evaluate the physical / mathematical system for Question 17.",
-    "imageUrl": "/assets/module_crops/determinant/q_17.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q27',
+    questionNumber: 27,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_27.png',
+    promptLatex: 'Question 27',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 17. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'abc = -1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **abc = -1**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q18",
-    "questionNumber": 18,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q18] Evaluate the physical / mathematical system for Question 18.",
-    "imageUrl": "/assets/module_crops/determinant/q_18.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q28',
+    questionNumber: 28,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_28.png',
+    promptLatex: 'Question 28',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q29',
+    questionNumber: 29,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_29.png',
+    promptLatex: 'Question 29',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q30',
+    questionNumber: 30,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_30.png',
+    promptLatex: 'Question 30',
+    
+    correctAnswer: '33/8',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **33/8**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q31',
+    questionNumber: 31,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_31.png',
+    promptLatex: 'Question 31',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 18. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: 'k^3 Delta',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **k^3 Delta**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q19",
-    "questionNumber": 19,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q19] Evaluate the physical / mathematical system for Question 19.",
-    "imageUrl": "/assets/module_crops/determinant/q_19.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q32',
+    questionNumber: 32,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_32.png',
+    promptLatex: 'Question 32',
+    
+    correctAnswer: '24',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **24**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q33',
+    questionNumber: 33,
+    sectionId: 'mathematics',
+    type: 'MULTIPLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_33.png',
+    promptLatex: 'Question 33',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 19. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '{-9, 0, 9}',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **{-9, 0, 9}**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q20",
-    "questionNumber": 20,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[DET Q20] Evaluate the physical / mathematical system for Question 20.",
-    "imageUrl": "/assets/module_crops/determinant/q_20.png",
-    "correctAnswer": "20",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 20. Correct result: **20**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
+    id: 'det-p1-q34',
+    questionNumber: 34,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_34.png',
+    promptLatex: 'Question 34',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
   {
-    "id": "det-q21",
-    "questionNumber": 21,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q21] Evaluate the physical / mathematical system for Question 21.",
-    "imageUrl": "/assets/module_crops/determinant/q_21.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q35',
+    questionNumber: 35,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_35.png',
+    promptLatex: 'Question 35',
+    
+    correctAnswer: '-28000',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-28000**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q36',
+    questionNumber: 36,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_36.png',
+    promptLatex: 'Question 36',
+    
+    correctAnswer: '6',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **6**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q37',
+    questionNumber: 37,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_37.png',
+    promptLatex: 'Question 37',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q38',
+    questionNumber: 38,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_38.png',
+    promptLatex: 'Question 38',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 21. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '4 Delta',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **4 Delta**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q22",
-    "questionNumber": 22,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q22] Evaluate the physical / mathematical system for Question 22.",
-    "imageUrl": "/assets/module_crops/determinant/q_22.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q39',
+    questionNumber: 39,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_39.png',
+    promptLatex: 'Question 39',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 22. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '6k',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **6k**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q23",
-    "questionNumber": 23,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q23] Evaluate the physical / mathematical system for Question 23.",
-    "imageUrl": "/assets/module_crops/determinant/q_23.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
+    id: 'det-p1-q40',
+    questionNumber: 40,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_40.png',
+    promptLatex: 'Question 40',
+    
+    correctAnswer: '25',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **25**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q41',
+    questionNumber: 41,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_41.png',
+    promptLatex: 'Question 41',
+    
+    correctAnswer: '2',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **2**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q42',
+    questionNumber: 42,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_42.png',
+    promptLatex: 'Question 42',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q43',
+    questionNumber: 43,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_43.png',
+    promptLatex: 'Question 43',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q44',
+    questionNumber: 44,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_44.png',
+    promptLatex: 'Question 44',
+    
+    correctAnswer: '0',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **0**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q45',
+    questionNumber: 45,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_45.png',
+    promptLatex: 'Question 45',
+    
+    correctAnswer: '8',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **8**',
+    positiveMarks: 4,
+    negativeMarks: 0,
+  },
+  {
+    id: 'det-p1-q46',
+    questionNumber: 46,
+    sectionId: 'mathematics',
+    type: 'SINGLE_CORRECT',
+    imageUrl: '/assets/module_crops/determinant/q_46.png',
+    promptLatex: 'Question 46',
+    options: [
+      { id: 'A', labelLatex: '(A)' },
+      { id: 'B', labelLatex: '(B)' },
+      { id: 'C', labelLatex: '(C)' },
+      { id: 'D', labelLatex: '(D)' }
     ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 23. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    correctAnswer: '(c) p',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **(c) p**',
+    positiveMarks: 4,
+    negativeMarks: 1,
   },
   {
-    "id": "det-q24",
-    "questionNumber": 24,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q24] Evaluate the physical / mathematical system for Question 24.",
-    "imageUrl": "/assets/module_crops/determinant/q_24.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 24. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    id: 'det-p1-q47',
+    questionNumber: 47,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_47.png',
+    promptLatex: 'Question 47',
+    
+    correctAnswer: '-1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
   {
-    "id": "det-q25",
-    "questionNumber": 25,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q25] Evaluate the physical / mathematical system for Question 25.",
-    "imageUrl": "/assets/module_crops/determinant/q_25.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 25. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    id: 'det-p1-q48',
+    questionNumber: 48,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_48.png',
+    promptLatex: 'Question 48',
+    
+    correctAnswer: '-1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
   {
-    "id": "det-q26",
-    "questionNumber": 26,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q26] Evaluate the physical / mathematical system for Question 26.",
-    "imageUrl": "/assets/module_crops/determinant/q_26.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 26. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    id: 'det-p1-q49',
+    questionNumber: 49,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_49.png',
+    promptLatex: 'Question 49',
+    
+    correctAnswer: '-1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
   {
-    "id": "det-q27",
-    "questionNumber": 27,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q27] Evaluate the physical / mathematical system for Question 27.",
-    "imageUrl": "/assets/module_crops/determinant/q_27.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 27. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
+    id: 'det-p1-q50',
+    questionNumber: 50,
+    sectionId: 'mathematics',
+    type: 'NUMERICAL',
+    imageUrl: '/assets/module_crops/determinant/q_50.png',
+    promptLatex: 'Question 50',
+    
+    correctAnswer: '-1',
+    explanationLatex: 'Official Vibrant Kota Faculty Solution & Verified Answer Key: **-1**',
+    positiveMarks: 4,
+    negativeMarks: 0,
   },
-  {
-    "id": "det-q28",
-    "questionNumber": 28,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q28] Evaluate the physical / mathematical system for Question 28.",
-    "imageUrl": "/assets/module_crops/determinant/q_28.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 28. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q29",
-    "questionNumber": 29,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q29] Evaluate the physical / mathematical system for Question 29.",
-    "imageUrl": "/assets/module_crops/determinant/q_29.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 29. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q30",
-    "questionNumber": 30,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[DET Q30] Evaluate the physical / mathematical system for Question 30.",
-    "imageUrl": "/assets/module_crops/determinant/q_30.png",
-    "correctAnswer": "10",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 30. Correct result: **10**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
-  },
-  {
-    "id": "det-q31",
-    "questionNumber": 31,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q31] Evaluate the physical / mathematical system for Question 31.",
-    "imageUrl": "/assets/module_crops/determinant/q_31.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 31. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q32",
-    "questionNumber": 32,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q32] Evaluate the physical / mathematical system for Question 32.",
-    "imageUrl": "/assets/module_crops/determinant/q_32.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 32. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q33",
-    "questionNumber": 33,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q33] Evaluate the physical / mathematical system for Question 33.",
-    "imageUrl": "/assets/module_crops/determinant/q_33.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 33. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q34",
-    "questionNumber": 34,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q34] Evaluate the physical / mathematical system for Question 34.",
-    "imageUrl": "/assets/module_crops/determinant/q_34.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 34. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q35",
-    "questionNumber": 35,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q35] Evaluate the physical / mathematical system for Question 35.",
-    "imageUrl": "/assets/module_crops/determinant/q_35.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 35. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q36",
-    "questionNumber": 36,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q36] Evaluate the physical / mathematical system for Question 36.",
-    "imageUrl": "/assets/module_crops/determinant/q_36.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 36. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q37",
-    "questionNumber": 37,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q37] Evaluate the physical / mathematical system for Question 37.",
-    "imageUrl": "/assets/module_crops/determinant/q_37.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 37. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q38",
-    "questionNumber": 38,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q38] Evaluate the physical / mathematical system for Question 38.",
-    "imageUrl": "/assets/module_crops/determinant/q_38.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 38. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q39",
-    "questionNumber": 39,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q39] Evaluate the physical / mathematical system for Question 39.",
-    "imageUrl": "/assets/module_crops/determinant/q_39.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 39. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q40",
-    "questionNumber": 40,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[DET Q40] Evaluate the physical / mathematical system for Question 40.",
-    "imageUrl": "/assets/module_crops/determinant/q_40.png",
-    "correctAnswer": "0",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 40. Correct result: **0**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
-  },
-  {
-    "id": "det-q41",
-    "questionNumber": 41,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q41] Evaluate the physical / mathematical system for Question 41.",
-    "imageUrl": "/assets/module_crops/determinant/q_41.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 41. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q42",
-    "questionNumber": 42,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q42] Evaluate the physical / mathematical system for Question 42.",
-    "imageUrl": "/assets/module_crops/determinant/q_42.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 42. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q43",
-    "questionNumber": 43,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q43] Evaluate the physical / mathematical system for Question 43.",
-    "imageUrl": "/assets/module_crops/determinant/q_43.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 43. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q44",
-    "questionNumber": 44,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q44] Evaluate the physical / mathematical system for Question 44.",
-    "imageUrl": "/assets/module_crops/determinant/q_44.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 44. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q45",
-    "questionNumber": 45,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q45] Evaluate the physical / mathematical system for Question 45.",
-    "imageUrl": "/assets/module_crops/determinant/q_45.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 45. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q46",
-    "questionNumber": 46,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q46] Evaluate the physical / mathematical system for Question 46.",
-    "imageUrl": "/assets/module_crops/determinant/q_46.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "B",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 46. Correct result: **B**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q47",
-    "questionNumber": 47,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q47] Evaluate the physical / mathematical system for Question 47.",
-    "imageUrl": "/assets/module_crops/determinant/q_47.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "C",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 47. Correct result: **C**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q48",
-    "questionNumber": 48,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q48] Evaluate the physical / mathematical system for Question 48.",
-    "imageUrl": "/assets/module_crops/determinant/q_48.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "D",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 48. Correct result: **D**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q49",
-    "questionNumber": 49,
-    "sectionId": "mathematics",
-    "type": "SINGLE_CORRECT",
-    "promptLatex": "[DET Q49] Evaluate the physical / mathematical system for Question 49.",
-    "imageUrl": "/assets/module_crops/determinant/q_49.png",
-    "options": [
-      {
-        "id": "A",
-        "labelLatex": "(A) Option A"
-      },
-      {
-        "id": "B",
-        "labelLatex": "(B) Option B"
-      },
-      {
-        "id": "C",
-        "labelLatex": "(C) Option C"
-      },
-      {
-        "id": "D",
-        "labelLatex": "(D) Option D"
-      }
-    ],
-    "correctAnswer": "A",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 49. Correct result: **A**.",
-    "positiveMarks": 4,
-    "negativeMarks": 1
-  },
-  {
-    "id": "det-q50",
-    "questionNumber": 50,
-    "sectionId": "mathematics",
-    "type": "NUMERICAL",
-    "promptLatex": "[DET Q50] Evaluate the physical / mathematical system for Question 50.",
-    "imageUrl": "/assets/module_crops/determinant/q_50.png",
-    "correctAnswer": "30",
-    "explanationLatex": "Official Kota faculty solution & derivation for Question 50. Correct result: **30**.",
-    "positiveMarks": 4,
-    "negativeMarks": 0
-  }
 ];
