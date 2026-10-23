@@ -110,24 +110,31 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     const initialSec = paper.durationMinutes * 60;
     let targetEndMs = now + initialSec * 1000;
 
-    // Anchor timer strictly to official shift window ONLY for live scheduled tests
-    if (!isModulePractice && !isReattempt && scheduledTest?.scheduledDate && scheduledTest?.endTime) {
+    // Anchor timer strictly to official shift window for live scheduled tests:
+    // The test is live: it starts at the scheduled time and ends at the exact scheduled end time
+    // no matter when students attend. Joining late yields only remaining time until scheduled end.
+    if (!isModulePractice && !isReattempt && scheduledTest) {
       try {
-        const [endH, endM] = scheduledTest.endTime.split(':').map(Number);
-        const scheduledEndDate = new Date(scheduledTest.scheduledDate);
-        scheduledEndDate.setHours(endH, endM, 0, 0);
-        const winEndMs = scheduledEndDate.getTime();
-
-        if (winEndMs > now) {
-          targetEndMs = winEndMs;
+        let rawEndTime = scheduledTest.endTime;
+        if (!rawEndTime && (scheduledTest as any).scheduledSlot) {
+          const parts = (scheduledTest as any).scheduledSlot.split('-').map((s: string) => s.trim());
+          if (parts.length >= 2) rawEndTime = parts[1];
         }
+        if (!rawEndTime) rawEndTime = '12:00';
+
+        const [endH, endM] = rawEndTime.split(':').map(Number);
+        const dateStr = scheduledTest.scheduledDate || new Date().toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const scheduledEndMs = new Date(year, month - 1, day, endH, endM, 0, 0).getTime();
+
+        targetEndMs = scheduledEndMs;
       } catch (err) {
         console.warn('Error computing live window end time', err);
       }
     }
 
-    const calculatedSec = !isModulePractice
-      ? Math.max(1, Math.min(paper.durationMinutes * 60, Math.floor((targetEndMs - now) / 1000)))
+    const calculatedSec = !isModulePractice && scheduledTest
+      ? Math.max(0, Math.floor((targetEndMs - now) / 1000))
       : initialSec;
 
     const freshSession = {
@@ -1145,11 +1152,9 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                 </div>
 
                 {/* Question Prompt with KaTeX */}
-                {(!currentQuestion.imageUrl || (currentQuestion.promptLatex && !currentQuestion.promptLatex.match(/^Question\s+\d+$/i))) && (
-                  <div className="text-sm md:text-base leading-relaxed">
-                    <MathRenderer content={currentQuestion.promptLatex} />
-                  </div>
-                )}
+                <div className="text-sm md:text-base leading-relaxed">
+                  <MathRenderer content={currentQuestion.promptLatex} />
+                </div>
 
                 {currentQuestion.imageUrl && (
                   <div className="my-3 p-3.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white flex flex-col items-center group max-w-3xl mx-auto shadow-md">
@@ -1262,14 +1267,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                                   <div className="w-2 h-2 rounded-full bg-white" />
                                 ) : null}
                               </div>
-                              <span className="font-bold text-xs pt-0.5 text-slate-700 dark:text-zinc-300 shrink-0">
-                                ({option.id})
+                              <span className="font-bold text-xs pt-0.5 text-slate-500 shrink-0">
+                                ({optionNum})
                               </span>
-                              {option.labelLatex && !option.labelLatex.match(/^\(?([A-D]|[1-4])\)?$/i) && (
-                                <div className="flex-1 text-xs md:text-sm pt-0.5">
-                                  <MathRenderer content={option.labelLatex} />
-                                </div>
-                              )}
+                              <div className="flex-1 text-xs md:text-sm pt-0.5">
+                                <MathRenderer content={option.labelLatex} />
+                              </div>
                             </div>
                           );
                         })}

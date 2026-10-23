@@ -1014,7 +1014,7 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
               {nextTargetTest.syllabus.map((topic) => (
                 <label
                   key={topic.id}
-                  onClick={() => onToggleTopic(nextTargetTest.id, topic.id || '')}
+                  onClick={() => onToggleTopic(nextTargetTest.id, topic.id)}
                   className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
                     topic.completed
                       ? 'bg-red-950/40 border-red-600/80 text-white shadow-xs'
@@ -1297,7 +1297,7 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                       {test.syllabus.map((topic) => (
                         <label
                           key={topic.id}
-                          onClick={() => onToggleTopic(test.id, topic.id || '')}
+                          onClick={() => onToggleTopic(test.id, topic.id)}
                           className={`p-2.5 rounded-lg border text-xs cursor-pointer flex items-center gap-2.5 transition-colors ${
                             topic.completed
                               ? 'bg-red-950/40 border-red-800 text-white'

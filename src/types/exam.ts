@@ -113,7 +113,7 @@ export interface ScheduledTest {
   status?: 'UPCOMING_LOCKED' | 'READY' | 'COMPLETED' | 'MISSED' | string;
   isLocked?: boolean;
   scheduledAt?: number;
-  syllabus: SyllabusTopic[];
+  syllabus?: SyllabusTopic[];
 }
 
 export interface DailyRoutineItem {
