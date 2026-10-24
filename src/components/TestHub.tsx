@@ -222,8 +222,6 @@ export const TestHub: React.FC<TestHubProps> = ({
 
       if (test.status === 'COMPLETED') {
         completed.push(test);
-      } else if (windowInfo.status === 'MISSED') {
-        missed.push({ test, windowInfo });
       } else if (test.scheduledDate === todayStr) {
         today.push({ test, windowInfo });
 
@@ -688,10 +686,10 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                   const windowInfo = getLiveTestWindowStatus(test, currentTime);
                   const isExpanded = !!expandedTopicTestIds[test.id];
                   const completedTopics = test.syllabus.filter((t) => t.completed).length;
-                  const isLive = windowInfo.isLive || test.status === 'LIVE_NOW';
-                  const isTomorrow = test.scheduledDate === tomorrowStr;
                   const isCompleted = test.status === 'COMPLETED';
-                  const isMissed = windowInfo.status === 'MISSED';
+                  const isLive = windowInfo.isLive || test.status === 'LIVE_NOW' || (test.scheduledDate === todayStr && !isCompleted);
+                  const isTomorrow = test.scheduledDate === tomorrowStr;
+                  const isMissed = windowInfo.status === 'MISSED' && test.scheduledDate < todayStr;
 
                   return (
                     <div

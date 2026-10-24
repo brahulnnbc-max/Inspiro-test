@@ -75,8 +75,10 @@ export default function App() {
         if (Array.isArray(parsed) && parsed.length === SAMPLE_SCHEDULED_TESTS.length) {
           // Date collision & base-date check: must start exactly from SCHEDULE_BASE_DATE with zero collisions
           const datesSet = new Set(parsed.map((t: any) => t.scheduledDate));
-          const startsToday = parsed[0]?.scheduledDate === SCHEDULE_BASE_DATE;
-          if (datesSet.size === parsed.length && startsToday) {
+          const startsTodayWithKinematics =
+            parsed[0]?.scheduledDate === SCHEDULE_BASE_DATE &&
+            (parsed[0]?.paperId === 'vibrant-kinematics-part-1' || parsed[0]?.title?.includes('Kinematics'));
+          if (datesSet.size === parsed.length && startsTodayWithKinematics) {
             return parsed;
           }
         }

@@ -98,7 +98,19 @@ import {
   VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER,
 } from './moduleMarathonPapers';
 
-export const SCHEDULE_BASE_DATE = '2026-10-22';
+export function getScheduleBaseDate(): string {
+  try {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  } catch {
+    return '2026-10-23';
+  }
+}
+
+export const SCHEDULE_BASE_DATE = getScheduleBaseDate();
 
 export function getDateForDay(baseDateStr: string, dayIndex: number): string {
   const [year, month, day] = baseDateStr.split('-').map(Number);
@@ -184,6 +196,7 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
   for (let day = 1; day <= totalDays; day++) {
     const isPhysicsDay = day % 2 === 1; // Odd days: Day 1, Day 3, Day 5...
     const dateStr = getDateForDay(baseDateStr, day - 1);
+    const isToday = dateStr === baseDateStr;
 
     if (isPhysicsDay && pIdx < physicsPapers.length) {
       const item = physicsPapers[pIdx];
@@ -199,13 +212,13 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
         pattern: 'JEE_MAIN',
         scheduledDate: dateStr,
         startTime: '09:00',
-        endTime: '12:00',
+        endTime: '23:59',
         durationMinutes: item.paper.durationMinutes || 180,
         totalMarks: item.paper.totalMarks || 200,
         paperId: item.paper.id,
         paper: item.paper,
-        status: 'UPCOMING_LOCKED',
-        isLocked: true,
+        status: isToday ? 'LIVE_NOW' : 'UPCOMING_LOCKED',
+        isLocked: !isToday,
         scheduledAt: Date.now() + day,
         syllabus: [syllabusTopic],
       });
@@ -224,13 +237,13 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
         pattern: 'JEE_MAIN',
         scheduledDate: dateStr,
         startTime: '09:00',
-        endTime: '12:00',
+        endTime: '23:59',
         durationMinutes: item.paper.durationMinutes || 180,
         totalMarks: item.paper.totalMarks || 200,
         paperId: item.paper.id,
         paper: item.paper,
-        status: 'UPCOMING_LOCKED',
-        isLocked: true,
+        status: isToday ? 'LIVE_NOW' : 'UPCOMING_LOCKED',
+        isLocked: !isToday,
         scheduledAt: Date.now() + day,
         syllabus: [syllabusTopic],
       });
