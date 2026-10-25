@@ -819,7 +819,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                   </span>
                   <div className="space-y-0.5">
                     <div className="font-semibold text-white">
-                      Day 2 • Math: Matrices CBT Mock Test 01 (Types & Operations • Q1 to Q25)
+                      Day 2 • Math: Matrices CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)
                     </div>
                     <div className="text-[11px] text-amber-300/90">
                       Slot: 09:00 - 12:00 IST • <strong>Starts Tomorrow @ 09:00 AM IST</strong>
