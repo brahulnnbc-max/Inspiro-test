@@ -99,6 +99,7 @@ export default function App() {
               score: prev.score,
             };
           });
+          localStorage.setItem('jee_scheduled_tests', JSON.stringify(refreshed));
           return refreshed;
         }
       }

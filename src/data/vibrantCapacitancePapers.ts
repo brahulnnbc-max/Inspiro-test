@@ -2206,7 +2206,7 @@ const EXERCISE_REMAINING_QUESTIONS: Question[] = [
 // =========================================================================
 export const VIBRANT_CAPACITANCE_TEST_1: ExamPaper = {
   id: 'vibrant-capacitance-mock-01',
-  title: 'Vibrant Academy Kota: Capacitance Mega CBT Mock 01 (50 Qs - Exercise I)',
+  title: 'Vibrant Academy Kota: Capacitance Mega CBT Mock 01 (Module 1st 50Q • Q1 to Q50 • Ex-I)',
   pattern: 'JEE_MAIN',
   durationMinutes: 180,
   totalMarks: 200,
@@ -2214,7 +2214,7 @@ export const VIBRANT_CAPACITANCE_TEST_1: ExamPaper = {
   sections: [
     {
       id: 'physics',
-      name: 'Physics (Capacitance)',
+      name: 'PHYSICS (CAPACITANCE EXERCISE-I 50Q)',
       questions: EXERCISE_1_QUESTIONS,
     },
   ],
@@ -2222,7 +2222,7 @@ export const VIBRANT_CAPACITANCE_TEST_1: ExamPaper = {
 
 export const VIBRANT_CAPACITANCE_TEST_2: ExamPaper = {
   id: 'vibrant-capacitance-mock-02',
-  title: 'Vibrant Academy Kota: Capacitance Mega CBT Mock 02 (50 Qs - JEE Archive)',
+  title: 'Vibrant Academy Kota: Capacitance Mega CBT Mock 02 (Module 2nd 50Q • Q51 to Q100 • JEE Archive)',
   pattern: 'JEE_MAIN',
   durationMinutes: 180,
   totalMarks: 200,
@@ -2230,7 +2230,7 @@ export const VIBRANT_CAPACITANCE_TEST_2: ExamPaper = {
   sections: [
     {
       id: 'physics',
-      name: 'Physics (Capacitance Archive)',
+      name: 'PHYSICS (CAPACITANCE JEE ARCHIVE 50Q)',
       questions: EXERCISE_3_QUESTIONS,
     },
   ],
@@ -2238,7 +2238,7 @@ export const VIBRANT_CAPACITANCE_TEST_2: ExamPaper = {
 
 export const VIBRANT_CAPACITANCE_TEST_3: ExamPaper = {
   id: 'vibrant-capacitance-mock-03',
-  title: 'Vibrant Academy Kota: Capacitance Advanced Drill 03 (31 Qs - 124 Mins)',
+  title: 'Vibrant Academy Kota: Capacitance CBT Mock 03 (Module Remainder 31Q • Q101 to Q131 • Ex-II & Numerical)',
   pattern: 'JEE_MAIN',
   durationMinutes: 124, // 31 questions x 4 minutes
   totalMarks: 124,
@@ -2246,8 +2246,29 @@ export const VIBRANT_CAPACITANCE_TEST_3: ExamPaper = {
   sections: [
     {
       id: 'physics',
-      name: 'Physics (Numerical & Remaining Drill)',
+      name: 'PHYSICS (CAPACITANCE NUMERICAL & ADVANCED DRILL)',
       questions: EXERCISE_REMAINING_QUESTIONS,
+    },
+  ],
+};
+
+export const ALL_131_CAPACITANCE_QUESTIONS: Question[] = [
+  ...EXERCISE_1_QUESTIONS,
+  ...EXERCISE_3_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 50 + idx + 1, id: `cap-master-${50 + idx + 1}` })),
+  ...EXERCISE_REMAINING_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 100 + idx + 1, id: `cap-master-${100 + idx + 1}` })),
+];
+
+export const VIBRANT_CAPACITANCE_MARATHON_PAPER: ExamPaper = {
+  id: 'module-marathon-capacitance',
+  title: 'Vibrant Kota Physics • Capacitance Complete Chapter Marathon (131 Qs)',
+  pattern: 'JEE_MAIN',
+  durationMinutes: 131 * 4,
+  totalMarks: 131 * 4,
+  sections: [
+    {
+      id: 'physics',
+      name: 'PHYSICS (COMPLETE VIBRANT CAPACITANCE MEGA-XII MODULE ARCHIVE)',
+      questions: ALL_131_CAPACITANCE_QUESTIONS,
     },
   ],
 };

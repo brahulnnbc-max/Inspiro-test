@@ -19,6 +19,7 @@ import {
   VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER,
   VIBRANT_BINOMIAL_MARATHON_PAPER,
 } from '../data/moduleMarathonPapers';
+import { VIBRANT_CAPACITANCE_MARATHON_PAPER } from '../data/vibrantCapacitancePapers';
 import { estimateMathonGoPercentile } from '../utils/mathongoPercentileEstimator';
 import {
   Layers,
@@ -98,15 +99,27 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
   // 12 Authentic Chapter Marathon Tests with all questions from that chapter (4 min/question)
   const marathonModules: ChapterMarathonModule[] = [
     {
+      id: 'module-marathon-capacitance',
+      title: 'Vibrant Kota Physics • Capacitance Complete Chapter Marathon (131 Qs)',
+      subject: 'physics',
+      chapter: 'Capacitance & Dielectrics',
+      totalQuestions: getPaperQCount(VIBRANT_CAPACITANCE_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_CAPACITANCE_MARATHON_PAPER) * 4,
+      difficulty: 'JEE Advanced',
+      coachingSource: 'Vibrant Academy Kota Mega XII Module',
+      description: 'Complete 131-question Capacitance module: Exercise-I, Exercise-II analytical circuits, and Exercise-III JEE Advanced/Mains 2016-2025 archive.',
+      paper: VIBRANT_CAPACITANCE_MARATHON_PAPER,
+    },
+    {
       id: 'module-marathon-electrostatics',
       title: 'Vibrant Kota Physics • Electrostatics Complete Chapter Marathon',
       subject: 'physics',
-      chapter: 'Electrostatics & Capacitance',
+      chapter: 'Electrostatics & Charges',
       totalQuestions: getPaperQCount(VIBRANT_ELECTROSTATICS_MARATHON_PAPER),
       durationMinutes: getPaperQCount(VIBRANT_ELECTROSTATICS_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Academy Kota XII Module',
-      description: 'Every single question from Coulomb law, Gauss law, potential, dipoles, conductors and RC dielectric systems.',
+      description: 'Every single question from Coulomb law, Gauss law, potential, dipoles, and conductor systems.',
       paper: VIBRANT_ELECTROSTATICS_MARATHON_PAPER,
     },
     {
