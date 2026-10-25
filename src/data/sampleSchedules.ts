@@ -39,6 +39,34 @@ import {
   VIBRANT_CAPACITANCE_TEST_3,
   VIBRANT_CAPACITANCE_MARATHON_PAPER,
 } from './vibrantCapacitancePapers';
+import {
+  VIBRANT_ROTATIONAL_DYNAMICS_TEST_1,
+  VIBRANT_ROTATIONAL_DYNAMICS_TEST_2,
+  VIBRANT_ROTATIONAL_DYNAMICS_TEST_3,
+  VIBRANT_ROTATIONAL_DYNAMICS_MARATHON_PAPER,
+} from './vibrantRotationalDynamicsData';
+import {
+  VIBRANT_KTG_THERMO_TEST_1,
+  VIBRANT_KTG_THERMO_TEST_2,
+  VIBRANT_KTG_THERMO_TEST_3,
+  VIBRANT_KTG_THERMO_TEST_4,
+  VIBRANT_KTG_THERMO_MARATHON_PAPER,
+} from './vibrantKtgThermodynamicsData';
+import {
+  VIBRANT_MAGNETIC_EFFECT_TEST_1,
+  VIBRANT_MAGNETIC_EFFECT_TEST_2,
+  VIBRANT_MAGNETIC_EFFECT_TEST_3,
+  VIBRANT_MAGNETIC_EFFECT_TEST_4,
+  VIBRANT_MAGNETIC_EFFECT_MARATHON_PAPER,
+} from './vibrantMagneticEffectData';
+import {
+  VIBRANT_EMI_AC_TEST_1,
+  VIBRANT_EMI_AC_TEST_2,
+  VIBRANT_EMI_AC_TEST_3,
+  VIBRANT_EMI_AC_TEST_4,
+  VIBRANT_EMI_AC_TEST_5,
+  VIBRANT_EMI_AC_MARATHON_PAPER,
+} from './vibrantEmiAcData';
 
 // Mathematics Papers
 import {
@@ -116,16 +144,33 @@ export function getScheduleBaseDate(): string {
 
 export function getDateForDay(baseDateStr: string, dayIndex: number): string {
   const [year, month, day] = baseDateStr.split('-').map(Number);
-  const d = new Date(year, month - 1, day);
-  d.setDate(d.getDate() + dayIndex);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const dt = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${dt}`;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  d.setUTCDate(d.getUTCDate() + dayIndex);
+
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth() + 1;
+  const dt = d.getUTCDate();
+  const isoStr = `${y}-${String(m).padStart(2, '0')}-${String(dt).padStart(2, '0')}`;
+
+  // If date falls after December 31, 2026:
+  // "till dec after dec from Feb 1 remaining schedule"
+  if (isoStr > '2026-12-31') {
+    const dec31 = Date.UTC(2026, 11, 31);
+    const diffDays = Math.round((d.getTime() - dec31) / (24 * 60 * 60 * 1000));
+    // Start remaining schedule from Feb 1, 2027
+    const feb1 = new Date(Date.UTC(2027, 1, 1));
+    feb1.setUTCDate(feb1.getUTCDate() + (diffDays - 1));
+    const fy = feb1.getUTCFullYear();
+    const fm = String(feb1.getUTCMonth() + 1).padStart(2, '0');
+    const fdt = String(feb1.getUTCDate()).padStart(2, '0');
+    return `${fy}-${fm}-${fdt}`;
+  }
+
+  return isoStr;
 }
 
 export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE_DATE): ScheduledTest[] {
-  // Ordered Physics Papers
+  // Phase 1: Ordered Physics Chapter Papers (Scheduled till Dec 31)
   const physicsPapers: { paper: ExamPaper; title: string; syllabus: string }[] = [
     { paper: VIBRANT_KINEMATICS_PAPER_1, title: 'Day 1 • Physics: Kinematics CBT Mock Test 01 (1st 50Q Sprint • Q1 to Q50)', syllabus: 'Kinematics 1D, Graphs & Rectilinear Motion (Q1 to Q50)' },
     { paper: VIBRANT_KINEMATICS_PAPER_2, title: 'Day 3 • Physics: Kinematics CBT Mock Test 02 (Remainder 38Q • Q51 to Q88)', syllabus: '2D Projectile Motion & Relative Velocity (Q51 to Q88)' },
@@ -144,19 +189,29 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
     { paper: VIBRANT_MODERN_PHYSICS_PAPER_1, title: 'Day 29 • Physics: Modern Physics CBT Mock Test 01 (Module 1st 50Q Quantum & Photoelectric • Q1 to Q50)', syllabus: 'Photoelectric Effect & de Broglie Wavelength (Q1 to Q50)' },
     { paper: VIBRANT_MODERN_PHYSICS_PAPER_2, title: 'Day 31 • Physics: Modern Physics CBT Mock Test 02 (Module 2nd 50Q Bohr Model & X-Rays • Q51 to Q100)', syllabus: 'Bohr Hydrogen Atom & Characteristic X-Rays (Q51 to Q100)' },
     { paper: VIBRANT_MODERN_PHYSICS_PAPER_3, title: 'Day 33 • Physics: Modern Physics CBT Mock Test 03 (Module 3rd 50Q Nuclear & Radioactivity • Q101 to Q150)', syllabus: 'Mass Defect, Binding Energy & Radioactive Decay (Q101 to Q150)' },
-    { paper: VIBRANT_KINEMATICS_MARATHON_PAPER, title: 'Day 35 • Physics: Kinematics Complete Module Marathon (All 88 Qs)', syllabus: 'All Kinematics Exercise I, II & III Modules' },
-    { paper: VIBRANT_ELECTROSTATICS_MARATHON_PAPER, title: 'Day 37 • Physics: Electrostatics Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Electrostatics Module Archive' },
-    { paper: VIBRANT_CURRENT_ELECTRICITY_MARATHON_PAPER, title: 'Day 39 • Physics: Current Electricity Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Current Electricity Module' },
-    { paper: VIBRANT_CAPACITANCE_MARATHON_PAPER, title: 'Day 41 • Physics: Capacitance Complete Chapter Marathon (All 131 Qs)', syllabus: 'Complete Vibrant Kota Capacitance Mega XII Module' },
-    { paper: VIBRANT_GEOMETRICAL_OPTICS_MARATHON_PAPER, title: 'Day 43 • Physics: Geometrical Optics Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Geometrical Optics Module' },
-    { paper: VIBRANT_MODERN_PHYSICS_MARATHON_PAPER, title: 'Day 45 • Physics: Modern Physics Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Modern Physics Module' },
-    { paper: VIBRANT_KINEMATICS_COMPLETE_PAPER, title: 'Day 47 • Physics: Kinematics Master Grand Revision', syllabus: 'Full Kinematics Master Revision' },
-    { paper: VIBRANT_CURRENT_ELECTRICITY_COMPLETE_PAPER, title: 'Day 49 • Physics: Current Electricity Master Grand Revision', syllabus: 'Full Current Electricity Master Revision' },
-    { paper: VIBRANT_GEOMETRICAL_OPTICS_COMPLETE_PAPER, title: 'Day 51 • Physics: Geometrical Optics Master Grand Revision', syllabus: 'Full Geometrical Optics Master Revision' },
-    { paper: VIBRANT_MODERN_PHYSICS_COMPLETE_PAPER, title: 'Day 53 • Physics: Modern Physics Master Grand Revision', syllabus: 'Full Modern Physics Master Revision' },
+    // 1. Rotational Dynamics
+    { paper: VIBRANT_ROTATIONAL_DYNAMICS_TEST_1, title: 'Day 35 • Physics: Rotational Dynamics CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)', syllabus: 'Rotational Kinematics, Moment of Inertia, Radius of Gyration & Torque (Q1 to Q50)' },
+    { paper: VIBRANT_ROTATIONAL_DYNAMICS_TEST_2, title: 'Day 37 • Physics: Rotational Dynamics CBT Mock Test 02 (Module 2nd 50Q • Q51 to Q100)', syllabus: 'Angular Momentum, Pure Rolling & Toppling Dynamics (Q51 to Q100)' },
+    { paper: VIBRANT_ROTATIONAL_DYNAMICS_TEST_3, title: 'Day 39 • Physics: Rotational Dynamics CBT Mock Test 03 (Module Remainder 54Q • Q101 to Q154)', syllabus: 'Rigid Body Collisions & JEE Advanced/Mains Archive (Q101 to Q154)' },
+    // 2. KTG & Thermodynamics
+    { paper: VIBRANT_KTG_THERMO_TEST_1, title: 'Day 41 • Physics: KTG & Thermodynamics CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)', syllabus: 'Kinetic Theory of Gases, Ideal Gas Laws & RMS Speeds (Q1 to Q50)' },
+    { paper: VIBRANT_KTG_THERMO_TEST_2, title: 'Day 43 • Physics: KTG & Thermodynamics CBT Mock Test 02 (Module 2nd 50Q • Q51 to Q100)', syllabus: 'First Law of Thermodynamics, Specific Heats & Work Done (Q51 to Q100)' },
+    { paper: VIBRANT_KTG_THERMO_TEST_3, title: 'Day 45 • Physics: KTG & Thermodynamics CBT Mock Test 03 (Module 3rd 50Q • Q101 to Q150)', syllabus: 'Adiabatic, Polytropic & Cyclic Processes (Q101 to Q150)' },
+    { paper: VIBRANT_KTG_THERMO_TEST_4, title: 'Day 47 • Physics: KTG & Thermodynamics CBT Mock Test 04 (Module Remainder 32Q • Q151 to Q182)', syllabus: 'Second Law, Carnot Engines, Entropy & JEE Archive (Q151 to Q182)' },
+    // 3. Magnetic Effect of Current
+    { paper: VIBRANT_MAGNETIC_EFFECT_TEST_1, title: 'Day 49 • Physics: Magnetic Effect of Current CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)', syllabus: 'Biot-Savart Law, Moving Charges & Magnetic Induction (Q1 to Q50)' },
+    { paper: VIBRANT_MAGNETIC_EFFECT_TEST_2, title: 'Day 51 • Physics: Magnetic Effect of Current CBT Mock Test 02 (Module 2nd 50Q • Q51 to Q100)', syllabus: 'Ampere Law, Solenoid, Toroid & Force on Conductor (Q51 to Q100)' },
+    { paper: VIBRANT_MAGNETIC_EFFECT_TEST_3, title: 'Day 53 • Physics: Magnetic Effect of Current CBT Mock Test 03 (Module 3rd 50Q • Q101 to Q150)', syllabus: 'Lorentz Force, Helical Motion & Torque on Loops (Q101 to Q150)' },
+    { paper: VIBRANT_MAGNETIC_EFFECT_TEST_4, title: 'Day 55 • Physics: Magnetic Effect of Current CBT Mock Test 04 (Module Remainder 44Q • Q151 to Q194)', syllabus: 'Galvanometer, Cyclotron & JEE Advanced Archive (Q151 to Q194)' },
+    // 4. Electromagnetic Induction & Alternating Current
+    { paper: VIBRANT_EMI_AC_TEST_1, title: 'Day 57 • Physics: EMI & AC CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)', syllabus: 'Faraday Law, Lenz Law & Motional EMF (Q1 to Q50)' },
+    { paper: VIBRANT_EMI_AC_TEST_2, title: 'Day 59 • Physics: EMI & AC CBT Mock Test 02 (Module 2nd 50Q • Q51 to Q100)', syllabus: 'Self & Mutual Inductance, Solenoid Flux & Growth/Decay (Q51 to Q100)' },
+    { paper: VIBRANT_EMI_AC_TEST_3, title: 'Day 61 • Physics: EMI & AC CBT Mock Test 03 (Module 3rd 50Q • Q101 to Q150)', syllabus: 'AC Circuit Fundamentals, Phasors & RMS Values (Q101 to Q150)' },
+    { paper: VIBRANT_EMI_AC_TEST_4, title: 'Day 63 • Physics: EMI & AC CBT Mock Test 04 (Module 4th 50Q • Q151 to Q200)', syllabus: 'LCR Resonance, Power Factor, Transformers & Choke (Q151 to Q200)' },
+    { paper: VIBRANT_EMI_AC_TEST_5, title: 'Day 65 • Physics: EMI & AC CBT Mock Test 05 (Module Remainder 49Q • Q201 to Q249)', syllabus: 'LC Oscillations, Analytical Circuits & JEE Archive (Q201 to Q249)' },
   ];
 
-  // Ordered Mathematics Papers (50-Question Module Bundles)
+  // Phase 1: Ordered Mathematics Chapter Papers (Scheduled till Dec 31)
   const mathPapers: { paper: ExamPaper; title: string; syllabus: string }[] = [
     { paper: VIBRANT_MATRICES_PAPER_1, title: 'Day 2 • Math: Matrices CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)', syllabus: 'Matrix Algebra, Symmetric, Skew-Symmetric & Orthogonal (Q1 to Q50)' },
     { paper: VIBRANT_MATRICES_PAPER_2, title: 'Day 4 • Math: Matrices CBT Mock Test 02 (Module 2nd 50Q • Q51 to Q100)', syllabus: 'Adjoint Matrix, Inverse & System of Equations (Q51 to Q100)' },
@@ -183,24 +238,54 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
     { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_3, title: 'Day 46 • Math: LCD CBT Mock Test 03 (Module 3rd 50Q • Q101 to Q150)', syllabus: 'Continuity, Types of Discontinuity & Intermediate Value (Q101 to Q150)' },
     { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_4, title: 'Day 48 • Math: LCD CBT Mock Test 04 (Module 4th 50Q • Q151 to Q200)', syllabus: 'Differentiability, Sharp Corners & Functional Equations (Q151 to Q200)' },
     { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_5, title: 'Day 50 • Math: LCD CBT Mock Test 05 (Module 5th 45Q • Q201 to Q245)', syllabus: 'Limits, Continuity & Differentiability IIT Archive (Q201 to Q245)' },
-    { paper: VIBRANT_MATRICES_MARATHON_PAPER, title: 'Day 52 • Math: Matrices Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Matrices Mega XII Module' },
-    { paper: VIBRANT_DETERMINANT_MARATHON_PAPER, title: 'Day 54 • Math: Determinant Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Determinant Mega XII Module' },
-    { paper: VIBRANT_BINOMIAL_MARATHON_PAPER, title: 'Day 56 • Math: Binomial Theorem Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Binomial Micro XI Module' },
-    { paper: VIBRANT_VECTORS_3D_MARATHON_PAPER, title: 'Day 58 • Math: Vectors & 3-D Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Vectors & 3D Module' },
-    { paper: VIBRANT_INTEGRATION_MARATHON_PAPER, title: 'Day 60 • Math: Integration Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Indefinite & Definite Module' },
-    { paper: VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER, title: 'Day 62 • Math: Diff Eq & AUC Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Diff Eq & AUC Mega XII Module' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER, title: 'Day 64 • Math: LCD Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota LCD Mega XII Module' },
+    { paper: VIBRANT_MATRICES_COMPLETE_PAPER, title: 'Day 52 • Math: Matrices Comprehensive Master Drill', syllabus: 'Full Matrices Master Review & Advanced Drill' },
+    { paper: VIBRANT_DETERMINANT_COMPLETE_PAPER, title: 'Day 54 • Math: Determinant Comprehensive Master Drill', syllabus: 'Full Determinants Master Review & Properties' },
+    { paper: VIBRANT_BINOMIAL_COMPLETE_PAPER, title: 'Day 56 • Math: Binomial Theorem Comprehensive Master Drill', syllabus: 'Full Binomial Expansion & Series Review' },
+    { paper: VIBRANT_VECTORS_3D_COMPLETE_PAPER, title: 'Day 58 • Math: Vectors & 3-D Comprehensive Master Drill', syllabus: 'Full Vectors & 3D Geometry Problem Drill' },
+    { paper: VIBRANT_INTEGRATION_COMPLETE_PAPER, title: 'Day 60 • Math: Integration Comprehensive Master Drill', syllabus: 'Full Definite & Indefinite Integration Drill' },
+    { paper: VIBRANT_DIFF_EQ_AUC_COMPLETE_PAPER, title: 'Day 62 • Math: Diff Eq & AUC Comprehensive Master Drill', syllabus: 'Full Differential Equations & Area Drill' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_COMPLETE_PAPER, title: 'Day 64 • Math: LCD Comprehensive Master Drill', syllabus: 'Full Limits, Continuity & Differentiability Drill' },
   ];
 
+  // Phase 2: Remaining Schedule (Grand Marathons & Revisions Scheduled from Feb 1)
+  const remainingPhysicsPapers: { paper: ExamPaper; title: string; syllabus: string }[] = [
+    { paper: VIBRANT_KINEMATICS_MARATHON_PAPER, title: 'Day 69 (Feb 1) • Physics: Kinematics Complete Module Marathon (All 88 Qs)', syllabus: 'All Kinematics Exercise I, II & III Modules' },
+    { paper: VIBRANT_ELECTROSTATICS_MARATHON_PAPER, title: 'Day 71 (Feb 3) • Physics: Electrostatics Complete Chapter Marathon (All 265 Qs)', syllabus: 'Complete Vibrant Kota Electrostatics Module Archive' },
+    { paper: VIBRANT_CURRENT_ELECTRICITY_MARATHON_PAPER, title: 'Day 73 (Feb 5) • Physics: Current Electricity Complete Chapter Marathon (All 224 Qs)', syllabus: 'Complete Vibrant Kota Current Electricity Module' },
+    { paper: VIBRANT_CAPACITANCE_MARATHON_PAPER, title: 'Day 75 (Feb 7) • Physics: Capacitance Complete Chapter Marathon (All 131 Qs)', syllabus: 'Complete Vibrant Kota Capacitance Mega XII Module' },
+    { paper: VIBRANT_GEOMETRICAL_OPTICS_MARATHON_PAPER, title: 'Day 77 (Feb 9) • Physics: Geometrical Optics Complete Chapter Marathon (All 229 Qs)', syllabus: 'Complete Vibrant Kota Geometrical Optics Module' },
+    { paper: VIBRANT_MODERN_PHYSICS_MARATHON_PAPER, title: 'Day 79 (Feb 11) • Physics: Modern Physics Complete Chapter Marathon (All 243 Qs)', syllabus: 'Complete Vibrant Kota Modern Physics Module' },
+    { paper: VIBRANT_ROTATIONAL_DYNAMICS_MARATHON_PAPER, title: 'Day 81 (Feb 13) • Physics: Rotational Dynamics Complete Chapter Marathon (All 154 Qs)', syllabus: 'Complete Vibrant Kota Rotational Dynamics Module' },
+    { paper: VIBRANT_KTG_THERMO_MARATHON_PAPER, title: 'Day 83 (Feb 15) • Physics: KTG & Thermodynamics Complete Chapter Marathon (All 182 Qs)', syllabus: 'Complete Vibrant Kota KTG & Thermodynamics Module' },
+    { paper: VIBRANT_MAGNETIC_EFFECT_MARATHON_PAPER, title: 'Day 85 (Feb 17) • Physics: Magnetic Effect of Current Complete Chapter Marathon (All 194 Qs)', syllabus: 'Complete Vibrant Kota Magnetic Effect Module' },
+    { paper: VIBRANT_EMI_AC_MARATHON_PAPER, title: 'Day 87 (Feb 19) • Physics: EMI & Alternating Current Complete Chapter Marathon (All 249 Qs)', syllabus: 'Complete Vibrant Kota EMI & AC Module' },
+    { paper: VIBRANT_KINEMATICS_COMPLETE_PAPER, title: 'Day 89 (Feb 21) • Physics: Kinematics Master Grand Revision', syllabus: 'Full Kinematics Master Revision' },
+    { paper: VIBRANT_CURRENT_ELECTRICITY_COMPLETE_PAPER, title: 'Day 91 (Feb 23) • Physics: Current Electricity Master Grand Revision', syllabus: 'Full Current Electricity Master Revision' },
+    { paper: VIBRANT_GEOMETRICAL_OPTICS_COMPLETE_PAPER, title: 'Day 93 (Feb 25) • Physics: Geometrical Optics Master Grand Revision', syllabus: 'Full Geometrical Optics Master Revision' },
+    { paper: VIBRANT_MODERN_PHYSICS_COMPLETE_PAPER, title: 'Day 95 (Feb 27) • Physics: Modern Physics Master Grand Revision', syllabus: 'Full Modern Physics Master Revision' },
+  ];
+
+  const remainingMathPapers: { paper: ExamPaper; title: string; syllabus: string }[] = [
+    { paper: VIBRANT_MATRICES_MARATHON_PAPER, title: 'Day 70 (Feb 2) • Math: Matrices Complete Chapter Marathon (All 146 Qs)', syllabus: 'Complete Vibrant Kota Matrices Mega XII Module' },
+    { paper: VIBRANT_DETERMINANT_MARATHON_PAPER, title: 'Day 72 (Feb 4) • Math: Determinant Complete Chapter Marathon (All 141 Qs)', syllabus: 'Complete Vibrant Kota Determinant Mega XII Module' },
+    { paper: VIBRANT_BINOMIAL_MARATHON_PAPER, title: 'Day 74 (Feb 6) • Math: Binomial Theorem Complete Chapter Marathon (All 108 Qs)', syllabus: 'Complete Vibrant Kota Binomial Micro XI Module' },
+    { paper: VIBRANT_VECTORS_3D_MARATHON_PAPER, title: 'Day 76 (Feb 8) • Math: Vectors & 3-D Complete Chapter Marathon (All 138 Qs)', syllabus: 'Complete Vibrant Kota Vectors & 3D Module' },
+    { paper: VIBRANT_INTEGRATION_MARATHON_PAPER, title: 'Day 78 (Feb 10) • Math: Integration Complete Chapter Marathon (All 190 Qs)', syllabus: 'Complete Vibrant Kota Indefinite & Definite Module' },
+    { paper: VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER, title: 'Day 80 (Feb 12) • Math: Diff Eq & AUC Complete Chapter Marathon (All 192 Qs)', syllabus: 'Complete Vibrant Kota Diff Eq & AUC Mega XII Module' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER, title: 'Day 82 (Feb 14) • Math: LCD Complete Chapter Marathon (All 245 Qs)', syllabus: 'Complete Vibrant Kota LCD Mega XII Module' },
+  ];
+
+  // 1. Schedule Chapter Tests Alternate Days till December 31
   const scheduledTests: ScheduledTest[] = [];
-  const totalDays = Math.max(physicsPapers.length * 2, mathPapers.length * 2);
+  const chapterTotalDays = Math.max(physicsPapers.length * 2, mathPapers.length * 2);
 
   let pIdx = 0;
   let mIdx = 0;
 
-  for (let day = 1; day <= totalDays; day++) {
+  for (let day = 1; day <= chapterTotalDays; day++) {
     const isPhysicsDay = day % 2 === 1; // Odd days: Day 1, Day 3, Day 5...
     const dateStr = getDateForDay(baseDateStr, day - 1);
+    if (dateStr > '2026-12-31') break;
     const isDay1Today = day === 1 && dateStr === baseDateStr;
 
     if (isPhysicsDay && pIdx < physicsPapers.length) {
@@ -253,6 +338,74 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
         syllabus: [syllabusTopic],
       });
       mIdx++;
+    }
+  }
+
+  // 2. Schedule Remaining Schedule (Grand Marathons & Master Revisions) strictly from Feb 1
+  const remainingTotalDays = Math.max(remainingPhysicsPapers.length * 2, remainingMathPapers.length * 2);
+  let remPIdx = 0;
+  let remMIdx = 0;
+
+  for (let remDay = 1; remDay <= remainingTotalDays; remDay++) {
+    const isPhysicsDay = remDay % 2 === 1;
+    // Date begins strictly from Feb 1, 2027
+    const feb1 = new Date(Date.UTC(2027, 1, 1));
+    feb1.setUTCDate(feb1.getUTCDate() + (remDay - 1));
+    const fy = feb1.getUTCFullYear();
+    const fm = String(feb1.getUTCMonth() + 1).padStart(2, '0');
+    const fdt = String(feb1.getUTCDate()).padStart(2, '0');
+    const dateStr = `${fy}-${fm}-${fdt}`;
+
+    const scheduledDayNumber = chapterTotalDays + remDay;
+
+    if (isPhysicsDay && remPIdx < remainingPhysicsPapers.length) {
+      const item = remainingPhysicsPapers[remPIdx];
+      scheduledTests.push({
+        id: `sched-rem-${remDay}-physics`,
+        title: item.title,
+        pattern: 'JEE_MAIN',
+        scheduledDate: dateStr,
+        startTime: '09:00',
+        endTime: '12:00',
+        durationMinutes: item.paper.durationMinutes || 180,
+        totalMarks: item.paper.totalMarks || 200,
+        paperId: item.paper.id,
+        paper: item.paper,
+        status: 'UPCOMING_LOCKED',
+        isLocked: true,
+        scheduledAt: scheduledDayNumber,
+        syllabus: [{
+          id: `syl-rem-${remDay}`,
+          subject: 'physics',
+          name: item.syllabus,
+          completed: false,
+        }],
+      });
+      remPIdx++;
+    } else if (!isPhysicsDay && remMIdx < remainingMathPapers.length) {
+      const item = remainingMathPapers[remMIdx];
+      scheduledTests.push({
+        id: `sched-rem-${remDay}-math`,
+        title: item.title,
+        pattern: 'JEE_MAIN',
+        scheduledDate: dateStr,
+        startTime: '09:00',
+        endTime: '12:00',
+        durationMinutes: item.paper.durationMinutes || 180,
+        totalMarks: item.paper.totalMarks || 200,
+        paperId: item.paper.id,
+        paper: item.paper,
+        status: 'UPCOMING_LOCKED',
+        isLocked: true,
+        scheduledAt: scheduledDayNumber,
+        syllabus: [{
+          id: `syl-rem-${remDay}`,
+          subject: 'mathematics',
+          name: item.syllabus,
+          completed: false,
+        }],
+      });
+      remMIdx++;
     }
   }
 

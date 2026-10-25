@@ -20,6 +20,10 @@ import {
   VIBRANT_BINOMIAL_MARATHON_PAPER,
 } from '../data/moduleMarathonPapers';
 import { VIBRANT_CAPACITANCE_MARATHON_PAPER } from '../data/vibrantCapacitancePapers';
+import { VIBRANT_ROTATIONAL_DYNAMICS_MARATHON_PAPER } from '../data/vibrantRotationalDynamicsData';
+import { VIBRANT_KTG_THERMO_MARATHON_PAPER } from '../data/vibrantKtgThermodynamicsData';
+import { VIBRANT_MAGNETIC_EFFECT_MARATHON_PAPER } from '../data/vibrantMagneticEffectData';
+import { VIBRANT_EMI_AC_MARATHON_PAPER } from '../data/vibrantEmiAcData';
 import { estimateMathonGoPercentile } from '../utils/mathongoPercentileEstimator';
 import {
   Layers,
@@ -98,6 +102,54 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
 
   // 12 Authentic Chapter Marathon Tests with all questions from that chapter (4 min/question)
   const marathonModules: ChapterMarathonModule[] = [
+    {
+      id: 'module-marathon-rotational-dynamics',
+      title: 'Vibrant Kota Physics • Rotational Dynamics Complete Chapter Marathon (154 Qs)',
+      subject: 'physics',
+      chapter: 'Rotational Dynamics',
+      totalQuestions: getPaperQCount(VIBRANT_ROTATIONAL_DYNAMICS_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_ROTATIONAL_DYNAMICS_MARATHON_PAPER) * 4,
+      difficulty: 'JEE Advanced',
+      coachingSource: 'Vibrant Academy Kota Micro XI Module',
+      description: 'Complete 154-question Rotational Dynamics module: Exercise-I, Exercise-II analytical mechanics, and Exercise-III JEE Advanced/Mains archive.',
+      paper: VIBRANT_ROTATIONAL_DYNAMICS_MARATHON_PAPER,
+    },
+    {
+      id: 'module-marathon-ktg-thermo',
+      title: 'Vibrant Kota Physics • KTG & Thermodynamics Complete Chapter Marathon (182 Qs)',
+      subject: 'physics',
+      chapter: 'KTG & Thermodynamics',
+      totalQuestions: getPaperQCount(VIBRANT_KTG_THERMO_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_KTG_THERMO_MARATHON_PAPER) * 4,
+      difficulty: 'JEE Advanced',
+      coachingSource: 'Vibrant Academy Kota Micro XI Module',
+      description: 'Complete 182-question KTG & Thermodynamics module: Gas laws, RMS speeds, First & Second laws, cyclic processes, and JEE archive.',
+      paper: VIBRANT_KTG_THERMO_MARATHON_PAPER,
+    },
+    {
+      id: 'module-marathon-magnetic-effect',
+      title: 'Vibrant Kota Physics • Magnetic Effect of Current Complete Chapter Marathon (194 Qs)',
+      subject: 'physics',
+      chapter: 'Magnetic Effect of Current',
+      totalQuestions: getPaperQCount(VIBRANT_MAGNETIC_EFFECT_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_MAGNETIC_EFFECT_MARATHON_PAPER) * 4,
+      difficulty: 'JEE Advanced',
+      coachingSource: 'Vibrant Academy Kota Mega XII Module',
+      description: 'Complete 194-question Magnetic Effect module: Biot-Savart, Ampere circuital law, Lorentz force, magnetic torque, and JEE archive.',
+      paper: VIBRANT_MAGNETIC_EFFECT_MARATHON_PAPER,
+    },
+    {
+      id: 'module-marathon-emi-ac',
+      title: 'Vibrant Kota Physics • EMI & Alternating Current Complete Chapter Marathon (249 Qs)',
+      subject: 'physics',
+      chapter: 'EMI & Alternating Current',
+      totalQuestions: getPaperQCount(VIBRANT_EMI_AC_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_EMI_AC_MARATHON_PAPER) * 4,
+      difficulty: 'JEE Advanced',
+      coachingSource: 'Vibrant Academy Kota Mega XII Module',
+      description: 'Complete 249-question EMI & AC module: Faraday law, Lenz law, self/mutual inductance, LR/LCR circuits, resonance, and JEE archive.',
+      paper: VIBRANT_EMI_AC_MARATHON_PAPER,
+    },
     {
       id: 'module-marathon-capacitance',
       title: 'Vibrant Kota Physics • Capacitance Complete Chapter Marathon (131 Qs)',

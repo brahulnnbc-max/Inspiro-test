@@ -81,10 +81,12 @@ export default function App() {
           const firstStored = parsed.find((t: any) => t && t.id === 'sched-day-1-physics');
           const isAlignedToToday = firstStored && firstStored.scheduledDate === todayIso;
 
-          // If expired tests exist or Day 1 is not aligned to today:
-          // Purge expired tests and realign fresh master sequence starting today!
-          if (hasPastExpiredTests || !isAlignedToToday) {
-            console.log('[Schedule] Purging expired tests and realigning master schedule to today...');
+          const hasDay35Marathon = parsed.some((t: any) => t && t.title && t.title.includes('Day 35') && t.title.includes('Marathon'));
+
+          // If expired tests exist, Day 1 is not aligned to today, or schedule updated with new chapters:
+          // Purge and realign fresh master sequence starting today!
+          if (hasPastExpiredTests || !isAlignedToToday || hasDay35Marathon || parsed.length !== freshMaster.length) {
+            console.log('[Schedule] Updating master schedule with newly added chapters and Feb 1 schedule...');
             localStorage.setItem('jee_scheduled_tests', JSON.stringify(freshMaster));
             return freshMaster;
           }
