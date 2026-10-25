@@ -25,7 +25,7 @@ import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
 import { PostTestAnalytics } from './components/PostTestAnalytics';
 import { RemedialPracticeModal } from './components/RemedialPracticeModal';
-import { getLiveTestWindowStatus, getActiveLiveTestId } from './utils/scheduleCalculator';
+import { getLiveTestWindowStatus, getActiveLiveTestId, getTodayIso } from './utils/scheduleCalculator';
 
 type AppView = 'HUB' | 'INSTRUCTIONS' | 'CBT_ROOM' | 'ANALYTICS';
 
@@ -67,75 +67,52 @@ export default function App() {
     }
   });
 
-  // Persistent Scheduled Tests (Fixed Static Anchor Series starting 2026-10-25, 09:00-12:00 Window)
+  // Persistent Scheduled Tests (Alternate Day Series starting TODAY with Day 1 Kinematics 1st 50Q)
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
+    const todayIso = getTodayIso();
+    const freshMaster = buildMasterAlternateSchedule(todayIso);
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const storedById = new Map<string, any>();
-          const customUserTests: ScheduledTest[] = [];
-          parsed.forEach((t: any) => {
-            if (t && typeof t.id === 'string') {
-              storedById.set(t.id, t);
-              if (!t.id.startsWith('sched-day-')) {
-                customUserTests.push({
-                  ...t,
-                  status: t.status === 'COMPLETED' ? 'COMPLETED' : 'UPCOMING_LOCKED',
-                });
-              }
-            }
-          });
+          // Purge any past expired tests before today
+          const hasPastExpiredTests = parsed.some((t: any) => t && t.scheduledDate && t.scheduledDate < todayIso);
+          const firstStored = parsed.find((t: any) => t && t.id === 'sched-day-1-physics');
+          const isAlignedToToday = firstStored && firstStored.scheduledDate === todayIso;
 
-          // Always refresh master schedule entries with latest scanned papers, fixed dates, and 09:00-12:00 window
-          const refreshedMaster = SAMPLE_SCHEDULED_TESTS.map((freshTest) => {
+          // If expired tests exist or Day 1 is not aligned to today:
+          // Purge expired tests and realign fresh master sequence starting today!
+          if (hasPastExpiredTests || !isAlignedToToday) {
+            console.log('[Schedule] Purging expired tests and realigning master schedule to today...');
+            localStorage.setItem('jee_scheduled_tests', JSON.stringify(freshMaster));
+            return freshMaster;
+          }
+
+          const storedById = new Map<string, any>(parsed.map((t: any) => [t.id, t]));
+          const refreshed = freshMaster.map((freshTest) => {
             const prev = storedById.get(freshTest.id);
             if (!prev) return freshTest;
-            const prevCompletedById = new Map<string, boolean>(
-              Array.isArray(prev.syllabus)
-                ? prev.syllabus.map((s: any) => [s.id, Boolean(s.completed)])
-                : []
-            );
             return {
               ...freshTest,
-              status: prev.status === 'COMPLETED' ? ('COMPLETED' as const) : ('UPCOMING_LOCKED' as const),
+              status: prev.status === 'COMPLETED' ? ('COMPLETED' as const) : freshTest.status,
               score: prev.score,
-              syllabus: freshTest.syllabus.map((top) => ({
-                ...top,
-                completed: prevCompletedById.get(top.id) ?? top.completed,
-              })),
             };
           });
-
-          // Deduplicate strictly by scheduledDate: ensure AT MOST ONE test per day
-          const dateMap = new Map<string, ScheduledTest>();
-          refreshedMaster.forEach((t) => {
-            if (!dateMap.has(t.scheduledDate)) {
-              dateMap.set(t.scheduledDate, t);
-            }
-          });
-          customUserTests.forEach((t) => {
-            if (!dateMap.has(t.scheduledDate)) {
-              dateMap.set(t.scheduledDate, t);
-            }
-          });
-          return Array.from(dateMap.values()).sort((a, b) =>
-            a.scheduledDate.localeCompare(b.scheduledDate)
-          );
+          return refreshed;
         }
       }
-      return SAMPLE_SCHEDULED_TESTS;
+      localStorage.setItem('jee_scheduled_tests', JSON.stringify(freshMaster));
+      return freshMaster;
     } catch {
-      return SAMPLE_SCHEDULED_TESTS;
+      return freshMaster;
     }
   });
 
-  // Re-align coaching roadmap fresh:
-  // Physics: Kinematics, Electrostatics, Current Electricity, Geometrical Optics, Modern Physics
-  // Mathematics: Matrices, Determinant, Binomial Theorem, Vectors & 3-D, Integration, Diff Eq & AUC, LCD
+  // Re-align coaching roadmap fresh starting today:
+  // Day 1: Kinematics 1st 50Q (Today), Day 2: Matrices Test 01, Day 3: Kinematics Remainder, Day 4: Matrices Test 02, Day 5: Electrostatics 1st 50Q...
   const handleResetCoachingSchedule = () => {
-    const fresh = buildMasterAlternateSchedule(SCHEDULE_BASE_DATE);
+    const fresh = buildMasterAlternateSchedule(getTodayIso());
     setScheduledTests(fresh);
     try {
       localStorage.setItem('jee_scheduled_tests', JSON.stringify(fresh));

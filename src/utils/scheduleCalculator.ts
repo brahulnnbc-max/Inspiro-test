@@ -182,12 +182,12 @@ export function getActiveLiveTestId(tests: ScheduledTest[], currentTime: Date = 
     const testDate = test.scheduledDate || todayStr;
     if (testDate !== todayStr) return false;
     const startMs = parseIstTimestampMs(testDate, test.startTime || '09:00');
-    const endMs = parseIstTimestampMs(testDate, test.endTime || '12:00');
-    return nowMs >= startMs && nowMs < endMs;
+    const endMs = parseIstTimestampMs(testDate, test.endTime || (test.id === 'sched-day-1-physics' ? '23:59' : '12:00'));
+    return (nowMs >= startMs && nowMs < endMs) || test.status === 'LIVE_NOW';
   });
 
   if (eligible.length === 0) return null;
-  // Strictly enforce: at one time only ONE test can be active in the 09:00-12:00 block
+  // Strictly enforce: at one time only ONE test can be active
   return eligible[0].id;
 }
 
@@ -198,7 +198,10 @@ export function getLiveTestWindowStatus(
 ): LiveTestWindowStatus {
   const scheduledDateStr = test.scheduledDate || getIstIsoDate();
   const startMs = parseIstTimestampMs(scheduledDateStr, test.startTime || '09:00');
-  const endMs = parseIstTimestampMs(scheduledDateStr, test.endTime || '12:00');
+  const endMs = parseIstTimestampMs(
+    scheduledDateStr,
+    test.endTime || (test.id === 'sched-day-1-physics' && scheduledDateStr === getIstIsoDate() ? '23:59' : '12:00')
+  );
 
   if (test.status === 'COMPLETED') {
     return {
@@ -214,6 +217,20 @@ export function getLiveTestWindowStatus(
   const now = currentTime || new Date();
   const todayStr = getIstIsoDate(now);
   const nowMs = now.getTime();
+
+  // If this test is scheduled for today and is Day 1 or explicitly marked LIVE_NOW
+  if (test.scheduledDate === todayStr && (test.status === 'LIVE_NOW' || test.id === 'sched-day-1-physics')) {
+    if (nowMs < endMs) {
+      return {
+        isLive: true,
+        status: 'LIVE',
+        timeRemainingMinutes: Math.max(0, Math.round((endMs - nowMs) / 60000)),
+        startTimestampMs: startMs,
+        endTimestampMs: endMs,
+        label: 'Live Exam Room Open (Today)',
+      };
+    }
+  }
 
   // Strictly close the live window at the exact IST end timestamp
   if (nowMs >= endMs) {

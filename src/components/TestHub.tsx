@@ -708,7 +708,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                     type="button"
                     onClick={onResetCoachingSchedule}
                     className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="Re-align full series: Day 1 Physics (Electrostatics), Day 2 Math (Vectors & 3-D), Day 13 Kinematics, Day 17 Geometrical Optics"
+                    title="Re-align full series starting today: Day 1 Kinematics 1st 50Q, Day 2 Matrices Test 01, Day 3 Kinematics Remainder, Day 4 Matrices Test 02, Day 5 Electrostatics 1st 50Q"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
                     <span>Re-align Series</span>
@@ -797,16 +797,17 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 {/* Day 1: Today Status */}
-                <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80 flex items-start gap-2.5">
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-zinc-800 text-zinc-300 shrink-0">
+                <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-600/40 flex items-start gap-2.5">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-300 shrink-0">
                     TODAY ({todayStr})
                   </span>
                   <div className="space-y-0.5">
                     <div className="font-semibold text-white">
-                      Day 1 • Physics: Kinematics CBT Mock Test 01
+                      Day 1 • Physics: Kinematics CBT Mock Test 01 (1st 50Q Sprint • Q1 to Q50)
                     </div>
-                    <div className="text-[11px] text-zinc-400">
-                      Slot: 09:00 - 12:00 IST • <strong className="text-red-400">Time&apos;s Up (Window Closed)</strong>
+                    <div className="text-[11px] text-emerald-300/90 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <strong>LIVE NOW • Test Series Active Today (09:00 - 23:59 IST)</strong>
                     </div>
                   </div>
                 </div>
@@ -818,7 +819,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                   </span>
                   <div className="space-y-0.5">
                     <div className="font-semibold text-white">
-                      Day 2 • Math: Matrices CBT Mock Test 01
+                      Day 2 • Math: Matrices CBT Mock Test 01 (Types & Operations • Q1 to Q25)
                     </div>
                     <div className="text-[11px] text-amber-300/90">
                       Slot: 09:00 - 12:00 IST • <strong>Starts Tomorrow @ 09:00 AM IST</strong>
