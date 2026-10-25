@@ -25,7 +25,7 @@ import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
 import { PostTestAnalytics } from './components/PostTestAnalytics';
 import { RemedialPracticeModal } from './components/RemedialPracticeModal';
-import { getLiveTestWindowStatus } from './utils/scheduleCalculator';
+import { getLiveTestWindowStatus, getActiveLiveTestId } from './utils/scheduleCalculator';
 
 type AppView = 'HUB' | 'INSTRUCTIONS' | 'CBT_ROOM' | 'ANALYTICS';
 
@@ -108,7 +108,21 @@ export default function App() {
             };
           });
 
-          return [...customUserTests, ...refreshedMaster];
+          // Deduplicate strictly by scheduledDate: ensure AT MOST ONE test per day
+          const dateMap = new Map<string, ScheduledTest>();
+          refreshedMaster.forEach((t) => {
+            if (!dateMap.has(t.scheduledDate)) {
+              dateMap.set(t.scheduledDate, t);
+            }
+          });
+          customUserTests.forEach((t) => {
+            if (!dateMap.has(t.scheduledDate)) {
+              dateMap.set(t.scheduledDate, t);
+            }
+          });
+          return Array.from(dateMap.values()).sort((a, b) =>
+            a.scheduledDate.localeCompare(b.scheduledDate)
+          );
         }
       }
       return SAMPLE_SCHEDULED_TESTS;
@@ -439,9 +453,10 @@ export default function App() {
       return;
     }
 
-    // Enforce strict IST live window (09:00 - 12:00 IST)
-    const windowInfo = getLiveTestWindowStatus(test, new Date());
-    if (!windowInfo.isLive) {
+    // Enforce strict IST live window (09:00 - 12:00 IST) and single active test policy
+    const activeLiveId = getActiveLiveTestId(scheduledTests, new Date());
+    const windowInfo = getLiveTestWindowStatus(test, new Date(), activeLiveId);
+    if (!windowInfo.isLive || activeLiveId !== test.id) {
       return;
     }
 

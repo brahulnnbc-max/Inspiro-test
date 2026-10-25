@@ -41,7 +41,19 @@ import {
   generateLockedSchedule,
   parseScheduleCommand,
   getLiveTestWindowStatus,
+  getActiveLiveTestId,
 } from '../utils/scheduleCalculator';
+import {
+  playTenMinuteWarningAlarm,
+  playLiveStartedAlarm,
+  playFifteenMinuteClosingAlarm,
+  playExamSubmittedChime,
+  isAlarmSoundEnabled,
+  setAlarmSoundEnabled,
+  hasAlarmRung,
+  markAlarmAsRung,
+  playTestAlarm,
+} from '../utils/examAlarm';
 import {
   Play,
   Clock,
@@ -70,6 +82,8 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface TestHubProps {
@@ -201,12 +215,27 @@ export const TestHub: React.FC<TestHubProps> = ({
 
   const creatorRef = useRef<HTMLDivElement | null>(null);
 
+  // Alarm sound preference state
+  const [alarmSoundEnabled, setAlarmSoundEnabledState] = useState<boolean>(() => isAlarmSoundEnabled());
+  const [showAlarmDetailsModal, setShowAlarmDetailsModal] = useState<boolean>(false);
+
+  const toggleSound = () => {
+    const next = !alarmSoundEnabled;
+    setAlarmSoundEnabledState(next);
+    setAlarmSoundEnabled(next);
+  };
+
   // Today, Tomorrow, and clock strings strictly in IST (Asia/Kolkata, UTC+05:30)
   const todayStr = useMemo(() => getIstIsoDate(currentTime), [currentTime]);
   const tomorrowStr = useMemo(() => getTomorrowIstIso(currentTime), [currentTime]);
   const istClockStr = useMemo(() => formatIstTime(currentTime), [currentTime]);
 
-  // Categorize Tests and evaluate strict 09:00-12:00 live window states
+  // Strictly enforce single live test at a time in 09:00 - 12:00 IST block
+  const activeLiveTestId = useMemo(() => {
+    return getActiveLiveTestId(scheduledTests, currentTime);
+  }, [scheduledTests, currentTime]);
+
+  // Categorize Tests and evaluate strict 09:00-12:00 live window states (strictly max 1 test live)
   const { todayTests, tomorrowTests, upcomingTests, missedTests, completedTests, activeReminders } = useMemo(() => {
     const today: { test: ScheduledTest; windowInfo: ReturnType<typeof getLiveTestWindowStatus> }[] = [];
     const tomorrow: { test: ScheduledTest; windowInfo: ReturnType<typeof getLiveTestWindowStatus> }[] = [];
@@ -221,7 +250,7 @@ export const TestHub: React.FC<TestHubProps> = ({
     );
 
     sorted.forEach((test) => {
-      const windowInfo = getLiveTestWindowStatus(test, currentTime);
+      const windowInfo = getLiveTestWindowStatus(test, currentTime, activeLiveTestId);
 
       if (test.status === 'COMPLETED') {
         completed.push(test);
@@ -238,7 +267,7 @@ export const TestHub: React.FC<TestHubProps> = ({
             id: `start-rem-${test.id}`,
             title: test.title,
             type: 'STARTING_SOON',
-            message: `⏰ UPCOMING LIVE TEST REMINDER: Starts at ${test.startTime}! (Only ${windowInfo.timeRemainingMinutes} mins left to start).`,
+            message: `⏰ UPCOMING LIVE TEST ALARM: Starts at ${test.startTime}! (Only ${windowInfo.timeRemainingMinutes} mins left to start).`,
           });
         } else if (windowInfo.status === 'ENDING_SOON') {
           reminders.push({
@@ -265,9 +294,55 @@ export const TestHub: React.FC<TestHubProps> = ({
       completedTests: completed,
       activeReminders: reminders,
     };
-  }, [scheduledTests, todayStr, tomorrowStr, currentTime]);
+  }, [scheduledTests, todayStr, tomorrowStr, currentTime, activeLiveTestId]);
 
-  // Unified homepage filter matching Schedule Section (strictly live only within 09:00-12:00 window)
+  // Automated Audio Alarm Monitoring:
+  // 1. 10 minutes before test live alarm (08:50 AM IST)
+  // 2. Before live / test live started alarm (09:00 AM IST)
+  // 3. 15 minutes before test ends warning alarm (11:45 AM IST)
+  useEffect(() => {
+    const todayTestObj = scheduledTests.find(
+      (t) => t.scheduledDate === todayStr && t.status !== 'COMPLETED'
+    );
+    if (!todayTestObj) return;
+
+    const windowInfo = getLiveTestWindowStatus(todayTestObj, currentTime, activeLiveTestId);
+
+    // 1. 10 minutes before live (08:50 AM IST)
+    if (
+      windowInfo.status === 'STARTING_SOON' &&
+      windowInfo.timeRemainingMinutes <= 10 &&
+      windowInfo.timeRemainingMinutes > 0
+    ) {
+      if (!hasAlarmRung(todayTestObj.id, '10_MIN_BEFORE')) {
+        playTenMinuteWarningAlarm();
+        markAlarmAsRung(todayTestObj.id, '10_MIN_BEFORE');
+      }
+    }
+
+    // 2. Before live / Live window opens (09:00 AM IST)
+    if (windowInfo.isLive && windowInfo.status === 'LIVE') {
+      if (!hasAlarmRung(todayTestObj.id, 'LIVE_START')) {
+        playLiveStartedAlarm();
+        markAlarmAsRung(todayTestObj.id, 'LIVE_START');
+      }
+    }
+
+    // 3. 15 minutes before window closing (11:45 AM IST)
+    if (
+      windowInfo.isLive &&
+      windowInfo.status === 'ENDING_SOON' &&
+      windowInfo.timeRemainingMinutes <= 15 &&
+      windowInfo.timeRemainingMinutes > 0
+    ) {
+      if (!hasAlarmRung(todayTestObj.id, '15_MIN_BEFORE_END')) {
+        playFifteenMinuteClosingAlarm();
+        markAlarmAsRung(todayTestObj.id, '15_MIN_BEFORE_END');
+      }
+    }
+  }, [scheduledTests, todayStr, currentTime, activeLiveTestId]);
+
+  // Unified homepage filter matching Schedule Section (strictly at most 1 test live in 09:00-12:00 window)
   const filteredHomeTests = useMemo(() => {
     const sorted = [...scheduledTests].sort((a, b) =>
       a.scheduledDate.localeCompare(b.scheduledDate)
@@ -277,7 +352,7 @@ export const TestHub: React.FC<TestHubProps> = ({
     if (homeFilter === 'LIVE') {
       return sorted.filter((t) => {
         if (t.status === 'COMPLETED') return false;
-        const info = getLiveTestWindowStatus(t, currentTime);
+        const info = getLiveTestWindowStatus(t, currentTime, activeLiveTestId);
         return info.isLive;
       });
     }
@@ -291,7 +366,7 @@ export const TestHub: React.FC<TestHubProps> = ({
       return sorted.filter((t) => t.status === 'COMPLETED');
     }
     return sorted;
-  }, [scheduledTests, homeFilter, currentTime, tomorrowStr]);
+  }, [scheduledTests, homeFilter, currentTime, tomorrowStr, activeLiveTestId]);
 
   // Overall Stats
   const totalCompletedCount = savedAttempts.length;
@@ -439,6 +514,15 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               <span>NTA & MathonGo CBT</span>
             </span>
+            <button
+              onClick={() => setShowAlarmDetailsModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              title="Test Alarms & Reminders (10m before live, live start, 15m before end, submit)"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Test Alarms</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </button>
             <button
               onClick={() => setIsAdminModalOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all cursor-pointer"
@@ -687,11 +771,107 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
               </div>
             </div>
 
+            {/* Single Live Test Schedule & Alarm Banner */}
+            <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs font-bold text-white tracking-wide uppercase">
+                    Strict Single Active Test Rule (09:00 - 12:00 IST)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono text-zinc-400">
+                    Alternate Days Cadence • Zero Clashes
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowAlarmDetailsModal(true)}
+                    className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Bell className="w-3 h-3 text-amber-400" />
+                    <span>Audio Alarms Active</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {/* Day 1: Today Status */}
+                <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800/80 flex items-start gap-2.5">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-zinc-800 text-zinc-300 shrink-0">
+                    TODAY ({todayStr})
+                  </span>
+                  <div className="space-y-0.5">
+                    <div className="font-semibold text-white">
+                      Day 1 • Physics: Kinematics CBT Mock Test 01
+                    </div>
+                    <div className="text-[11px] text-zinc-400">
+                      Slot: 09:00 - 12:00 IST • <strong className="text-red-400">Time&apos;s Up (Window Closed)</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Day 2: Tomorrow Status */}
+                <div className="p-3 rounded-lg bg-zinc-900/60 border border-amber-600/30 flex items-start gap-2.5">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 shrink-0">
+                    TOMORROW ({tomorrowStr})
+                  </span>
+                  <div className="space-y-0.5">
+                    <div className="font-semibold text-white">
+                      Day 2 • Math: Matrices CBT Mock Test 01
+                    </div>
+                    <div className="text-[11px] text-amber-300/90">
+                      Slot: 09:00 - 12:00 IST • <strong>Starts Tomorrow @ 09:00 AM IST</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Audio Alarm Previews */}
+              <div className="pt-2 border-t border-zinc-900 flex items-center justify-between flex-wrap gap-2 text-[11px]">
+                <span className="text-zinc-400 font-medium">Automatic Exam Alarm Rings:</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => playTestAlarm('10_MIN_BEFORE')}
+                    className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Ring 10 minutes before test live alarm"
+                  >
+                    <span>⏰ 10m Ring</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => playTestAlarm('LIVE_START')}
+                    className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Ring test live start bell"
+                  >
+                    <span>🔔 Live Ring</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => playTestAlarm('15_MIN_BEFORE_END')}
+                    className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Ring 15 minutes before end warning alarm"
+                  >
+                    <span>⚠️ 15m Ring</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => playTestAlarm('AFTER_SUBMIT')}
+                    className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Ring after submit completion chime"
+                  >
+                    <span>🎉 Submit Chime</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Test Cards List matching schedule section */}
             <div className="space-y-4">
               {filteredHomeTests.length > 0 ? (
                 filteredHomeTests.map((test, index) => {
-                  const windowInfo = getLiveTestWindowStatus(test, currentTime);
+                  const windowInfo = getLiveTestWindowStatus(test, currentTime, activeLiveTestId);
                   const isExpanded = !!expandedTopicTestIds[test.id];
                   const completedTopics = test.syllabus.filter((t) => t.completed).length;
                   const isCompleted = test.status === 'COMPLETED';
@@ -1140,6 +1320,132 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
         onClearAllScheduledTests={onClearAllScheduledTests}
         onStartTestDirectly={onSelectExam}
       />
+
+      {/* Test Alarms & Bell Reminders Modal */}
+      {showAlarmDetailsModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-bold text-white">Exam Bell & Alarm Reminders</h3>
+              </div>
+              <button
+                onClick={() => setShowAlarmDetailsModal(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-900 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Official CBT exam audio alarms trigger automatically for scheduled live tests (09:00 - 12:00 IST). You can test and preview all 4 bell chimes below:
+            </p>
+
+            <div className="space-y-3">
+              {/* Alarm 1: 10m before live */}
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>1. 10 Minutes Before Live Alarm (08:50 AM IST)</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-400">Gentle exam readiness chime alerting student to take seat</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => playTestAlarm('10_MIN_BEFORE')}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  Ring Preview
+                </button>
+              </div>
+
+              {/* Alarm 2: Live start ring */}
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-red-500" />
+                    <span>2. Live Exam Start Ring (09:00 AM IST)</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-400">Official CBT live start bell opening test question palette</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => playTestAlarm('LIVE_START')}
+                  className="px-3 py-1.5 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  Ring Preview
+                </button>
+              </div>
+
+              {/* Alarm 3: 15m before end warning */}
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                    <span>3. 15 Minutes Before End Warning (11:45 AM IST)</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-400">Urgent double warning chime to review marked questions</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => playTestAlarm('15_MIN_BEFORE_END')}
+                  className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  Ring Preview
+                </button>
+              </div>
+
+              {/* Alarm 4: After submit chime */}
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>4. After Submitting Exam Chime</span>
+                  </div>
+                  <div className="text-[11px] text-zinc-400">Harmonious confirmation chord confirming successful submission</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => playTestAlarm('AFTER_SUBMIT')}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  Ring Preview
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-zinc-800 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={toggleSound}
+                className="flex items-center gap-2 text-xs font-semibold text-zinc-300 hover:text-white cursor-pointer"
+              >
+                {alarmSoundEnabled ? (
+                  <>
+                    <Volume2 className="w-4 h-4 text-emerald-400" />
+                    <span>Audio Alarms: <strong className="text-emerald-400">Enabled</strong></span>
+                  </>
+                ) : (
+                  <>
+                    <VolumeX className="w-4 h-4 text-red-400" />
+                    <span>Audio Alarms: <strong className="text-red-400">Muted</strong></span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAlarmDetailsModal(false)}
+                className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

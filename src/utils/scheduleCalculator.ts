@@ -173,7 +173,29 @@ export interface LiveTestWindowStatus {
   label: string;
 }
 
-export function getLiveTestWindowStatus(test: ScheduledTest, currentTime?: Date): LiveTestWindowStatus {
+export function getActiveLiveTestId(tests: ScheduledTest[], currentTime: Date = new Date()): string | null {
+  const nowMs = currentTime.getTime();
+  const todayStr = getIstIsoDate(currentTime);
+
+  const eligible = tests.filter((test) => {
+    if (test.status === 'COMPLETED') return false;
+    const testDate = test.scheduledDate || todayStr;
+    if (testDate !== todayStr) return false;
+    const startMs = parseIstTimestampMs(testDate, test.startTime || '09:00');
+    const endMs = parseIstTimestampMs(testDate, test.endTime || '12:00');
+    return nowMs >= startMs && nowMs < endMs;
+  });
+
+  if (eligible.length === 0) return null;
+  // Strictly enforce: at one time only ONE test can be active in the 09:00-12:00 block
+  return eligible[0].id;
+}
+
+export function getLiveTestWindowStatus(
+  test: ScheduledTest,
+  currentTime?: Date,
+  activeLiveTestId?: string | null
+): LiveTestWindowStatus {
   const scheduledDateStr = test.scheduledDate || getIstIsoDate();
   const startMs = parseIstTimestampMs(scheduledDateStr, test.startTime || '09:00');
   const endMs = parseIstTimestampMs(scheduledDateStr, test.endTime || '12:00');
@@ -206,6 +228,18 @@ export function getLiveTestWindowStatus(test: ScheduledTest, currentTime?: Date)
   }
 
   if (nowMs >= startMs && nowMs < endMs) {
+    // Single live test enforcement: if activeLiveTestId is specified, only that test is live
+    if (activeLiveTestId !== undefined && activeLiveTestId !== null && activeLiveTestId !== test.id) {
+      return {
+        isLive: false,
+        status: 'UPCOMING',
+        timeRemainingMinutes: 0,
+        startTimestampMs: startMs,
+        endTimestampMs: endMs,
+        label: 'Queued (Single Test Limit)',
+      };
+    }
+
     const minsToEnd = Math.max(1, Math.ceil((endMs - nowMs) / 60000));
     if (minsToEnd <= 30) {
       return {

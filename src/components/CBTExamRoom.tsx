@@ -14,6 +14,12 @@ import { ScratchpadModal } from './ScratchpadModal';
 import { InspiroLogo } from './InspiroLogo';
 import { getIstIsoDate, parseIstTimestampMs } from '../utils/scheduleCalculator';
 import {
+  playFifteenMinuteClosingAlarm,
+  playExamSubmittedChime,
+  hasAlarmRung,
+  markAlarmAsRung,
+} from '../utils/examAlarm';
+import {
   Clock,
   User,
   Monitor,
@@ -300,6 +306,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         const currentRemaining = Math.max(0, Math.floor((sessionData.scheduledEndTimestamp - now) / 1000));
         setSecondsRemaining(currentRemaining);
 
+        // 15-minute remaining warning alarm
+        if (currentRemaining <= 900 && currentRemaining > 0) {
+          if (!hasAlarmRung(paper.id, '15_MIN_BEFORE_END')) {
+            playFifteenMinuteClosingAlarm();
+            markAlarmAsRung(paper.id, '15_MIN_BEFORE_END');
+          }
+        }
+
         if (currentRemaining <= 0) {
           clearInterval(timer);
           handleFinalSubmit();
@@ -479,6 +493,10 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       console.warn('Failed to clean up exam session', e);
     }
     const latest = latestStateRef.current;
+    // Ring celebration / completion chime on exam submission
+    playExamSubmittedChime();
+    markAlarmAsRung(paper.id, 'AFTER_SUBMIT');
+
     const attempt: StudentAttempt = {
       id: `attempt-${Date.now()}`,
       examId: paper.id,

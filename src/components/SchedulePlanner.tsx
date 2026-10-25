@@ -46,6 +46,7 @@ import {
   parseIstTimestampMs,
   addDaysToIsoDate,
   getLiveTestWindowStatus,
+  getActiveLiveTestId,
 } from '../utils/scheduleCalculator';
 
 interface SchedulePlannerProps {
@@ -224,26 +225,31 @@ MATHEMATICS:
     }
   };
 
+  // Strictly enforce single live test at a time in 09:00 - 12:00 IST block
+  const activeLiveTestId = useMemo(() => {
+    return getActiveLiveTestId(scheduledTests, currentTime);
+  }, [scheduledTests, currentTime]);
+
   // Active target test (strictly live test first, otherwise next upcoming non-missed test)
   const nextTargetTest = useMemo(() => {
     const sorted = [...scheduledTests].sort((a, b) =>
       a.scheduledDate.localeCompare(b.scheduledDate)
     );
     return (
-      sorted.find((t) => t.status !== 'COMPLETED' && getLiveTestWindowStatus(t, currentTime).isLive) ||
+      sorted.find((t) => t.status !== 'COMPLETED' && getLiveTestWindowStatus(t, currentTime, activeLiveTestId).isLive) ||
       sorted.find((t) => {
         if (t.status === 'COMPLETED') return false;
-        const st = getLiveTestWindowStatus(t, currentTime).status;
+        const st = getLiveTestWindowStatus(t, currentTime, activeLiveTestId).status;
         return st !== 'MISSED';
       }) ||
       sorted[0]
     );
-  }, [scheduledTests, currentTime]);
+  }, [scheduledTests, currentTime, activeLiveTestId]);
 
   const nextTargetIsLive = useMemo(() => {
     if (!nextTargetTest || nextTargetTest.status === 'COMPLETED') return false;
-    return getLiveTestWindowStatus(nextTargetTest, currentTime).isLive;
-  }, [nextTargetTest, currentTime]);
+    return getLiveTestWindowStatus(nextTargetTest, currentTime, activeLiveTestId).isLive;
+  }, [nextTargetTest, currentTime, activeLiveTestId]);
 
   // Calculate countdown to next scheduled IST timestamp
   const getCountdownString = (dateStr: string, timeStr: string) => {
@@ -467,17 +473,17 @@ MATHEMATICS:
     );
     if (filter === 'ALL') return sorted;
     if (filter === 'LIVE') {
-      return sorted.filter((t) => t.status !== 'COMPLETED' && getLiveTestWindowStatus(t, currentTime).isLive);
+      return sorted.filter((t) => t.status !== 'COMPLETED' && getLiveTestWindowStatus(t, currentTime, activeLiveTestId).isLive);
     }
     if (filter === 'UPCOMING') {
       return sorted.filter((t) => {
         if (t.status === 'COMPLETED') return false;
-        const info = getLiveTestWindowStatus(t, currentTime);
+        const info = getLiveTestWindowStatus(t, currentTime, activeLiveTestId);
         return !info.isLive && info.status !== 'MISSED';
       });
     }
     return sorted.filter((t) => t.status === 'COMPLETED');
-  }, [scheduledTests, filter, currentTime]);
+  }, [scheduledTests, filter, currentTime, activeLiveTestId]);
 
   return (
     <div className="space-y-8 text-white">
@@ -1186,7 +1192,7 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
         <div className="space-y-4">
           {filteredTests.map((test, index) => {
             const isExpanded = !!expandedTestIds[test.id];
-            const windowInfo = getLiveTestWindowStatus(test, currentTime);
+            const windowInfo = getLiveTestWindowStatus(test, currentTime, activeLiveTestId);
             const isLive = test.status !== 'COMPLETED' && windowInfo.isLive;
             const completedTopics = test.syllabus.filter((t) => t.completed).length;
 
