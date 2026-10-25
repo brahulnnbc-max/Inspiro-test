@@ -1,20 +1,64 @@
 import { ExamPaper, ScheduledTest, SyllabusTopic } from '../types/exam';
 
-export function getIsoDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
+// India Standard Time (IST = UTC+05:30) fixed offset in milliseconds
+export const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+
+/**
+ * Returns YYYY-MM-DD strictly in India Standard Time (Asia/Kolkata, UTC+05:30),
+ * regardless of the client browser or server OS local timezone.
+ */
+export function getIstIsoDate(date: Date = new Date()): string {
+  const ist = new Date(date.getTime() + IST_OFFSET_MS);
+  const y = ist.getUTCFullYear();
+  const m = String(ist.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(ist.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
 
+export function getTomorrowIstIso(date: Date = new Date()): string {
+  return getIstIsoDate(new Date(date.getTime() + 24 * 60 * 60 * 1000));
+}
+
+export function formatIstTime(date: Date = new Date()): string {
+  const ist = new Date(date.getTime() + IST_OFFSET_MS);
+  const hh = String(ist.getUTCHours()).padStart(2, '0');
+  const mm = String(ist.getUTCMinutes()).padStart(2, '0');
+  const ss = String(ist.getUTCSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss} IST`;
+}
+
+/**
+ * Parses a YYYY-MM-DD date and HH:MM(:SS) clock string as an authoritative IST (+05:30) epoch timestamp (ms).
+ * Guarantees every student's live test opens and ends at the exact same IST timestamp.
+ */
+export function parseIstTimestampMs(dateStr: string, timeStr: string = '09:00'): number {
+  const cleanDate = (dateStr || getIstIsoDate()).trim();
+  const parts = (timeStr || '09:00').trim().split(':');
+  const hh = String(Math.max(0, Math.min(23, parseInt(parts[0] || '9', 10) || 0))).padStart(2, '0');
+  const mm = String(Math.max(0, Math.min(59, parseInt(parts[1] || '0', 10) || 0))).padStart(2, '0');
+  const ss = String(Math.max(0, Math.min(59, parseInt(parts[2] || '0', 10) || 0))).padStart(2, '0');
+  return new Date(`${cleanDate}T${hh}:${mm}:${ss}+05:30`).getTime();
+}
+
+export function addDaysToIsoDate(baseDateStr: string, daysToAdd: number): string {
+  const anchorMs = new Date(`${baseDateStr}T00:00:00Z`).getTime();
+  const target = new Date(anchorMs + daysToAdd * 24 * 60 * 60 * 1000);
+  const y = target.getUTCFullYear();
+  const m = String(target.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(target.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export function getIsoDate(date: Date = new Date()): string {
+  return getIstIsoDate(date);
+}
+
 export function getTodayIso(): string {
-  return getIsoDate(new Date());
+  return getIstIsoDate(new Date());
 }
 
 export function getTomorrowIso(): string {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return getIsoDate(tomorrow);
+  return getTomorrowIstIso(new Date());
 }
 
 export function parseScheduleCommand(command: string): {
@@ -64,9 +108,9 @@ export function parseScheduleCommand(command: string): {
   if (dateMatch) {
     startDate = dateMatch[1];
   } else if (lower.includes('tomorrow')) {
-    startDate = getTomorrowIso();
+    startDate = getTomorrowIstIso();
   } else if (lower.includes('today')) {
-    startDate = getTodayIso();
+    startDate = getIstIsoDate();
   }
 
   return { mode, startDate, startTime, endTime, durationMonths: 1 };
@@ -83,10 +127,7 @@ export interface GenerateScheduleOptions {
 
 export function generateLockedSchedule(options: GenerateScheduleOptions): ScheduledTest[] {
   const { paper, mode = 'ALTERNATE_DAYS', startTime = '09:00', endTime = '12:00' } = options;
-  const start = options.startDate ? new Date(options.startDate + 'T00:00:00') : new Date();
-  if (!options.startDate) {
-    start.setDate(start.getDate() + 1);
-  }
+  const baseDateStr = options.startDate || getTomorrowIstIso();
 
   const syllabus: SyllabusTopic[] = paper.sections.map((s) => ({
     id: `syl-${s.id}`,
@@ -100,9 +141,7 @@ export function generateLockedSchedule(options: GenerateScheduleOptions): Schedu
   const stepDays = mode === 'WEEKLY' ? 7 : mode === 'BIWEEKLY' ? 14 : mode === 'MONTHLY' ? 30 : 2;
 
   for (let i = 0; i < count; i++) {
-    const cur = new Date(start);
-    cur.setDate(start.getDate() + i * stepDays);
-    const dateStr = getIsoDate(cur);
+    const dateStr = addDaysToIsoDate(baseDateStr, i * stepDays);
     const testId = `locked-sched-${Date.now()}-${i + 1}`;
     tests.push({
       id: testId,
@@ -129,41 +168,83 @@ export interface LiveTestWindowStatus {
   isLive: boolean;
   status: 'STARTING_SOON' | 'ENDING_SOON' | 'LIVE' | 'UPCOMING' | 'MISSED' | 'COMPLETED';
   timeRemainingMinutes: number;
+  startTimestampMs: number;
+  endTimestampMs: number;
   label: string;
 }
 
 export function getLiveTestWindowStatus(test: ScheduledTest, currentTime?: Date): LiveTestWindowStatus {
+  const scheduledDateStr = test.scheduledDate || getIstIsoDate();
+  const startMs = parseIstTimestampMs(scheduledDateStr, test.startTime || '09:00');
+  const endMs = parseIstTimestampMs(scheduledDateStr, test.endTime || '12:00');
+
   if (test.status === 'COMPLETED') {
-    return { isLive: false, status: 'COMPLETED', timeRemainingMinutes: 0, label: 'Completed' };
+    return {
+      isLive: false,
+      status: 'COMPLETED',
+      timeRemainingMinutes: 0,
+      startTimestampMs: startMs,
+      endTimestampMs: endMs,
+      label: 'Completed (Single Attempt)',
+    };
   }
 
   const now = currentTime || new Date();
-  const todayStr = getIsoDate(now);
-  const scheduledDateStr = test.scheduledDate;
-
-  const [startH, startM] = (test.startTime || '09:00').split(':').map(Number);
-  const [endH, endM] = (test.endTime || '12:00').split(':').map(Number);
-
-  const startMs = new Date(`${scheduledDateStr}T${String(startH).padStart(2, '0')}:${String(startM).padStart(2, '0')}:00`).getTime();
-  const endMs = new Date(`${scheduledDateStr}T${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}:00`).getTime();
+  const todayStr = getIstIsoDate(now);
   const nowMs = now.getTime();
 
-  if (nowMs > endMs) {
-    return { isLive: false, status: 'MISSED', timeRemainingMinutes: 0, label: 'Window Closed (Missed)' };
+  // Strictly close the live window at the exact IST end timestamp
+  if (nowMs >= endMs) {
+    return {
+      isLive: false,
+      status: 'MISSED',
+      timeRemainingMinutes: 0,
+      startTimestampMs: startMs,
+      endTimestampMs: endMs,
+      label: 'Window Closed (IST)',
+    };
   }
 
-  if (nowMs >= startMs && nowMs <= endMs) {
-    const minsToEnd = Math.round((endMs - nowMs) / 60000);
+  if (nowMs >= startMs && nowMs < endMs) {
+    const minsToEnd = Math.max(1, Math.ceil((endMs - nowMs) / 60000));
     if (minsToEnd <= 30) {
-      return { isLive: true, status: 'ENDING_SOON', timeRemainingMinutes: minsToEnd, label: `Closing Soon (${minsToEnd}m left)` };
+      return {
+        isLive: true,
+        status: 'ENDING_SOON',
+        timeRemainingMinutes: minsToEnd,
+        startTimestampMs: startMs,
+        endTimestampMs: endMs,
+        label: `Closing Soon (${minsToEnd}m left • IST)`,
+      };
     }
-    return { isLive: true, status: 'LIVE', timeRemainingMinutes: minsToEnd, label: 'Live Now' };
+    return {
+      isLive: true,
+      status: 'LIVE',
+      timeRemainingMinutes: minsToEnd,
+      startTimestampMs: startMs,
+      endTimestampMs: endMs,
+      label: 'Live Now (IST)',
+    };
   }
 
-  const minsToStart = Math.round((startMs - nowMs) / 60000);
+  const minsToStart = Math.max(1, Math.ceil((startMs - nowMs) / 60000));
   if (scheduledDateStr === todayStr && minsToStart <= 60 && minsToStart > 0) {
-    return { isLive: false, status: 'STARTING_SOON', timeRemainingMinutes: minsToStart, label: `Starts in ${minsToStart}m` };
+    return {
+      isLive: false,
+      status: 'STARTING_SOON',
+      timeRemainingMinutes: minsToStart,
+      startTimestampMs: startMs,
+      endTimestampMs: endMs,
+      label: `Starts in ${minsToStart}m (IST)`,
+    };
   }
 
-  return { isLive: false, status: 'UPCOMING', timeRemainingMinutes: minsToStart, label: 'Upcoming Locked' };
+  return {
+    isLive: false,
+    status: 'UPCOMING',
+    timeRemainingMinutes: minsToStart,
+    startTimestampMs: startMs,
+    endTimestampMs: endMs,
+    label: 'Upcoming Locked (IST)',
+  };
 }

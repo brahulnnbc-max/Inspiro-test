@@ -40,7 +40,13 @@ import {
   SAMPLE_JEE_REMAINING_PART_2,
   getFiftyAndRemainingScheduledMockTests,
 } from '../data/sampleSplitFiftyPapers';
-import { getIsoDate, getLiveTestWindowStatus } from '../utils/scheduleCalculator';
+import {
+  getIstIsoDate,
+  getTomorrowIstIso,
+  parseIstTimestampMs,
+  addDaysToIsoDate,
+  getLiveTestWindowStatus,
+} from '../utils/scheduleCalculator';
 
 interface SchedulePlannerProps {
   scheduledTests: ScheduledTest[];
@@ -72,32 +78,23 @@ export const SchedulePlanner: React.FC<SchedulePlannerProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState('');
   const [expandedTestIds, setExpandedTestIds] = useState<Record<string, boolean>>({});
-  const [earlyUnlockOverrides, setEarlyUnlockOverrides] = useState<Record<string, boolean>>({});
 
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Local timezone date computation helpers (never UTC split)
-  const getTodayIsoLocal = () => getIsoDate(new Date());
-  const getTomorrowIsoLocal = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return getIsoDate(d);
-  };
+  // Authoritative IST date computation helpers
+  const getTodayIsoLocal = () => getIstIsoDate(new Date());
+  const getTomorrowIsoLocal = () => getTomorrowIstIso(new Date());
   const getUpcomingSundayIso = () => {
-    const d = new Date();
-    const daysUntilSunday = (7 - d.getDay()) % 7 || 7;
-    const sunday = new Date(d.getTime() + daysUntilSunday * 86400000);
-    return getIsoDate(sunday);
+    const todayIst = getIstIsoDate(new Date());
+    const d = new Date(`${todayIst}T00:00:00Z`);
+    const daysUntilSunday = (7 - d.getUTCDay()) % 7 || 7;
+    return addDaysToIsoDate(todayIst, daysUntilSunday);
   };
-  const getTwoWeeksLaterIso = () => {
-    const d = new Date();
-    d.setDate(d.getDate() + 14);
-    return getIsoDate(d);
-  };
+  const getTwoWeeksLaterIso = () => addDaysToIsoDate(getIstIsoDate(new Date()), 14);
 
   // Coaching material multi-month scheduler state
   const [scheduleInputMode, setScheduleInputMode] = useState<'MATERIAL' | 'COMMAND'>('MATERIAL');
@@ -248,14 +245,14 @@ MATHEMATICS:
     return getLiveTestWindowStatus(nextTargetTest, currentTime).isLive;
   }, [nextTargetTest, currentTime]);
 
-  // Calculate countdown to next scheduled date
+  // Calculate countdown to next scheduled IST timestamp
   const getCountdownString = (dateStr: string, timeStr: string) => {
     try {
-      const targetTime = new Date(`${dateStr}T${timeStr}:00`).getTime();
-      const now = Date.now();
+      const targetTime = parseIstTimestampMs(dateStr, timeStr);
+      const now = currentTime.getTime();
       const diffMs = targetTime - now;
 
-      if (diffMs <= 0) return 'Window Open / Today';
+      if (diffMs <= 0) return 'Window Open (IST)';
 
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const diffHours = Math.floor(
@@ -263,12 +260,12 @@ MATHEMATICS:
       );
 
       if (diffDays > 0) {
-        return `Opens in ${diffDays}d ${diffHours}h`;
+        return `Opens in ${diffDays}d ${diffHours}h (IST)`;
       }
       const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      return `Opens in ${diffHours}h ${diffMins}m`;
+      return `Opens in ${diffHours}h ${diffMins}m (IST)`;
     } catch {
-      return 'Scheduled Soon';
+      return 'Scheduled Soon (IST)';
     }
   };
 
@@ -462,10 +459,6 @@ MATHEMATICS:
 
   const toggleExpand = (id: string) => {
     setExpandedTestIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const toggleUnlockOverride = (id: string) => {
-    setEarlyUnlockOverrides((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const filteredTests = useMemo(() => {
@@ -1105,40 +1098,22 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                 </div>
               )}
 
-              {/* Early access unlock toggle */}
-              <button
-                onClick={() => toggleUnlockOverride(nextTargetTest.id)}
-                className="text-[11px] text-zinc-400 hover:text-white underline ml-2 flex items-center gap-1"
-              >
-                {earlyUnlockOverrides[nextTargetTest.id] ? (
-                  <>
-                    <Unlock className="w-3 h-3 text-red-400" />
-                    Early Access Unlocked
-                  </>
-                ) : (
-                  <>
-                    <Lock className="w-3 h-3" />
-                    Preview / Unlock Early
-                  </>
-                )}
-              </button>
+              <span className="text-[11px] font-mono text-zinc-400 flex items-center gap-1 select-none">
+                <Lock className="w-3 h-3 text-amber-400" />
+                Strict IST Window ({nextTargetTest.startTime} – {nextTargetTest.endTime} IST)
+              </span>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => onEnterLiveTest(nextTargetTest)}
-                disabled={
-                  !nextTargetIsLive &&
-                  !earlyUnlockOverrides[nextTargetTest.id]
-                }
+                disabled={!nextTargetIsLive}
                 className="px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.5)] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Play className="w-4 h-4 fill-current" />
                 {nextTargetIsLive
                   ? 'Enter Live CBT Examination Room'
-                  : earlyUnlockOverrides[nextTargetTest.id]
-                  ? 'Start Test (Early Access)'
-                  : 'Test Locked Until Scheduled Window'}
+                  : `Locked Until ${nextTargetTest.scheduledDate} ${nextTargetTest.startTime} IST`}
               </button>
             </div>
           </div>
@@ -1213,7 +1188,6 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
             const isExpanded = !!expandedTestIds[test.id];
             const windowInfo = getLiveTestWindowStatus(test, currentTime);
             const isLive = test.status !== 'COMPLETED' && windowInfo.isLive;
-            const isUnlocked = isLive || !!earlyUnlockOverrides[test.id];
             const completedTopics = test.syllabus.filter((t) => t.completed).length;
 
             return (
@@ -1230,7 +1204,7 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                       </span>
                       {isLive ? (
                         <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-600 text-white shadow-[0_0_8px_rgba(220,38,38,0.6)] animate-pulse">
-                          ● LIVE WINDOW ({test.startTime} - {test.endTime})
+                          ● LIVE WINDOW ({test.startTime} - {test.endTime} IST)
                         </span>
                       ) : test.status === 'COMPLETED' ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/50">
@@ -1238,12 +1212,12 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                         </span>
                       ) : windowInfo.status === 'MISSED' ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800">
-                          ❌ CLOSED / MISSED
+                          CLOSED / MISSED
                         </span>
                       ) : (
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5" />
-                          Locked ({test.scheduledDate} @ {test.startTime})
+                          Locked ({test.scheduledDate} @ {test.startTime} IST)
                         </span>
                       )}
                     </div>
@@ -1254,7 +1228,7 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
 
                     <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 font-mono">
                       <span>Date: {test.scheduledDate}</span>
-                      <span>Window: {test.startTime} - {test.endTime}</span>
+                      <span>Window: {test.startTime} - {test.endTime} IST</span>
                       <span>
                         Syllabus: {completedTopics}/{test.syllabus.length} Revised
                       </span>
@@ -1295,18 +1269,29 @@ MATHEMATICS: Quadratic Equations, Complex Numbers, Sequences, Binomial Theorem, 
                       )}
                     </button>
 
-                    <button
-                      onClick={() => onEnterLiveTest(test)}
-                      disabled={!isUnlocked}
-                      className="px-4 py-2 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-lg shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      {isLive
-                        ? 'Take Live Test'
-                        : isUnlocked
-                        ? 'Take Test'
-                        : 'Locked'}
-                    </button>
+                    {isLive ? (
+                      <button
+                        onClick={() => onEnterLiveTest(test)}
+                        className="px-4 py-2 text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-500 active:scale-95 rounded-lg shadow-[0_0_12px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        Take Live Test
+                      </button>
+                    ) : test.status === 'COMPLETED' ? (
+                      <div className="px-4 py-2 text-xs font-semibold text-emerald-300 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1.5 select-none">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Submitted</span>
+                      </div>
+                    ) : (
+                      <div className="px-4 py-2 text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1.5 select-none">
+                        <Lock className="w-3.5 h-3.5 text-amber-400" />
+                        <span>
+                          {windowInfo.status === 'MISSED'
+                            ? `Ended (${test.endTime} IST)`
+                            : `Locked (${test.startTime} IST)`}
+                        </span>
+                      </div>
+                    )}
 
                     {test.isLocked ? (
                       <div

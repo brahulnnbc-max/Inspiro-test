@@ -25,6 +25,7 @@ import { ExamInstructions } from './components/ExamInstructions';
 import { CBTExamRoom } from './components/CBTExamRoom';
 import { PostTestAnalytics } from './components/PostTestAnalytics';
 import { RemedialPracticeModal } from './components/RemedialPracticeModal';
+import { getLiveTestWindowStatus } from './utils/scheduleCalculator';
 
 type AppView = 'HUB' | 'INSTRUCTIONS' | 'CBT_ROOM' | 'ANALYTICS';
 
@@ -277,17 +278,24 @@ export default function App() {
       });
       earnedScore = calc;
     }
-    const scoredAttempt: StudentAttempt = { ...attempt, score: earnedScore };
+    const isScheduledLiveSubmission = Boolean(
+      activeScheduledTest &&
+        !attempt.examId.startsWith('module-marathon-') &&
+        !attempt.examId.startsWith('mod-')
+    );
+
+    const scoredAttempt: StudentAttempt = {
+      ...attempt,
+      score: earnedScore,
+      scheduledTestId: isScheduledLiveSubmission ? activeScheduledTest?.id : attempt.scheduledTestId,
+      isLiveScheduled: isScheduledLiveSubmission ? true : Boolean(attempt.isLiveScheduled),
+    };
     setSavedAttempts((prev) => [scoredAttempt, ...prev]);
     setActiveAttempt(scoredAttempt);
 
-    // CRITICAL FIX: Only mark a scheduled test as COMPLETED if activeScheduledTest is explicitly set
+    // Only mark a scheduled test as COMPLETED if activeScheduledTest is explicitly set
     // AND the attempt is NOT a module marathon or module practice test
-    if (
-      activeScheduledTest &&
-      !attempt.examId.startsWith('module-marathon-') &&
-      !attempt.examId.startsWith('mod-')
-    ) {
+    if (isScheduledLiveSubmission && activeScheduledTest) {
       setScheduledTests((prev) =>
         prev.map((t) => {
           if (t.id === activeScheduledTest.id) {
@@ -409,7 +417,6 @@ export default function App() {
   };
 
   const handleEnterLiveTest = (test: ScheduledTest) => {
-    // If paper is attached, use it; otherwise look up in customPapers by paperId or use mock with test's title
     const paperToUse: ExamPaper =
       test.paper ||
       customPapers.find((p) => p.id === test.paperId) || {
@@ -418,6 +425,26 @@ export default function App() {
         title: test.title,
       };
 
+    // Single-attempt policy: if already completed, redirect to submitted analytics instead of launching again
+    if (test.status === 'COMPLETED') {
+      const existingAttempt = savedAttempts.find(
+        (a) =>
+          a.scheduledTestId === test.id ||
+          (a.isLiveScheduled && a.examId === test.paperId) ||
+          a.examId === paperToUse.id
+      );
+      if (existingAttempt) {
+        handleViewAttempt(existingAttempt, paperToUse);
+      }
+      return;
+    }
+
+    // Enforce strict IST live window (09:00 - 12:00 IST)
+    const windowInfo = getLiveTestWindowStatus(test, new Date());
+    if (!windowInfo.isLive) {
+      return;
+    }
+
     setActiveScheduledTest(test);
     setIsReattemptMode(false);
     setSelectedPaper(paperToUse);
@@ -425,12 +452,23 @@ export default function App() {
   };
 
   const handleReattemptExam = (paper: ExamPaper, test?: ScheduledTest) => {
+    // Reattempting scheduled live tests is strictly disabled
+    const isPracticePaper =
+      paper.id.startsWith('module-marathon-') || paper.id.startsWith('mod-');
+    if (
+      test ||
+      (!isPracticePaper &&
+        scheduledTests.some((t) => t.paperId === paper.id || `live-${t.id}` === paper.id))
+    ) {
+      return;
+    }
+
     try {
       localStorage.removeItem(`jee_live_session_${paper.id}`);
     } catch (e) {
       console.warn(e);
     }
-    setActiveScheduledTest(test || null);
+    setActiveScheduledTest(null);
     setIsReattemptMode(true);
     setSelectedPaper(paper);
     setCurrentView('INSTRUCTIONS');
@@ -570,6 +608,7 @@ export default function App() {
       {currentView === 'INSTRUCTIONS' && selectedPaper && (
         <ExamInstructions
           paper={selectedPaper}
+          scheduledTest={activeScheduledTest}
           onStartExam={handleStartExam}
           onCancel={() => setCurrentView('HUB')}
         />
@@ -589,15 +628,32 @@ export default function App() {
       )}
 
       {/* 4. POST-TEST PERFORMANCE ANALYTICS */}
-      {currentView === 'ANALYTICS' && selectedPaper && activeAttempt && (
-        <PostTestAnalytics
-          paper={selectedPaper}
-          attempt={activeAttempt}
-          onRetake={() => setCurrentView('INSTRUCTIONS')}
-          onBackToHub={() => setCurrentView('HUB')}
-          onLogMistake={handleLogMistake}
-        />
-      )}
+      {currentView === 'ANALYTICS' && selectedPaper && activeAttempt && (() => {
+        const isPracticePaper =
+          activeAttempt.examId.startsWith('module-marathon-') ||
+          activeAttempt.examId.startsWith('mod-');
+        const isLiveScheduledAttempt = Boolean(
+          activeAttempt.isLiveScheduled ||
+            activeAttempt.scheduledTestId ||
+            (!isPracticePaper &&
+              scheduledTests.some(
+                (t) =>
+                  t.id === activeAttempt.scheduledTestId ||
+                  t.paperId === activeAttempt.examId ||
+                  `live-${t.id}` === activeAttempt.examId
+              ))
+        );
+        return (
+          <PostTestAnalytics
+            paper={selectedPaper}
+            attempt={activeAttempt}
+            allowRetake={!isLiveScheduledAttempt}
+            onRetake={!isLiveScheduledAttempt ? () => setCurrentView('INSTRUCTIONS') : undefined}
+            onBackToHub={() => setCurrentView('HUB')}
+            onLogMistake={handleLogMistake}
+          />
+        );
+      })()}
 
       {/* Global Remedial PYQs Modal */}
       <RemedialPracticeModal

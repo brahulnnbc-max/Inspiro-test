@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { ExamPaper, UIMode } from '../types/exam';
-import { CheckCircle2, AlertCircle, Clock, ShieldCheck, Monitor, Flame } from 'lucide-react';
+import { ExamPaper, ScheduledTest, UIMode } from '../types/exam';
+import { CheckCircle2, AlertCircle, Clock, ShieldCheck, Monitor, Flame, Lock } from 'lucide-react';
 import { InspiroLogo } from './InspiroLogo';
 
 interface ExamInstructionsProps {
   paper: ExamPaper;
+  scheduledTest?: ScheduledTest | null;
   onStartExam: (selectedMode: UIMode) => void;
   onCancel: () => void;
 }
 
 export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
   paper,
+  scheduledTest = null,
   onStartExam,
   onCancel,
 }) => {
@@ -19,16 +21,24 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
   const [language, setLanguage] = useState<'English' | 'Hindi'>('English');
 
   const totalQuestions = paper.sections.reduce((acc, s) => acc + s.questions.length, 0);
+  const isModulePractice =
+    paper.id.startsWith('module-marathon-') ||
+    paper.id.startsWith('mod-') ||
+    !scheduledTest;
 
-  // Check if student has a paused session
+  // Check if student has an active session to resume
   const savedSession = React.useMemo(() => {
     try {
-      const stored = localStorage.getItem(`jee_live_session_${paper.id}`);
+      const key =
+        !isModulePractice && scheduledTest
+          ? `jee_live_session_${scheduledTest.id}`
+          : `jee_live_session_${paper.id}`;
+      const stored = localStorage.getItem(key);
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
-  }, [paper.id]);
+  }, [paper.id, scheduledTest, isModulePractice]);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col justify-between p-4 md:p-8">
@@ -47,11 +57,18 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
             </h1>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-medium text-zinc-300">
-            <span className="flex items-center gap-1.5 bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
-              <Clock className="w-4 h-4 text-red-500" />
-              Duration: {paper.durationMinutes} Mins ({(paper.durationMinutes / 60).toFixed(1)}h • 4m/Q)
-            </span>
+          <div className="flex items-center gap-3 text-xs font-medium text-zinc-300 flex-wrap">
+            {!isModulePractice && scheduledTest ? (
+              <span className="flex items-center gap-1.5 bg-red-950/60 text-red-200 px-3 py-1.5 rounded-lg border border-red-700/60 font-mono">
+                <Clock className="w-4 h-4 text-red-400" />
+                Live Shift: {scheduledTest.startTime} – {scheduledTest.endTime} IST (Single Attempt)
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
+                <Clock className="w-4 h-4 text-red-500" />
+                Duration: {paper.durationMinutes} Mins ({(paper.durationMinutes / 60).toFixed(1)}h • 4m/Q)
+              </span>
+            )}
             <span className="bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-800">
               Total Marks: {paper.totalMarks}
             </span>
@@ -61,13 +78,28 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
           </div>
         </div>
 
+        {/* Official Live Shift Banner */}
+        {!isModulePractice && scheduledTest && (
+          <div className="bg-red-950/40 border-b border-red-700/40 px-6 py-3 flex items-center justify-between gap-4 text-xs text-red-200">
+            <div className="flex items-center gap-2">
+              <Lock className="w-3.5 h-3.5 text-red-400 shrink-0" />
+              <span>
+                <strong>Official Live Scheduled Examination:</strong> Runs strictly from{' '}
+                <strong>{scheduledTest.startTime} IST</strong> to <strong>{scheduledTest.endTime} IST</strong> on{' '}
+                <strong>{scheduledTest.scheduledDate}</strong>. Auto-submits at {scheduledTest.endTime} IST —{' '}
+                <strong>no reattempts permitted after submission</strong>.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Saved Session Notification Banner */}
         {savedSession && typeof savedSession.secondsRemaining === 'number' && savedSession.secondsRemaining > 0 && (
           <div className="bg-amber-950/40 border-b border-amber-600/40 px-6 py-3 flex items-center justify-between gap-4 text-xs text-amber-200">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0" />
               <span>
-                <strong>Paused Attempt Found:</strong> You were at <strong>Question {(savedSession.activeQuestionIndex || 0) + 1}</strong> with <strong>{Math.floor(savedSession.secondsRemaining / 60)}m {savedSession.secondsRemaining % 60}s</strong> remaining.
+                <strong>Active Session Found:</strong> You were at <strong>Question {(savedSession.activeQuestionIndex || 0) + 1}</strong> with <strong>{Math.floor(savedSession.secondsRemaining / 60)}m {savedSession.secondsRemaining % 60}s</strong> remaining.
               </span>
             </div>
             <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 bg-amber-500/20 rounded border border-amber-500/30 text-amber-300 shrink-0">
@@ -97,13 +129,30 @@ export const ExamInstructions: React.FC<ExamInstructionsProps> = ({
 
           <ol className="list-decimal pl-5 space-y-2.5 text-zinc-300">
             <li>
-              Total duration of examination is <strong className="text-white">{paper.durationMinutes} minutes ({(paper.durationMinutes / 60).toFixed(1)} Hours — Allotted 4 min/question)</strong>.
+              {!isModulePractice && scheduledTest ? (
+                <>
+                  This live test is synchronized to <strong>India Standard Time (IST)</strong> and closes strictly at{' '}
+                  <strong className="text-white">{scheduledTest.endTime} IST on {scheduledTest.scheduledDate}</strong>.
+                </>
+              ) : (
+                <>
+                  Total duration of examination is <strong className="text-white">{paper.durationMinutes} minutes ({(paper.durationMinutes / 60).toFixed(1)} Hours — Allotted 4 min/question)</strong>.
+                </>
+              )}
             </li>
             <li>
-              The clock will be set at the server. The countdown timer in the top right corner of the screen will display the remaining time available for you to complete the examination.
+              The clock will be set at the server (IST). The countdown timer in the top right corner of the screen displays the exact remaining time before automatic submission.
             </li>
             <li>
-              <strong className="text-white">Marathon Practice Persistence:</strong> If you leave, escape (Esc), or close this tab during practice, your exact question and countdown timer are saved. When you return, you will rejoin at the exact same question and timestamp!
+              {!isModulePractice && scheduledTest ? (
+                <>
+                  <strong className="text-white">Single-Attempt Official Policy:</strong> Once you submit this live test (or when the {scheduledTest.endTime} IST shift ends), your score is permanently recorded and no reattempt option will be available.
+                </>
+              ) : (
+                <>
+                  <strong className="text-white">Marathon Practice Persistence:</strong> If you leave, escape (Esc), or close this tab during practice, your exact question and countdown timer are saved.
+                </>
+              )}
             </li>
             <li>
               The Question Palette displayed on the right side of screen will show the status of each question using one of the following symbols:

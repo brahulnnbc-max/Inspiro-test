@@ -43,7 +43,8 @@ import confetti from 'canvas-confetti';
 interface PostTestAnalyticsProps {
   paper: ExamPaper;
   attempt: StudentAttempt;
-  onRetake: () => void;
+  allowRetake?: boolean;
+  onRetake?: () => void;
   onBackToHub: () => void;
   onLogMistake: (
     q: Question,
@@ -57,6 +58,7 @@ interface PostTestAnalyticsProps {
 export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
   paper,
   attempt,
+  allowRetake = false,
   onRetake,
   onBackToHub,
   onLogMistake,
@@ -435,22 +437,31 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
     <div className="min-h-screen bg-black text-zinc-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Navigation */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <button
             onClick={onBackToHub}
-            className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Test Hub
           </button>
 
-          <button
-            onClick={onRetake}
-            className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5 active:scale-95"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Re-attempt Test
-          </button>
+          {allowRetake && onRetake ? (
+            <button
+              onClick={onRetake}
+              className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Practice Again
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 select-none">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Official Live CBT Submitted</span>
+              <span aria-hidden="true">·</span>
+              <span>Single Attempt Recorded</span>
+            </div>
+          )}
         </div>
 
         {/* 1. HERO ANALYTICS SCORECARD */}
@@ -466,8 +477,14 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
               <h1 className="text-2xl md:text-3xl font-bold font-display mt-1 text-white">
                 {paper.title}
               </h1>
-              <p className="text-xs text-zinc-400 mt-1">
-                Submitted on {new Date(attempt.submittedAt).toLocaleDateString()}
+              <p className="text-xs text-zinc-400 mt-1 font-mono">
+                Submitted on{' '}
+                {new Date(attempt.submittedAt || Date.now()).toLocaleString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}{' '}
+                IST
               </p>
             </div>
 

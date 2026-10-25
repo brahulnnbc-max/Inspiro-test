@@ -34,9 +34,10 @@ import { ALL_VIBRANT_LIMIT_CONT_DIFF_PAPERS } from '../data/vibrantLimitContDiff
 import { ALL_VIBRANT_BINOMIAL_PAPERS } from '../data/vibrantBinomialData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
-  getIsoDate,
+  getIstIsoDate,
+  getTomorrowIstIso,
+  formatIstTime,
   getTodayIso,
-  getTomorrowIso,
   generateLockedSchedule,
   parseScheduleCommand,
   getLiveTestWindowStatus,
@@ -191,22 +192,19 @@ export const TestHub: React.FC<TestHubProps> = ({
   const [scheduleDurationMonths, setScheduleDurationMonths] = useState<1 | 3 | 6>(1);
   const [scheduleSuccessNotice, setScheduleSuccessNotice] = useState('');
 
-  // Real-time ticking clock (updates every 30 seconds for live countdowns & window triggers)
+  // Real-time 1-second ticking clock synchronized to IST for exact 09:00:00 start & 12:00:00 end triggers
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const creatorRef = useRef<HTMLDivElement | null>(null);
 
-  // Today and Tomorrow strings synchronized with ticking currentTime
-  const todayStr = useMemo(() => getIsoDate(currentTime), [currentTime]);
-  const tomorrowStr = useMemo(() => {
-    const d = new Date(currentTime);
-    d.setDate(d.getDate() + 1);
-    return getIsoDate(d);
-  }, [currentTime]);
+  // Today, Tomorrow, and clock strings strictly in IST (Asia/Kolkata, UTC+05:30)
+  const todayStr = useMemo(() => getIstIsoDate(currentTime), [currentTime]);
+  const tomorrowStr = useMemo(() => getTomorrowIstIso(currentTime), [currentTime]);
+  const istClockStr = useMemo(() => formatIstTime(currentTime), [currentTime]);
 
   // Categorize Tests and evaluate strict 09:00-12:00 live window states
   const { todayTests, tomorrowTests, upcomingTests, missedTests, completedTests, activeReminders } = useMemo(() => {
@@ -435,7 +433,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
 
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 hidden sm:inline">
-              Today: <strong className="text-white">{todayStr}</strong>
+              <strong className="text-white">{todayStr}</strong> • {istClockStr}
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-zinc-900 border border-zinc-800 text-zinc-300">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -723,15 +721,15 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
 
                             {isLive ? (
                               <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-red-600 text-white shadow-[0_0_8px_rgba(220,38,38,0.6)] animate-pulse">
-                                ● LIVE WINDOW ({test.startTime} - {test.endTime})
+                                ● LIVE WINDOW ({test.startTime} - {test.endTime} IST)
                               </span>
                             ) : isTodayBeforeStart ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                Opens Today @ {test.startTime}
+                                Opens Today @ {test.startTime} IST
                               </span>
                             ) : isTomorrow ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                Opens Tomorrow @ {test.startTime}
+                                Opens Tomorrow @ {test.startTime} IST
                               </span>
                             ) : isCompleted ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-600/50">
@@ -739,17 +737,17 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                               </span>
                             ) : isMissed ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800">
-                                ❌ CLOSED / MISSED
+                                CLOSED / MISSED
                               </span>
                             ) : (
                               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1">
                                 <Lock className="w-2.5 h-2.5" />
-                                Locked (Opens {test.scheduledDate} @ {test.startTime})
+                                Locked (Opens {test.scheduledDate} @ {test.startTime} IST)
                               </span>
                             )}
 
                             <span className="text-xs font-mono text-zinc-400">
-                              Slot: {test.startTime} - {test.endTime}
+                              Slot: {test.startTime} - {test.endTime} IST
                             </span>
                           </div>
 
@@ -761,6 +759,11 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                             <span>Date: {test.scheduledDate}</span>
                             <span>Duration: {test.durationMinutes} Mins</span>
                             <span>Marks: {test.totalMarks}</span>
+                            {isCompleted && typeof test.score === 'number' && (
+                              <span className="text-emerald-400 font-bold">
+                                Score: {test.score} / {test.totalMarks}
+                              </span>
+                            )}
                             <span>
                               Syllabus: {completedTopics}/{test.syllabus.length} Revised
                             </span>
@@ -791,25 +794,52 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                               <Play className="w-3.5 h-3.5 fill-current" />
                               <span>Take Live Test</span>
                             </button>
-                          ) : isCompleted || isMissed ? (
-                            <button
-                              onClick={() => {
-                                const paper = test.paper || savedCustomPapers.find(p => p.id === test.paperId) || { ...SAMPLE_JEE_MAIN_MOCK, id: test.paperId || test.id, title: test.title };
-                                if (onReattemptTest) onReattemptTest(paper, test);
-                                else onSelectExam(paper);
-                              }}
-                              className="px-4 py-2 text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                          ) : isCompleted ? (
+                            (() => {
+                              const matchingAttempt = savedAttempts.find(
+                                (a) =>
+                                  a.scheduledTestId === test.id ||
+                                  (a.isLiveScheduled && a.examId === test.paperId) ||
+                                  a.examId === test.paperId ||
+                                  a.examId === `live-${test.id}`
+                              );
+                              const paper =
+                                test.paper ||
+                                savedCustomPapers.find((p) => p.id === test.paperId) || {
+                                  ...SAMPLE_JEE_MAIN_MOCK,
+                                  id: test.paperId || test.id,
+                                  title: test.title,
+                                };
+                              return matchingAttempt ? (
+                                <button
+                                  onClick={() => onViewAttempt(matchingAttempt, paper)}
+                                  className="px-4 py-2 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                                >
+                                  <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>View Analysis</span>
+                                </button>
+                              ) : (
+                                <div className="px-4 py-2 text-xs font-semibold text-emerald-300 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1.5 select-none">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>Submitted</span>
+                                </div>
+                              );
+                            })()
+                          ) : isMissed ? (
+                            <div
+                              className="px-4 py-2 text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1.5 select-none"
+                              title="Official live shift ended at the scheduled IST closing timestamp"
                             >
-                              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-                              <span>Reattempt Test</span>
-                            </button>
+                              <Lock className="w-3.5 h-3.5 text-red-400" />
+                              <span>Ended ({test.endTime} IST)</span>
+                            </div>
                           ) : (
                             <div
                               className="px-4 py-2 text-xs font-semibold text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1.5 select-none"
-                              title="Test is locked until scheduled start window"
+                              title="Test is locked until scheduled IST start window"
                             >
                               <Lock className="w-3.5 h-3.5 text-amber-400" />
-                              <span>Locked Until Window</span>
+                              <span>Locked Until {test.startTime} IST</span>
                             </div>
                           )}
                         </div>
@@ -977,36 +1007,21 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-black tracking-wider uppercase">
-                            ❌ MISSED (0 MARKS RECORDED)
+                            MISSED (0 MARKS RECORDED)
                           </span>
                           <span className="text-xs font-mono text-red-400">
-                            Closed on {test.scheduledDate} at {test.endTime}
+                            Closed on {test.scheduledDate} at {test.endTime} IST
                           </span>
                         </div>
                         <h4 className="text-base font-bold text-white">{test.title}</h4>
                         <div className="text-xs font-mono text-zinc-400">
-                          Scheduled Slot: {test.startTime} - {test.endTime} • Duration: {test.durationMinutes}m
+                          Scheduled Slot: {test.startTime} - {test.endTime} IST • Duration: {test.durationMinutes}m
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            const paper =
-                              test.paper ||
-                              savedCustomPapers.find((p) => p.id === test.paperId) || {
-                                ...SAMPLE_JEE_MAIN_MOCK,
-                                id: test.paperId || test.id,
-                                title: test.title,
-                              };
-                            if (onReattemptTest) onReattemptTest(paper, test);
-                            else onSelectExam(paper);
-                          }}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Reattempt / Practice</span>
-                        </button>
+                      <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 select-none">
+                        <Lock className="w-3.5 h-3.5 text-red-400" />
+                        <span>Shift Closed ({test.endTime} IST)</span>
                       </div>
                     </div>
                   ))}
@@ -1024,15 +1039,29 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                 <div className="grid grid-cols-1 gap-3">
                   {savedAttempts.map((attempt) => {
                     const paper =
+                      allAvailablePapers.find((p) => p.id === attempt.examId) ||
                       savedCustomPapers.find((p) => p.id === attempt.examId) ||
                       scheduledTests.find((t) => t.paperId === attempt.examId)?.paper || {
                         id: attempt.examId,
-                        title: attempt.examTitle,
-                        pattern: attempt.pattern,
+                        title: attempt.examTitle || 'JEE Mock Test',
+                        pattern: attempt.pattern || 'JEE_MAIN',
                         durationMinutes: 180,
-                        totalMarks: attempt.totalMarks,
+                        totalMarks: attempt.totalMarks || 200,
                         sections: [],
                       };
+
+                    const isScheduledLiveAttempt = Boolean(
+                      attempt.isLiveScheduled ||
+                        attempt.scheduledTestId ||
+                        (!attempt.examId.startsWith('module-marathon-') &&
+                          !attempt.examId.startsWith('mod-') &&
+                          scheduledTests.some(
+                            (t) =>
+                              t.id === attempt.scheduledTestId ||
+                              t.paperId === attempt.examId ||
+                              `live-${t.id}` === attempt.examId
+                          ))
+                    );
 
                     return (
                       <div
@@ -1045,30 +1074,37 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                               COMPLETED
                             </span>
                             <span className="text-xs font-mono text-zinc-500">
-                              {new Date(attempt.submittedAt).toLocaleDateString()}
+                              {new Date(attempt.submittedAt || Date.now()).toLocaleString('en-IN', {
+                                timeZone: 'Asia/Kolkata',
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              })}{' '}
+                              IST
                             </span>
                           </div>
                           <h4 className="text-sm font-bold text-white">{attempt.examTitle}</h4>
                           <div className="text-xs font-mono text-zinc-400">
                             Score:{' '}
                             <strong className="text-emerald-400 font-bold">
-                              {attempt.totalMarks}
+                              {typeof attempt.score === 'number' ? attempt.score : 0}
                             </strong>{' '}
-                            Marks
+                            / {attempt.totalMarks} Marks
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              if (onReattemptTest) onReattemptTest(paper);
-                              else onSelectExam(paper);
-                            }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-amber-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Reattempt Exam</span>
-                          </button>
+                          {!isScheduledLiveAttempt && (
+                            <button
+                              onClick={() => {
+                                if (onReattemptTest) onReattemptTest(paper);
+                                else onSelectExam(paper);
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-amber-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Practice Again</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => onViewAttempt(attempt, paper)}
                             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center gap-1.5 cursor-pointer"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ExamPaper,
   Question,
@@ -12,6 +12,7 @@ import { MathRenderer } from './MathRenderer';
 import { NumericalKeypad } from './NumericalKeypad';
 import { ScratchpadModal } from './ScratchpadModal';
 import { InspiroLogo } from './InspiroLogo';
+import { getIstIsoDate, parseIstTimestampMs } from '../utils/scheduleCalculator';
 import {
   Clock,
   User,
@@ -54,8 +55,17 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   onExit,
   onToggleTag,
 }) => {
+  // Flag to identify open module marathon / practice test vs strict scheduled CBT
+  const isModulePractice =
+    paper.id.startsWith('module-marathon-') ||
+    paper.id.startsWith('mod-') ||
+    scheduledTest === null;
+
   // Session storage key for real-time exam state preservation
-  const sessionStorageKey = `jee_live_session_${paper.id}`;
+  const sessionStorageKey =
+    !isModulePractice && scheduledTest
+      ? `jee_live_session_${scheduledTest.id}`
+      : `jee_live_session_${paper.id}`;
 
   // Mode toggle: Official NTA vs Modern MathonGo
   const [uiMode, setUiMode] = useState<UIMode>(initialMode);
@@ -70,19 +80,13 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     }
   }, [isDarkMode]);
 
-  // Flag to identify open module marathon / practice test vs strict scheduled CBT
-  const isModulePractice =
-    paper.id.startsWith('module-marathon-') ||
-    paper.id.startsWith('mod-') ||
-    scheduledTest === null;
-
-  // Session Data restoration (MARATHON RESUME AT EXACT QUESTION & TIMESTAMP)
+  // Session Data restoration (MARATHON RESUME AT EXACT QUESTION & IST SHIFT END TIMESTAMP)
   const [sessionData] = useState(() => {
     const now = Date.now();
 
-    // Compute authoritative live window end timestamp if this is a live scheduled test
+    // Compute authoritative IST (+05:30) live window end timestamp for any scheduled live test
     let officialScheduledEndMs: number | null = null;
-    if (!isModulePractice && !isReattempt && scheduledTest) {
+    if (!isModulePractice && scheduledTest) {
       try {
         let rawEndTime = scheduledTest.endTime;
         if (!rawEndTime && (scheduledTest as any).scheduledSlot) {
@@ -91,17 +95,15 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
         }
         if (!rawEndTime) rawEndTime = '12:00';
 
-        const [endH, endM] = rawEndTime.split(':').map(Number);
-        const dateStr = scheduledTest.scheduledDate || new Date().toISOString().split('T')[0];
-        const [year, month, day] = dateStr.split('-').map(Number);
-        officialScheduledEndMs = new Date(year, month - 1, day, endH, endM, 0, 0).getTime();
+        const dateStr = scheduledTest.scheduledDate || getIstIsoDate();
+        officialScheduledEndMs = parseIstTimestampMs(dateStr, rawEndTime);
       } catch (err) {
-        console.warn('Error computing live window end time', err);
+        console.warn('Error computing IST live window end time', err);
       }
     }
 
     // 1. Try to restore in-progress session if student refreshed, navigated away, or escaped
-    if (!isReattempt) {
+    if (!isReattempt || !isModulePractice) {
       try {
         const stored = localStorage.getItem(sessionStorageKey);
         if (stored) {
@@ -116,7 +118,7 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                 activeQuestionIndex: typeof parsed.activeQuestionIndex === 'number' ? parsed.activeQuestionIndex : 0,
               };
             }
-            if (!isModulePractice && parsed.scheduledEndTimestamp) {
+            if (!isModulePractice && (officialScheduledEndMs || parsed.scheduledEndTimestamp)) {
               const effectiveEndMs = officialScheduledEndMs ?? parsed.scheduledEndTimestamp;
               if (effectiveEndMs > now) {
                 return {
@@ -133,13 +135,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       }
     }
 
-    // 2. Fresh session creation (4 mins x total number of questions, or anchored to 12:00 PM live shift end)
+    // 2. Fresh session creation (strictly anchored to 12:00 PM IST shift end for live tests)
     const initialSec = paper.durationMinutes * 60;
     const targetEndMs = officialScheduledEndMs ?? now + initialSec * 1000;
 
-    const calculatedSec = !isModulePractice && !isReattempt && scheduledTest
-      ? Math.max(0, Math.floor((targetEndMs - now) / 1000))
-      : initialSec;
+    const calculatedSec =
+      !isModulePractice && scheduledTest
+        ? Math.max(0, Math.floor((targetEndMs - now) / 1000))
+        : initialSec;
 
     const freshSession = {
       scheduledEndTimestamp: targetEndMs,
@@ -169,14 +172,13 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
     typeof sessionData.activeQuestionIndex === 'number' ? sessionData.activeQuestionIndex : 0
   );
 
-  // Examination timer state (strictly tied to frozen remaining seconds for module practice)
+  // Examination timer state (strictly tied to IST end timestamp for scheduled live tests)
   const [secondsRemaining, setSecondsRemaining] = useState<number>(() => {
     if (isModulePractice && typeof sessionData.secondsRemaining === 'number') {
       return Math.max(0, Math.min(paper.durationMinutes * 60, sessionData.secondsRemaining));
     }
     const now = Date.now();
-    const diff = Math.floor((sessionData.scheduledEndTimestamp - now) / 1000);
-    return Math.max(0, Math.min(paper.durationMinutes * 60, diff));
+    return Math.max(0, Math.floor((sessionData.scheduledEndTimestamp - now) / 1000));
   });
 
   const [answers, setAnswers] = useState<Record<string, any>>(sessionData.answers || {});
@@ -184,6 +186,10 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const [timeSpent, setTimeSpent] = useState<Record<string, number>>(sessionData.timeSpent || {});
   const [startedAt] = useState<number>(sessionData.startedAt || Date.now());
   const [questionTags, setQuestionTags] = useState<Record<string, QuestionTag[]>>({});
+
+  // Keep latest mutable responses in a ref so automatic submission at 12:00:00 IST never reads stale state
+  const latestStateRef = useRef({ answers, statuses, timeSpent, questionTags });
+  latestStateRef.current = { answers, statuses, timeSpent, questionTags };
 
   const handleToggleTag = (tag: QuestionTag) => {
     if (!currentQuestion) return;
@@ -468,9 +474,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const handleFinalSubmit = () => {
     try {
       localStorage.removeItem(sessionStorageKey);
+      localStorage.removeItem(`jee_live_session_${paper.id}`);
     } catch (e) {
       console.warn('Failed to clean up exam session', e);
     }
+    const latest = latestStateRef.current;
     const attempt: StudentAttempt = {
       id: `attempt-${Date.now()}`,
       examId: paper.id,
@@ -479,10 +487,12 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       totalMarks: paper.totalMarks,
       startedAt,
       submittedAt: Date.now(),
-      timeSpentSeconds: timeSpent,
-      answers,
-      statuses,
-      questionTags,
+      timeSpentSeconds: latest.timeSpent,
+      answers: latest.answers,
+      statuses: latest.statuses,
+      questionTags: latest.questionTags,
+      scheduledTestId: !isModulePractice && scheduledTest ? scheduledTest.id : undefined,
+      isLiveScheduled: Boolean(!isModulePractice && scheduledTest),
     };
     setIsSubmitModalOpen(false);
     onSubmitExam(attempt);

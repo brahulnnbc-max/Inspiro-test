@@ -90,10 +90,12 @@ export interface StudentAttempt {
   accuracyPercentage?: number;
   mode?: UIMode;
   pattern?: ExamPattern | string;
+  scheduledTestId?: string;
+  isLiveScheduled?: boolean;
 }
 
 export interface SyllabusTopic {
-  id?: string;
+  id: string;
   subject: SubjectId;
   name: string;
   completed?: boolean;
@@ -103,17 +105,18 @@ export interface ScheduledTest {
   id: string;
   title: string;
   pattern: ExamPattern | string;
-  scheduledDate: string; // YYYY-MM-DD
-  startTime: string; // '09:00'
-  endTime: string; // '12:00'
+  scheduledDate: string; // YYYY-MM-DD (IST)
+  startTime: string; // '09:00' (IST)
+  endTime: string; // '12:00' (IST)
   durationMinutes?: number;
   totalMarks?: number;
+  score?: number;
   paperId?: string;
   paper?: ExamPaper;
   status?: 'UPCOMING_LOCKED' | 'READY' | 'COMPLETED' | 'MISSED' | string;
   isLocked?: boolean;
   scheduledAt?: number;
-  syllabus?: SyllabusTopic[];
+  syllabus: SyllabusTopic[];
 }
 
 export interface DailyRoutineItem {
