@@ -5,9 +5,13 @@ import { DETERMINANT_PART_3_QUESTIONS } from './vibrantDeterminantPart3';
 
 export const ALL_DETERMINANT_QUESTIONS: Question[] = [
   ...DETERMINANT_PART_1_QUESTIONS,
-  ...DETERMINANT_PART_2_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 50 + idx + 1, id: `det-master-${50 + idx + 1}` })),
-  ...DETERMINANT_PART_3_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 100 + idx + 1, id: `det-master-${100 + idx + 1}` })),
-];
+  ...DETERMINANT_PART_2_QUESTIONS,
+  ...DETERMINANT_PART_3_QUESTIONS,
+].map((q, idx) => ({
+  ...q,
+  questionNumber: idx + 1,
+  id: `det-master-${idx + 1}`,
+}));
 
 export const VIBRANT_DETERMINANT_PAPER_1: ExamPaper = {
   id: 'vibrant-determinant-part-1',
@@ -29,10 +33,10 @@ export const VIBRANT_DETERMINANT_PAPER_2: ExamPaper = {
 
 export const VIBRANT_DETERMINANT_PAPER_3: ExamPaper = {
   id: 'vibrant-determinant-part-3',
-  title: 'Vibrant Kota Mathematics - Determinant CBT Mock Test 03 (Part 3 - 32Q Advanced)',
+  title: 'Vibrant Kota Mathematics - Determinant CBT Mock Test 03 (Part 3 - 41Q Advanced Archive)',
   pattern: 'JEE_MAIN',
   durationMinutes: 180,
-  totalMarks: 128,
+  totalMarks: 164,
   sections: [{ id: 'mathematics', name: 'MATHEMATICS (DETERMINANT PART 3)', questions: DETERMINANT_PART_3_QUESTIONS }],
 };
 
@@ -40,8 +44,8 @@ export const VIBRANT_DETERMINANT_COMPLETE_PAPER: ExamPaper = {
   id: 'vibrant-determinant-complete-132',
   title: 'Vibrant Kota Mathematics - Determinant Complete Series (Full Chapter Marathon)',
   pattern: 'JEE_MAIN',
-  durationMinutes: 528,
-  totalMarks: 528,
+  durationMinutes: 564,
+  totalMarks: 564,
   sections: [{ id: 'mathematics', name: 'MATHEMATICS (DETERMINANT COMPLETE)', questions: ALL_DETERMINANT_QUESTIONS }],
 };
 
@@ -53,8 +57,15 @@ export const ALL_VIBRANT_DETERMINANT_PAPERS: ExamPaper[] = [
 ];
 
 export function getVibrantDeterminantLockedTests(baseDateStr?: string): ScheduledTest[] {
-  const d = new Date(baseDateStr || '2026-10-18');
-  const formatIso = (date: Date) => date.toISOString().split('T')[0];
+  const anchor = baseDateStr || '2026-10-25';
+  const [y, m, day] = anchor.split('-').map(Number);
+  const d = new Date(y, m - 1, day);
+  const formatIso = (date: Date) => {
+    const yy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yy}-${mm}-${dd}`;
+  };
   return ALL_VIBRANT_DETERMINANT_PAPERS.map((paper, idx) => {
     const testDate = new Date(d);
     testDate.setDate(d.getDate() + 36 + idx * 2);
@@ -71,8 +82,9 @@ export function getVibrantDeterminantLockedTests(baseDateStr?: string): Schedule
       paper,
       status: 'UPCOMING_LOCKED',
       isLocked: true,
-      scheduledAt: Date.now() + idx,
+      scheduledAt: idx + 1,
       syllabus: [{ id: `syl-det-${idx}`, subject: 'mathematics', name: paper.sections[0].name, completed: false }],
     };
   });
 }
+

@@ -73,14 +73,10 @@ async function generateContentWithFallback(options: {
   }
 
   const ai = getGeminiClient();
-  // Valid modern Gemini models for free tier (Google AI Studio Free Plan: 15 RPM, 1M TPM, 1500 RPD)
-  // gemini-3.8-flash: flagship fast multimodal STEM & LaTeX reasoner
-  // gemini-3.1-flash-lite: ultra-low latency fallback
-  // gemini-2.5-flash: high-throughput fallback
   const candidateModels = [
-    'gemini-3.8-flash',
-    'gemini-3.1-flash-lite',
-    'gemini-2.5-flash',
+    'gemini-3-flash-preview',
+    'gemini-3.1-flash-lite-preview',
+    'gemini-flash-latest',
   ];
   let lastError: any = null;
   const isVercel = Boolean(process.env.VERCEL);
@@ -301,7 +297,7 @@ app.all(['/api/test-ai', '/test-ai'], async (req, res) => {
     const ai = getGeminiClient();
     const startTime = Date.now();
     const result = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-3-flash-preview',
       contents: 'Respond with exactly: "OK: JEE AI Engine Operational"',
     });
     const latencyMs = Date.now() - startTime;
@@ -309,17 +305,17 @@ app.all(['/api/test-ai', '/test-ai'], async (req, res) => {
       success: true,
       hasGeminiKey: true,
       latencyMs,
-      model: 'gemini-3.8-flash (Free Tier)',
+      model: 'gemini-3-flash-preview',
       reply: result.text?.trim() || 'OK',
-      message: 'Gemini 3.8 Flash responded successfully on the free plan!',
+      message: 'Gemini 3 Flash responded successfully!',
     });
   } catch (err: any) {
-    console.warn('[test-ai] Direct 3.8-flash ping error, testing 3.1-flash-lite fallback:', err.message);
+    console.warn('[test-ai] Direct 3-flash ping error, testing 3.1-flash-lite-preview fallback:', err.message);
     try {
       const ai = getGeminiClient();
       const startTime = Date.now();
       const result = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-lite',
+        model: 'gemini-3.1-flash-lite-preview',
         contents: 'Respond with exactly: "OK: Backup AI Engine Operational"',
       });
       const latencyMs = Date.now() - startTime;
@@ -327,9 +323,9 @@ app.all(['/api/test-ai', '/test-ai'], async (req, res) => {
         success: true,
         hasGeminiKey: true,
         latencyMs,
-        model: 'gemini-3.1-flash-lite (Free Tier Backup)',
+        model: 'gemini-3.1-flash-lite-preview',
         reply: result.text?.trim() || 'OK',
-        message: 'Gemini 3.1 Flash Lite responded successfully on the free plan!',
+        message: 'Gemini 3.1 Flash Lite responded successfully!',
       });
     } catch (fallbackErr: any) {
       return res.status(500).json({

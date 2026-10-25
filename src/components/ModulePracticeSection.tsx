@@ -92,6 +92,9 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  const getPaperQCount = (paper: ExamPaper) =>
+    paper.sections.reduce((acc, s) => acc + s.questions.length, 0);
+
   // 12 Authentic Chapter Marathon Tests with all questions from that chapter (4 min/question)
   const marathonModules: ChapterMarathonModule[] = [
     {
@@ -99,8 +102,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Physics • Electrostatics Complete Chapter Marathon',
       subject: 'physics',
       chapter: 'Electrostatics & Capacitance',
-      totalQuestions: 265,
-      durationMinutes: 265 * 4, // 1060 minutes (17h 40m)
+      totalQuestions: getPaperQCount(VIBRANT_ELECTROSTATICS_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_ELECTROSTATICS_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Academy Kota XII Module',
       description: 'Every single question from Coulomb law, Gauss law, potential, dipoles, conductors and RC dielectric systems.',
@@ -111,8 +114,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Allen Kota Physics • Kinematics 1D & 2D Complete Marathon',
       subject: 'physics',
       chapter: 'Kinematics 1D & 2D',
-      totalQuestions: 88,
-      durationMinutes: 88 * 4, // 352 minutes (5h 52m)
+      totalQuestions: getPaperQCount(VIBRANT_KINEMATICS_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_KINEMATICS_MARATHON_PAPER) * 4,
       difficulty: 'Allen Leader Ex-1',
       coachingSource: 'Allen Leader Batch Exercise 1 & 2',
       description: 'Full question set of rectilinear motion, graphs, projectile motion, and river-boat/relative velocity problems.',
@@ -123,8 +126,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Physics • Geometrical Optics Chapter Marathon',
       subject: 'physics',
       chapter: 'Geometrical Optics & Instruments',
-      totalQuestions: 229,
-      durationMinutes: 229 * 4, // 916 minutes (15h 16m)
+      totalQuestions: getPaperQCount(VIBRANT_GEOMETRICAL_OPTICS_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_GEOMETRICAL_OPTICS_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Master Collection',
       description: 'Complete optics archive: spherical mirrors, Snell law, total internal reflection, prisms, lenses, and optical systems.',
@@ -135,8 +138,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Physics • Modern Physics Chapter Marathon',
       subject: 'physics',
       chapter: 'Modern Physics',
-      totalQuestions: 243,
-      durationMinutes: 243 * 4, // 972 minutes (16h 12m)
+      totalQuestions: getPaperQCount(VIBRANT_MODERN_PHYSICS_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_MODERN_PHYSICS_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Physics Archive',
       description: 'Full spectrum: photoelectric effect, Bohr model, de Broglie wavelength, X-rays, nuclear decay, binding energy & radioactivity.',
@@ -147,8 +150,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Physics • Current Electricity Chapter Marathon',
       subject: 'physics',
       chapter: 'Current Electricity & Circuits',
-      totalQuestions: 224,
-      durationMinutes: 224 * 4, // 896 minutes (14h 56m)
+      totalQuestions: getPaperQCount(VIBRANT_CURRENT_ELECTRICITY_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_CURRENT_ELECTRICITY_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Physics Archive',
       description: 'Ohm law, symmetry lattices, Kirchhoff laws, potentiometer, meter bridge, RC transient charging, and galvanometer conversions.',
@@ -159,8 +162,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Vectors & 3-D Geometry Chapter Marathon',
       subject: 'mathematics',
       chapter: 'Vectors & 3-D Geometry',
-      totalQuestions: 113,
-      durationMinutes: 113 * 4, // 452 minutes (7h 32m)
+      totalQuestions: getPaperQCount(VIBRANT_VECTORS_3D_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_VECTORS_3D_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Mega XII Archive',
       description: 'Dot and cross products, scalar triple product, vector triple product, skew lines, planes, shortest distance, and coordinate geometry in 3D.',
@@ -171,8 +174,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Integration Complete Chapter Marathon',
       subject: 'mathematics',
       chapter: 'Indefinite & Definite Integration',
-      totalQuestions: 185,
-      durationMinutes: 185 * 4, // 740 minutes (12h 20m)
+      totalQuestions: getPaperQCount(VIBRANT_INTEGRATION_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_INTEGRATION_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Mega XII Archive',
       description: 'Standard substitutions, bypass integration, trigonometric powers, King property, Queen property, Leibniz rule, and reduction formulas.',
@@ -183,8 +186,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Matrices Complete Chapter Marathon',
       subject: 'mathematics',
       chapter: 'Matrices & Transformations',
-      totalQuestions: 146,
-      durationMinutes: 146 * 4, // 584 minutes (9h 44m)
+      totalQuestions: getPaperQCount(VIBRANT_MATRICES_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_MATRICES_MARATHON_PAPER) * 4,
       difficulty: 'Allen Leader Ex-1',
       coachingSource: 'Vibrant Kota Mega XII Archive',
       description: 'Matrix multiplication, symmetric & skew-symmetric, orthogonal, nilpotent, involutory, adjoint formulas, and Cayley-Hamilton.',
@@ -195,8 +198,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Determinants Chapter Marathon',
       subject: 'mathematics',
       chapter: 'Determinants & Linear Systems',
-      totalQuestions: 132,
-      durationMinutes: 132 * 4, // 528 minutes (8h 48m)
+      totalQuestions: getPaperQCount(VIBRANT_DETERMINANT_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_DETERMINANT_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Mega XII Archive',
       description: 'Row and column transformations, circulant determinants, Cramer rule for homogeneous & non-homogeneous linear systems.',
@@ -207,8 +210,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Diff Equations & AUC Chapter Marathon',
       subject: 'mathematics',
       chapter: 'Differential Equations & Area Under Curve',
-      totalQuestions: 200,
-      durationMinutes: 200 * 4, // 800 minutes (13h 20m)
+      totalQuestions: getPaperQCount(VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER) * 4,
       difficulty: 'JEE Advanced',
       coachingSource: 'Vibrant Kota Mega XII Archive',
       description: 'Variable separable, homogeneous, linear differential equations, Bernoulli equations, integrating factors, and bounded curve areas.',
@@ -219,8 +222,8 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Limit, Continuity & Diff Marathon',
       subject: 'mathematics',
       chapter: 'Limits, Continuity & Differentiability',
-      totalQuestions: 237,
-      durationMinutes: 237 * 4, // 948 minutes (15h 48m)
+      totalQuestions: getPaperQCount(VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER) * 4,
       difficulty: 'Allen Leader Ex-1',
       coachingSource: 'Vibrant Kota Mega XII Archive',
       description: 'L-Hopital rule, expansion series, standard forms 1^infinity, continuity of composite functions, differentiability at sharp corners.',
@@ -231,14 +234,16 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
       title: 'Vibrant Kota Maths • Binomial Theorem Chapter Marathon',
       subject: 'mathematics',
       chapter: 'Binomial Theorem',
-      totalQuestions: 108,
-      durationMinutes: 108 * 4, // 432 minutes (7h 12m)
+      totalQuestions: getPaperQCount(VIBRANT_BINOMIAL_MARATHON_PAPER),
+      durationMinutes: getPaperQCount(VIBRANT_BINOMIAL_MARATHON_PAPER) * 4,
       difficulty: 'JEE Main',
       coachingSource: 'Vibrant Kota Micro XI Archive',
-      description: 'General term T_{r+1}, middle terms, greatest coefficient, binomial coefficients summation identities, and multinational expansions.',
+      description: 'General term T_{r+1}, middle terms, greatest coefficient, binomial coefficients summation identities, and multinomial expansions.',
       paper: VIBRANT_BINOMIAL_MARATHON_PAPER,
     },
   ];
+
+  const totalArchiveQuestions = marathonModules.reduce((acc, m) => acc + m.totalQuestions, 0);
 
   // Also include custom-uploaded user papers
   const userCustomMarathons: ChapterMarathonModule[] = (savedCustomPapers || [])
@@ -446,7 +451,7 @@ export const ModulePracticeSection: React.FC<ModulePracticeSectionProps> = ({
             </div>
             <div className="bg-black/60 p-3 rounded-xl border border-zinc-800">
               <div className="text-[10px] text-zinc-400 font-bold uppercase">Total Archive</div>
-              <div className="text-base font-black text-white font-mono">2,168 Real Questions</div>
+              <div className="text-base font-black text-white font-mono">{totalArchiveQuestions.toLocaleString()} Real Questions</div>
             </div>
             <div className="bg-black/60 p-3 rounded-xl border border-zinc-800">
               <div className="text-[10px] text-zinc-400 font-bold uppercase">Time Allotment</div>

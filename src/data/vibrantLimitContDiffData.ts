@@ -7,11 +7,15 @@ import { LIMIT_CONT_DIFF_PART_5_QUESTIONS } from './vibrantLimitContDiffPart5';
 
 export const ALL_LIMIT_CONT_DIFF_QUESTIONS: Question[] = [
   ...LIMIT_CONT_DIFF_PART_1_QUESTIONS,
-  ...LIMIT_CONT_DIFF_PART_2_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 50 + idx + 1, id: `lcd-master-${50 + idx + 1}` })),
-  ...LIMIT_CONT_DIFF_PART_3_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 100 + idx + 1, id: `lcd-master-${100 + idx + 1}` })),
-  ...LIMIT_CONT_DIFF_PART_4_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 150 + idx + 1, id: `lcd-master-${150 + idx + 1}` })),
-  ...LIMIT_CONT_DIFF_PART_5_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 200 + idx + 1, id: `lcd-master-${200 + idx + 1}` })),
-];
+  ...LIMIT_CONT_DIFF_PART_2_QUESTIONS,
+  ...LIMIT_CONT_DIFF_PART_3_QUESTIONS,
+  ...LIMIT_CONT_DIFF_PART_4_QUESTIONS,
+  ...LIMIT_CONT_DIFF_PART_5_QUESTIONS,
+].map((q, idx) => ({
+  ...q,
+  questionNumber: idx + 1,
+  id: `lcd-master-${idx + 1}`,
+}));
 
 export const VIBRANT_LIMIT_CONT_DIFF_PAPER_1: ExamPaper = {
   id: 'vibrant-limit-cont-diff-part-1',
@@ -51,19 +55,19 @@ export const VIBRANT_LIMIT_CONT_DIFF_PAPER_4: ExamPaper = {
 
 export const VIBRANT_LIMIT_CONT_DIFF_PAPER_5: ExamPaper = {
   id: 'vibrant-limit-cont-diff-part-5',
-  title: 'Vibrant Kota Mathematics - LCD CBT Mock Test 05 (Part 5 - 37Q Archive)',
+  title: 'Vibrant Kota Mathematics - LCD CBT Mock Test 05 (Part 5 - 29Q JEE Archive)',
   pattern: 'JEE_MAIN',
   durationMinutes: 180,
-  totalMarks: 148,
-  sections: [{ id: 'mathematics', name: 'MATHEMATICS (JEE ARCHIVE)', questions: LIMIT_CONT_DIFF_PART_5_QUESTIONS }],
+  totalMarks: 116,
+  sections: [{ id: 'mathematics', name: 'MATHEMATICS (LCD JEE ARCHIVE)', questions: LIMIT_CONT_DIFF_PART_5_QUESTIONS }],
 };
 
 export const VIBRANT_LIMIT_CONT_DIFF_COMPLETE_PAPER: ExamPaper = {
   id: 'vibrant-limit-cont-diff-complete-237',
   title: 'Vibrant Kota Mathematics - LCD Complete Series (Full Chapter Marathon)',
   pattern: 'JEE_MAIN',
-  durationMinutes: 948,
-  totalMarks: 948,
+  durationMinutes: 916,
+  totalMarks: 916,
   sections: [{ id: 'mathematics', name: 'MATHEMATICS (COMPLETE LCD)', questions: ALL_LIMIT_CONT_DIFF_QUESTIONS }],
 };
 
@@ -77,8 +81,15 @@ export const ALL_VIBRANT_LIMIT_CONT_DIFF_PAPERS: ExamPaper[] = [
 ];
 
 export function getVibrantLimitContDiffLockedTests(baseDateStr?: string): ScheduledTest[] {
-  const d = new Date(baseDateStr || '2026-10-18');
-  const formatIso = (date: Date) => date.toISOString().split('T')[0];
+  const anchor = baseDateStr || '2026-10-25';
+  const [y, m, day] = anchor.split('-').map(Number);
+  const d = new Date(y, m - 1, day);
+  const formatIso = (date: Date) => {
+    const yy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yy}-${mm}-${dd}`;
+  };
   return ALL_VIBRANT_LIMIT_CONT_DIFF_PAPERS.map((paper, idx) => {
     const testDate = new Date(d);
     testDate.setDate(d.getDate() + 54 + idx * 2);
@@ -95,8 +106,9 @@ export function getVibrantLimitContDiffLockedTests(baseDateStr?: string): Schedu
       paper,
       status: 'UPCOMING_LOCKED',
       isLocked: true,
-      scheduledAt: Date.now() + idx,
+      scheduledAt: idx + 1,
       syllabus: [{ id: `syl-lcd-${idx}`, subject: 'mathematics', name: paper.sections[0].name, completed: false }],
     };
   });
 }
+

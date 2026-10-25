@@ -66,21 +66,48 @@ export default function App() {
     }
   });
 
-  // Persistent Scheduled Tests (Locked Vibrant Electrostatics + Kinematics Alternate-Day Series)
+  // Persistent Scheduled Tests (Fixed Static Anchor Series starting 2026-10-25, 09:00-12:00 Window)
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length === SAMPLE_SCHEDULED_TESTS.length) {
-          // Date collision & base-date check: must start exactly from SCHEDULE_BASE_DATE with zero collisions
-          const datesSet = new Set(parsed.map((t: any) => t.scheduledDate));
-          const startsTodayWithKinematics =
-            parsed[0]?.scheduledDate === SCHEDULE_BASE_DATE &&
-            (parsed[0]?.paperId === 'vibrant-kinematics-part-1' || parsed[0]?.title?.includes('Kinematics'));
-          if (datesSet.size === parsed.length && startsTodayWithKinematics) {
-            return parsed;
-          }
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const storedById = new Map<string, any>();
+          const customUserTests: ScheduledTest[] = [];
+          parsed.forEach((t: any) => {
+            if (t && typeof t.id === 'string') {
+              storedById.set(t.id, t);
+              if (!t.id.startsWith('sched-day-')) {
+                customUserTests.push({
+                  ...t,
+                  status: t.status === 'COMPLETED' ? 'COMPLETED' : 'UPCOMING_LOCKED',
+                });
+              }
+            }
+          });
+
+          // Always refresh master schedule entries with latest scanned papers, fixed dates, and 09:00-12:00 window
+          const refreshedMaster = SAMPLE_SCHEDULED_TESTS.map((freshTest) => {
+            const prev = storedById.get(freshTest.id);
+            if (!prev) return freshTest;
+            const prevCompletedById = new Map<string, boolean>(
+              Array.isArray(prev.syllabus)
+                ? prev.syllabus.map((s: any) => [s.id, Boolean(s.completed)])
+                : []
+            );
+            return {
+              ...freshTest,
+              status: prev.status === 'COMPLETED' ? ('COMPLETED' as const) : ('UPCOMING_LOCKED' as const),
+              score: prev.score,
+              syllabus: freshTest.syllabus.map((top) => ({
+                ...top,
+                completed: prevCompletedById.get(top.id) ?? top.completed,
+              })),
+            };
+          });
+
+          return [...customUserTests, ...refreshedMaster];
         }
       }
       return SAMPLE_SCHEDULED_TESTS;
@@ -90,8 +117,8 @@ export default function App() {
   });
 
   // Re-align coaching roadmap fresh:
-  // Physics: Electrostatics, Kinematics, Geometrical Optics, Modern Physics, Current Electricity
-  // Mathematics: Vectors & 3-D, Integration, Matrices, Determinant, Differential Eq & AUC, Limit/Cont/Diff, Binomial Theorem
+  // Physics: Kinematics, Electrostatics, Current Electricity, Geometrical Optics, Modern Physics
+  // Mathematics: Matrices, Determinant, Binomial Theorem, Vectors & 3-D, Integration, Diff Eq & AUC, LCD
   const handleResetCoachingSchedule = () => {
     const fresh = buildMasterAlternateSchedule(SCHEDULE_BASE_DATE);
     setScheduledTests(fresh);
@@ -102,21 +129,50 @@ export default function App() {
     }
   };
 
-  // Persistent Daily Coaching Routine Checklist
+  // Persistent Daily Coaching Routine Checklist (always refresh default routine papers)
   const [routineItems, setRoutineItems] = useState<DailyRoutineItem[]>(() => {
     try {
       const stored = localStorage.getItem('jee_daily_routine');
-      return stored ? JSON.parse(stored) : SAMPLE_DAILY_ROUTINE;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const sampleIds = new Set(SAMPLE_DAILY_ROUTINE.map((r) => r.id));
+          const storedById = new Map(parsed.map((r: any) => [r.id, r]));
+          const customItems = parsed.filter((r: any) => r && !sampleIds.has(r.id));
+          const refreshedSample = SAMPLE_DAILY_ROUTINE.map((sample) => {
+            const prev: any = storedById.get(sample.id);
+            return prev ? { ...sample, isCompleted: Boolean(prev.isCompleted) } : sample;
+          });
+          return [...customItems, ...refreshedSample];
+        }
+      }
+      return SAMPLE_DAILY_ROUTINE;
     } catch {
       return SAMPLE_DAILY_ROUTINE;
     }
   });
 
-  // Persistent Tagged RACE & Doubt Bank Questions
+  // Persistent Tagged RACE & Doubt Bank Questions (refresh preset sample question objects)
   const [taggedRaceQuestions, setTaggedRaceQuestions] = useState<TaggedQuestionEntry[]>(() => {
     try {
       const stored = localStorage.getItem('jee_tagged_race_bank');
-      return stored ? JSON.parse(stored) : SAMPLE_TAGGED_RACE_QUESTIONS;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const sampleById = new Map(SAMPLE_TAGGED_RACE_QUESTIONS.map((q) => [q.id, q]));
+          return parsed.map((entry: TaggedQuestionEntry) => {
+            const freshSample = sampleById.get(entry.id);
+            return freshSample
+              ? {
+                  ...entry,
+                  question: freshSample.question,
+                  correctAnswer: freshSample.question.correctAnswer,
+                }
+              : entry;
+          });
+        }
+      }
+      return SAMPLE_TAGGED_RACE_QUESTIONS;
     } catch {
       return SAMPLE_TAGGED_RACE_QUESTIONS;
     }
@@ -193,8 +249,37 @@ export default function App() {
 
   // Handler: Submit examination -> Save attempt and view analytics
   const handleSubmitExam = (attempt: StudentAttempt) => {
-    setSavedAttempts((prev) => [attempt, ...prev]);
-    setActiveAttempt(attempt);
+    let earnedScore = typeof attempt.score === 'number' ? attempt.score : 0;
+    if (typeof attempt.score !== 'number' && selectedPaper) {
+      let calc = 0;
+      selectedPaper.sections.forEach((sec) => {
+        sec.questions.forEach((q) => {
+          const ua = attempt.answers[q.id];
+          const hasAns = ua !== undefined && ua !== '' && !(Array.isArray(ua) && ua.length === 0);
+          if (!hasAns) return;
+          let ok = false;
+          const sc = String(q.correctAnswer ?? '').trim();
+          if (q.type === 'MULTIPLE_CORRECT') {
+            const cSet = sc.split(',').map((s) => s.trim().toUpperCase()).sort();
+            const uSet = Array.isArray(ua)
+              ? [...ua].map((s) => String(s).trim().toUpperCase()).sort()
+              : String(ua).split(',').map((s) => s.trim().toUpperCase()).sort();
+            ok = JSON.stringify(cSet) === JSON.stringify(uSet);
+          } else if (q.type === 'NUMERICAL') {
+            const un = parseFloat(String(ua).trim());
+            const cn = parseFloat(sc);
+            ok = !isNaN(un) && !isNaN(cn) ? Math.abs(un - cn) < 0.05 : String(ua).trim() === sc;
+          } else {
+            ok = String(ua).trim().toUpperCase() === sc.toUpperCase();
+          }
+          calc += ok ? (q.positiveMarks || 4) : -(q.negativeMarks ?? (q.type === 'NUMERICAL' ? 0 : 1));
+        });
+      });
+      earnedScore = calc;
+    }
+    const scoredAttempt: StudentAttempt = { ...attempt, score: earnedScore };
+    setSavedAttempts((prev) => [scoredAttempt, ...prev]);
+    setActiveAttempt(scoredAttempt);
 
     // CRITICAL FIX: Only mark a scheduled test as COMPLETED if activeScheduledTest is explicitly set
     // AND the attempt is NOT a module marathon or module practice test
@@ -206,7 +291,7 @@ export default function App() {
       setScheduledTests((prev) =>
         prev.map((t) => {
           if (t.id === activeScheduledTest.id) {
-            return { ...t, status: 'COMPLETED', score: attempt.totalMarks };
+            return { ...t, status: 'COMPLETED', score: earnedScore };
           }
           return t;
         })

@@ -5,9 +5,13 @@ import { MATRICES_PART_3_QUESTIONS } from './vibrantMatricesPart3';
 
 export const ALL_MATRICES_QUESTIONS: Question[] = [
   ...MATRICES_PART_1_QUESTIONS,
-  ...MATRICES_PART_2_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 50 + idx + 1, id: `mat-master-${50 + idx + 1}` })),
-  ...MATRICES_PART_3_QUESTIONS.map((q, idx) => ({ ...q, questionNumber: 100 + idx + 1, id: `mat-master-${100 + idx + 1}` })),
-];
+  ...MATRICES_PART_2_QUESTIONS,
+  ...MATRICES_PART_3_QUESTIONS,
+].map((q, idx) => ({
+  ...q,
+  questionNumber: idx + 1,
+  id: `mat-master-${idx + 1}`,
+}));
 
 export const VIBRANT_MATRICES_PAPER_1: ExamPaper = {
   id: 'vibrant-matrices-part-1',
@@ -29,7 +33,7 @@ export const VIBRANT_MATRICES_PAPER_2: ExamPaper = {
 
 export const VIBRANT_MATRICES_PAPER_3: ExamPaper = {
   id: 'vibrant-matrices-part-3',
-  title: 'Vibrant Kota Mathematics - Matrices CBT Mock Test 03 (Part 3 - 46Q Advanced)',
+  title: 'Vibrant Kota Mathematics - Matrices CBT Mock Test 03 (Part 3 - 46Q Advanced Archive)',
   pattern: 'JEE_MAIN',
   durationMinutes: 180,
   totalMarks: 184,
@@ -53,8 +57,15 @@ export const ALL_VIBRANT_MATRICES_PAPERS: ExamPaper[] = [
 ];
 
 export function getVibrantMatricesLockedTests(baseDateStr?: string): ScheduledTest[] {
-  const d = new Date(baseDateStr || '2026-10-18');
-  const formatIso = (date: Date) => date.toISOString().split('T')[0];
+  const anchor = baseDateStr || '2026-10-25';
+  const [y, m, day] = anchor.split('-').map(Number);
+  const d = new Date(y, m - 1, day);
+  const formatIso = (date: Date) => {
+    const yy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yy}-${mm}-${dd}`;
+  };
   return ALL_VIBRANT_MATRICES_PAPERS.map((paper, idx) => {
     const testDate = new Date(d);
     testDate.setDate(d.getDate() + 28 + idx * 2);
@@ -71,8 +82,9 @@ export function getVibrantMatricesLockedTests(baseDateStr?: string): ScheduledTe
       paper,
       status: 'UPCOMING_LOCKED',
       isLocked: true,
-      scheduledAt: Date.now() + idx,
+      scheduledAt: idx + 1,
       syllabus: [{ id: `syl-mat-${idx}`, subject: 'mathematics', name: paper.sections[0].name, completed: false }],
     };
   });
 }
+

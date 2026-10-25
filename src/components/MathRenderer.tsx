@@ -7,6 +7,48 @@ interface MathRendererProps {
   block?: boolean;
 }
 
+const SAFE_HTML_TAG_RE = /^<\/?(?:strong|b|em|i|u|br|sup|sub|span|div|p|ul|ol|li|code|table|thead|tbody|tr|th|td)\b[^>]*>$/i;
+
+function sanitizePlainTextSegment(segment: string): string {
+  // Preserve legitimate HTML formatting tags while escaping bare '<' (e.g. "0 < x < 1" outside $)
+  let out = '';
+  let lastIdx = 0;
+  const tagCandidateRe = /<[^>]*>/g;
+  let match: RegExpExecArray | null;
+  while ((match = tagCandidateRe.exec(segment)) !== null) {
+    const before = segment.slice(lastIdx, match.index).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const candidate = match[0];
+    if (SAFE_HTML_TAG_RE.test(candidate)) {
+      out += before + candidate;
+    } else {
+      out += before + candidate.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    lastIdx = match.index + candidate.length;
+  }
+  out += segment.slice(lastIdx).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // Render any standalone un-delimited LaTeX commands in plain text only (never inside KaTeX output)
+  out = out.replace(
+    /\\(frac|sqrt|vec|int|sum|prod|lim|alpha|beta|gamma|delta|theta|lambda|mu|pi|sigma|omega|Delta|Omega|times|div|pm|mp|approx|neq|leq|geq|infty|rightarrow|leftarrow|Rightarrow|Leftrightarrow)(?:\{[^{}]*\}|\[[^\[\]]*\]|[a-zA-Z0-9\^_\+\-\*\/=])*/g,
+    (matched) => {
+      try {
+        return katex.renderToString(matched.trim(), {
+          displayMode: false,
+          throwOnError: false,
+          strict: false,
+        });
+      } catch {
+        return matched;
+      }
+    }
+  );
+
+  // Support Markdown **bold** in plain text segments (e.g. **Paragraph:**, **Column-I**)
+  out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+
+  return out.replace(/\n/g, '<br/>');
+}
+
 export const MathRenderer: React.FC<MathRendererProps> = ({
   content = '',
   className = '',
@@ -16,57 +58,54 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
     if (!content) return '';
 
     try {
-      // If the content is purely a math block without delimiters
+      // Pure math block without $ delimiters
       if (block && !content.includes('$')) {
-        return katex.renderToString(content, {
+        return katex.renderToString(content.trim(), {
           displayMode: true,
           throwOnError: false,
+          strict: false,
+          trust: true,
         });
       }
 
-      // Replace $$...$$ first (display math), then $...$ (inline math)
-      let parsed = content;
+      // Single-pass tokenization for $$...$$ (display) and $...$ (inline)
+      const tokenRegex = /(\$\$[\s\S]+?\$\$|(?<!\\)\$[^\$]+?\$)/g;
+      const parts = content.split(tokenRegex);
 
-      // Match block math: $$...$$
-      parsed = parsed.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
-        try {
-          return katex.renderToString(math.trim(), {
-            displayMode: true,
-            throwOnError: false,
-          });
-        } catch {
-          return `<span class="text-rose-500">[Math: ${math}]</span>`;
-        }
-      });
-
-      // Match inline math: $...$ (ensure not preceded by backslash)
-      parsed = parsed.replace(/(?<!\\)\$([^\$]+?)\$/g, (_, math) => {
-        try {
-          return katex.renderToString(math.trim(), {
-            displayMode: false,
-            throwOnError: false,
-          });
-        } catch {
-          return `<span class="text-rose-500">[Math: ${math}]</span>`;
-        }
-      });
-
-      // Match standalone un-delimited LaTeX expressions if any remain (e.g. \frac{1}{2}, \sqrt{3}, \alpha, \vec{v})
-      parsed = parsed.replace(/\\(frac|sqrt|vec|int|sum|alpha|beta|gamma|delta|theta|lambda|mu|pi|sigma|omega|Delta|Omega|times|div|pm|approx|neq|leq|geq|infty|rightarrow|leftarrow)(?:\{[^{}]*\}|\[[^\[\]]*\]|[a-zA-Z0-9\^_\+\-\*\/= ])+/g, (matched) => {
-        try {
-          return katex.renderToString(matched.trim(), {
-            displayMode: false,
-            throwOnError: false,
-          });
-        } catch {
-          return matched;
-        }
-      });
-
-      // Format linebreaks
-      parsed = parsed.replace(/\n/g, '<br/>');
-
-      return parsed;
+      return parts
+        .map((part) => {
+          if (!part) return '';
+          if (part.startsWith('$$') && part.endsWith('$$') && part.length >= 4) {
+            const math = part.slice(2, -2).trim();
+            if (!math) return '';
+            try {
+              return katex.renderToString(math, {
+                displayMode: true,
+                throwOnError: false,
+                strict: false,
+                trust: true,
+              });
+            } catch {
+              return `<span class="font-mono text-amber-400">${math}</span>`;
+            }
+          }
+          if (part.startsWith('$') && part.endsWith('$') && part.length >= 2) {
+            const math = part.slice(1, -1).trim();
+            if (!math) return '';
+            try {
+              return katex.renderToString(math, {
+                displayMode: false,
+                throwOnError: false,
+                strict: false,
+                trust: true,
+              });
+            } catch {
+              return `<span class="font-mono text-amber-400">${math}</span>`;
+            }
+          }
+          return sanitizePlainTextSegment(part);
+        })
+        .join('');
     } catch (e) {
       console.error('KaTeX rendering error:', e);
       return content;
@@ -75,7 +114,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
 
   return (
     <div
-      className={`math-content leading-relaxed text-slate-800 dark:text-slate-100 ${className}`}
+      className={`math-content leading-relaxed overflow-x-auto text-slate-800 dark:text-slate-100 ${className}`}
       dangerouslySetInnerHTML={{ __html: renderedHtml }}
     />
   );

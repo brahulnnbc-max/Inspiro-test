@@ -2,847 +2,1018 @@ import { Question } from '../types/exam';
 
 export const BINOMIAL_PART_2_QUESTIONS: Question[] = [
   {
-    id: 'bin-p2-q1',
-    questionNumber: 1,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q51] If in the expansion of 2 1 / 3 + , the ratio of 6th terms from beginning and from the end is 1/6, then the 3 1 / 3 value of n is -',
-    options: [
-      { id: 'A', labelLatex: '^{5}' },
-      { id: 'B', labelLatex: '^{7}' },
-      { id: 'C', labelLatex: '^{9}' },
-      { id: 'D', labelLatex: 'None of these 1 1 1' },
+    "id": "bin-p2-q1",
+    "questionNumber": 1,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "The expressions $1 + x,\\; 1 + x + x^2,\\; 1 + x + x^2 + x^3,\\dots,\\; 1 + x + x^2 + \\dots + x^n$ are multiplied together and the terms of the product thus obtained are arranged in increasing powers of $x$ in the form of $a_0 + a_1 x + a_2 x^2 + \\dots$, then find the number of terms in the product.",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{n^2 + n + 2}{2}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{n(n+1)}{2}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$\\frac{n^2 + 3n + 2}{2}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$n^2 + 1$"
+      }
     ],
-    correctAnswer: '12',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **12**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 51.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.10]** The maximum power of $x$ is $1 + 2 + 3 + \\dots + n = \\frac{n(n+1)}{2}$. Since the product starts with degree $0$, the number of terms is $\\frac{n(n+1)}{2} + 1 = \\frac{n^2 + n + 2}{2}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q2',
-    questionNumber: 2,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q52] 1 ! ( n - 1 )! + 3 ! ( n - 3 )! + 5 ! ( n - 5 ) ! + .......= 2 n 2 n - 1',
-    options: [
-      { id: 'A', labelLatex: '^{n} !' },
-      { id: 'B', labelLatex: '^{n} !' },
-      { id: 'C', labelLatex: '^{0}' },
-      { id: 'D', labelLatex: 'None of these' },
+    "id": "bin-p2-q2",
+    "questionNumber": 2,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "Find the coeff. of \\\\\n(a) $x^6$ in the expansion of $(ax^2 + bx + c)^9$. \\\\\n(b) $x^2 y^3 z^4$ in the expansion of $(ax - by + cz)^9$. \\\\\n(c) $a^2 b^3 c^4 d$ in the expansion of $(a - b - c + d)^{10}$.",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$84b^6c^3 + 630ab^4c^4 + 756a^2b^2c^5 + 84a^3c^6$, (b) $-1260 a^2b^3c^4$, (c) $-12600$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$84b^6c^3 + 630ab^4c^4 + 756a^2b^2c^5 + 84a^3c^6$, (b) $1260 a^2b^3c^4$, (c) $12600$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$84b^6c^3 + 252ab^4c^4 + 756a^2b^2c^5 + 84a^3c^6$, (b) $-1260 a^2b^3c^4$, (c) $-12600$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$84b^6c^3 + 630ab^4c^4 + 756a^2b^2c^5 + 84a^3c^6$, (b) $-1260 a^2b^3c^4$, (c) $-25200$"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 52.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.11]** Using the multinomial theorem: for (b), $\\frac{9!}{2!3!4!} a^2(-b)^3 c^4 = -1260 a^2 b^3 c^4$; for (c), $\\frac{10!}{2!3!4!1!} (1)^2(-1)^3(-1)^4(1)^1 = -12600$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q3',
-    questionNumber: 3,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q53] If (1+ x)^{n} = C + C x + C x^{2} +....+ C x n , then ( C 0 + C 1 )( C 1 + C 2 )...( C n - 1 + C n ) equals- 0 1 2 ^{n}C_{1} C 2 ... C n n n ( n + 1 )^{n} n n',
-    options: [
-      { id: 'A', labelLatex: '( n + 1 )!' },
-      { id: 'B', labelLatex: '^{n} !' },
-      { id: 'C', labelLatex: '^{n} !' },
-      { id: 'D', labelLatex: 'None of these' },
+    "id": "bin-p2-q3",
+    "questionNumber": 3,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "Find the coefficient of $x^r$ in the expression of : \\\\\n$(x + 3)^{n-1} + (x + 3)^{n-2}(x + 2) + (x + 3)^{n-3}(x + 2)^2 + \\dots + (x + 2)^{n-1}$",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "${}^n C_r (3^{n-r} - 2^{n-r})$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "${}^n C_r (3^r - 2^r)$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "${}^{n-1} C_r (3^{n-r} - 2^{n-r})$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "${}^{n+1} C_r (3^{n-r} - 2^{n-r})$"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 53.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.12]** The given expression is a geometric progression with sum $\\frac{(x+3)^n - (x+2)^n}{(x+3) - (x+2)} = (x+3)^n - (x+2)^n$. The coefficient of $x^r$ is ${}^n C_r (3^{n-r} - 2^{n-r})$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q4',
-    questionNumber: 4,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q54] 1 + 1 + 13 . + 13 5 . . + .... is equal to - 5 5 10 . 5 10 15 . . 1 1 5',
-    options: [
-      { id: 'A', labelLatex: '^{5}' },
-      { id: 'B', labelLatex: '^{2}' },
-      { id: 'C', labelLatex: '^{3}' },
-      { id: 'D', labelLatex: '^{5} 1 + 2 x + 3 x^{2}' },
+    "id": "bin-p2-q4",
+    "questionNumber": 4,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "(a) Find the index $n$ of the binomial $\\left(\\frac{x}{5} + \\frac{2}{5}\\right)^n$ if the 9th term of the expansion has numerically the greatest coefficient ($n \\in \\mathbb{N}$). \\\\\n(b) For which positive values of $x$ is the fourth term in the expansion of $(5 + 3x)^{10}$ is the greatest.",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$n = 12$, (b) $\\frac{5}{8} < x < \\frac{20}{21}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$n = 11$, (b) $\\frac{1}{2} < x < 1$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$n = 12$, (b) $\\frac{3}{5} < x < \\frac{5}{6}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$n = 13$, (b) $\\frac{5}{8} < x < \\frac{20}{21}$"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 54.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.13]** For (a), $T_9$ greatest coefficient implies $\\frac{{}^n C_8 2^{n-8}}{{}^n C_7 2^{n-7}} \\ge 1$ and $\\frac{{}^n C_9 2^{n-9}}{{}^n C_8 2^{n-8}} \\le 1$, yielding $n=12$. For (b), $T_4 > T_3$ and $T_4 > T_5$ gives $\\frac{5}{8} < x < \\frac{20}{21}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q5',
-    questionNumber: 5,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q55] The coefficient of x^{4} in the expansion of 2 is- ( 1 - x )',
-    options: [
-      { id: 'A', labelLatex: '^{13}' },
-      { id: 'B', labelLatex: '^{14}' },
-      { id: 'C', labelLatex: '^{20}' },
-      { id: 'D', labelLatex: '^{22}' },
+    "id": "bin-p2-q5",
+    "questionNumber": 5,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "(a) Find the number of divisors of the number \\\\\n$N = {}^{2000}C_1 + 2 \\cdot {}^{2000}C_2 + 3 \\cdot {}^{2000}C_3 + \\dots + 2000 \\cdot {}^{2000}C_{2000}$. \\\\\n(b) Find the sum of the roots (real or complex) of the equation $x^{2001} + \\left(\\frac{1}{2} - x\\right)^{2001} = 0$.",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$8016$; (b) $500$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$4008$; (b) $500$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$8016$; (b) $1000$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$2004$; (b) $250$"
+      }
     ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 55.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.14]** $N = 2000 \\cdot 2^{1999} = 125 \\cdot 16 \\cdot 2^{1999} = 5^3 \\cdot 2^{2003}$, so number of divisors is $(3+1)(2003+1) = 4 \\times 2004 = 8016$. For (b), the equation degree is $2000$, sum of roots is $500$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q6',
-    questionNumber: 6,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q56] If the fourth term in the expansion of (px + 1/x)^{n} is 5/2 then the value of n and p are respectively-',
-    options: [
-      { id: 'A', labelLatex: '^{6}, 1/2' },
-      { id: 'B', labelLatex: '^{1}/2, 6' },
-      { id: 'C', labelLatex: '^{3},1' },
-      { id: 'D', labelLatex: '^{3}, 1/2' },
+    "id": "bin-p2-q6",
+    "questionNumber": 6,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "Show that the integral part of $(5 + 2\\sqrt{6})^n$ is odd for all $n \\in \\mathbb{N}$.",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "Always odd"
+      },
+      {
+        "id": "B",
+        "labelLatex": "Always even"
+      },
+      {
+        "id": "C",
+        "labelLatex": "Odd only for odd $n$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "Even only for odd $n$"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 56.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.15]** Let $(5+2\\sqrt{6})^n = I + f$ and $(5-2\\sqrt{6})^n = f'$. Then $I + f + f' = 2 \\sum {}^n C_{2k} 5^{n-2k} (24)^k$, which is an even integer, so $I = \\text{even} - 1 = \\text{odd}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q7',
-    questionNumber: 7,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q57] The coefficient of x^{4} in the expansion of (1+ x + x^{2} + x^{3} )^{n} is -',
-    options: [
-      { id: 'A', labelLatex: '^{n}C_{4}' },
-      { id: 'B', labelLatex: '^{n}C_{4} + ^{n}C_{2}' },
-      { id: 'C', labelLatex: '^{n}C_{1} + ^{n}C_{2} + ^{n}C_{4}. ^{n}C_{2}' },
-      { id: 'D', labelLatex: '^{n}C_{4} + ^{n}C_{2} + ^{n}C_{1} . ^{n}C_{2}' },
+    "id": "bin-p2-q7",
+    "questionNumber": 7,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $(7 + 4\\sqrt{3})^n = p + \\beta$ where $n$ & $p$ are positive integers and $\\beta$ is a proper fraction, then the value of $(1 - \\beta)(p + \\beta)$ is :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$1$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$2$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$0$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$2^n$"
+      }
     ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 57.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.16]** Let $(7-4\\sqrt{3})^n = \\beta'$. Then $p + \\beta + \\beta'$ is an integer, so $\\beta' = 1 - \\beta$. Thus $(1-\\beta)(p+\\beta) = (7-4\\sqrt{3})^n (7+4\\sqrt{3})^n = (49-48)^n = 1$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q8',
-    questionNumber: 8,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q58] If (2- x - x^{2} )^{2n} = a 0 + a 1 x+a 2 x^{2} + a 3 x^{3} + ..., then the value of a 0 + a 2 + a 4 + .... is-',
-    options: [
-      { id: 'A', labelLatex: '^{2} n-1' },
-      { id: 'B', labelLatex: '^{2} 2n' },
-      { id: 'C', labelLatex: '^{2} 2n-1' },
-      { id: 'D', labelLatex: 'None of these' },
+    "id": "bin-p2-q8",
+    "questionNumber": 8,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $(6\\sqrt{6} + 14)^{2n+1} = N$ and $F$ be the fractional part of $N$, then the value of $NF$ is ($n \\in \\mathbb{N}$) :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$20^{2n+1}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$14^{2n+1}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$6^{2n+1}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$2^{2n+1}$"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 58.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.17]** $F = (6\\sqrt{6} - 14)^{2n+1}$, so $NF = ((6\\sqrt{6}+14)(6\\sqrt{6}-14))^{2n+1} = (216-196)^{2n+1} = 20^{2n+1}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q9',
-    questionNumber: 9,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q59] If the third term in the expansion of  x + x log 10 x  5 is equal to 10,00,000 , then x equals-',
-    options: [
-      { id: 'A', labelLatex: '10' },
-      { id: 'B', labelLatex: '^{10} 2' },
-      { id: 'C', labelLatex: '10 3' },
-      { id: 'D', labelLatex: 'No such x exists' },
+    "id": "bin-p2-q9",
+    "questionNumber": 9,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $C_0, C_1, C_2, \\dots, C_n$ are the combinatorial coefficients in the expansion of $(1 + x)^n$, $n \\in \\mathbb{N}$, then $C_0^2 + C_1^2 + C_2^2 + \\dots + C_n^2$ equals :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{(2n)!}{n! \\, n!}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{(2n)!}{(n-1)! \\, (n+1)!}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$\\frac{(2n)!}{(n!)^3}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$2^n$"
+      }
     ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 59.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.18]** The sum of the squares of the coefficients is the coefficient of $x^n$ in $(1+x)^{2n}$, which is ${}^{2n}C_n = \\frac{(2n)!}{n!n!}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q10',
-    questionNumber: 10,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q60] If (1+ x)^{n} = C 0 + C 1 x + C 2 x^{2} + ....+ C n x n , then ^{3}C_{0} - ^{5}C_{1} + ^{7}C_{2} + ...+ (-1)^{n} (2n+ 3) C n equals-',
-    options: [
-      { id: 'A', labelLatex: '^{1}' },
-      { id: 'B', labelLatex: '^{2}(2n + 3)^{2} n' },
-      { id: 'C', labelLatex: '(2n+3)^{2} n-1' },
-      { id: 'D', labelLatex: '^{0}' },
+    "id": "bin-p2-q10",
+    "questionNumber": 10,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $C_0, C_1, C_2, \\dots, C_n$ are the combinatorial coefficients in the expansion of $(1 + x)^n$, $n \\in \\mathbb{N}$, then $C_1 + 2C_2 + 3C_3 + \\dots + n \\cdot C_n$ equals :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$n \\cdot 2^n$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$n \\cdot 2^{n-1}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$(n-1) \\cdot 2^n$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$(n+1) \\cdot 2^{n-1}$"
+      }
     ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 60.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.19]** Differentiating $(1+x)^n = \\sum C_r x^r$ with respect to $x$ and putting $x=1$ gives $n(1+1)^{n-1} = n \\cdot 2^{n-1}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q11',
-    questionNumber: 11,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q61] If 6 83 + 8 83 is divided by 49, then the remainder is',
-    options: [
-      { id: 'A', labelLatex: '^{35}' },
-      { id: 'B', labelLatex: '^{5}' },
-      { id: 'C', labelLatex: '^{14}' },
-      { id: 'D', labelLatex: '^{2}C_{0} + C 1 + C 2 + ...... + C 10 is equal to 1 2 3 11 2 11 2 11 - 1 3 11 3 11 - 1 (A)^{11} (B)^{11} (C)^{11} (D)^{11}' },
+    "id": "bin-p2-q11",
+    "questionNumber": 11,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $P_n$ denotes the product of all the coefficients in the expansion of $(1 + x)^n$, $n \\in \\mathbb{N}$, then $\\frac{P_{n+1}}{P_n}$ is equal to :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{(n+1)^n}{n!}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{n^n}{(n+1)!}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$\\frac{(n+1)^{n+1}}{n!}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$\\frac{(n+1)!}{n^n}$"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 61.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-I Q.20]** $\\frac{P_{n+1}}{P_n} = \\prod_{r=1}^{n+1} \\frac{{}^{n+1}C_r}{{}^n C_{r-1}} = \\prod_{r=1}^{n+1} \\frac{n+1}{r} = \\frac{(n+1)^{n+1}}{(n+1)!} = \\frac{(n+1)^n}{n!}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q12',
-    questionNumber: 12,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q62] Last three digits of the number N = 7 100 - 3 100 are',
-    options: [
-      { id: 'A', labelLatex: '^{100}' },
-      { id: 'B', labelLatex: '^{300}' },
-      { id: 'C', labelLatex: '^{500}' },
-      { id: 'D', labelLatex: '^{000} n 2' },
+    "id": "bin-p2-q12",
+    "questionNumber": 12,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If in the expansion of $\\left(2^{1/3} + \\frac{1}{3^{1/3}}\\right)^n$, the ratio of 6th terms from beginning and from the end is $1/6$, then the value of $n$ is -",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "5"
+      },
+      {
+        "id": "B",
+        "labelLatex": "7"
+      },
+      {
+        "id": "C",
+        "labelLatex": "9"
+      },
+      {
+        "id": "D",
+        "labelLatex": "None of these"
+      }
     ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 62.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.1]** $T_6 = {}^n C_5 (2^{1/3})^{n-5} (3^{-1/3})^5$. The 6th term from the end is $T_{n-4} = {}^n C_5 (2^{1/3})^5 (3^{-1/3})^{n-5}$. Ratio is $6^{(n-10)/3} = 6^{-1} \\implies \\frac{n-10}{3} = -1 \\implies n = 7$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q13',
-    questionNumber: 13,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q63] Let  5 + 2 6  = p + f where n \\in N and p \\in N and 0 < f < 1 then the value of, f - f + pf - p is',
-    options: [
-      { id: 'A', labelLatex: 'a composite number' },
-      { id: 'B', labelLatex: 'a negative integer' },
-      { id: 'C', labelLatex: 'a prime number' },
-      { id: 'D', labelLatex: 'an irrational number 4 100' },
+    "id": "bin-p2-q13",
+    "questionNumber": 13,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "$\\frac{1}{1!(n - 1)!} + \\frac{1}{3!(n - 3)!} + \\frac{1}{5!(n - 5)!} + \\dots =$ -",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{2^n}{n!}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{2^{n-1}}{n!}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$0$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "None of these"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 63.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.2]** Multiply and divide by $n!$: $\\frac{1}{n!} ({}^n C_1 + {}^n C_3 + {}^n C_5 + \\dots) = \\frac{2^{n-1}}{n!}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q14',
-    questionNumber: 14,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q64] Number of rational terms in the expansion of  2 + 3  is :',
-    options: [
-      { id: 'A', labelLatex: '^{25}' },
-      { id: 'B', labelLatex: '^{26}' },
-      { id: 'C', labelLatex: '^{27}' },
-      { id: 'D', labelLatex: '^{28}' },
+    "id": "bin-p2-q14",
+    "questionNumber": 14,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $(1 + x)^n = C_0 + C_1 x + C_2 x^2 + \\dots + C_n x^n$, then $\\frac{(C_0 + C_1)(C_1 + C_2)\\dots(C_{n-1} + C_n)}{C_1 C_2 \\dots C_n}$ equals-",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{n^n}{(n + 1)!}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{(n + 1)^n}{n!}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$\\frac{n^n}{n!}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "None of these"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 64.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.3]** Each factor is $\\frac{C_{r-1} + C_r}{C_r} = 1 + \\frac{r}{n-r+1} = \\frac{n+1}{n-r+1}$. Taking product for $r=1$ to $n$ gives $\\frac{(n+1)^n}{n!}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q15',
-    questionNumber: 15,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q65] The coefficient of the middle term in the binomial expansion in powers of x of (1 + \\alpha x)^{4} and of (1 - \\alpha x)^{6} is the same if \\alpha equals : [AIEEE 2004]',
-    options: [
-      { id: 'A', labelLatex: '- 5' },
-      { id: 'B', labelLatex: '^{3}' },
-      { id: 'C', labelLatex: '- 3' },
-      { id: 'D', labelLatex: '^{10} 3 5 10 3' },
+    "id": "bin-p2-q15",
+    "questionNumber": 15,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "$1 + \\frac{1}{5} + \\frac{1 \\cdot 3}{5 \\cdot 10} + \\frac{1 \\cdot 3 \\cdot 5}{5 \\cdot 10 \\cdot 15} + \\dots$ is equal to -",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{1}{\\sqrt{5}}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{1}{\\sqrt{2}}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$\\sqrt{\\frac{5}{3}}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$\\sqrt{5}$"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 65.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "C",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.4]** Compare with $(1 - x)^{-1/2} = 1 + \\frac{1}{2}x + \\frac{1 \\cdot 3}{2 \\cdot 4}x^2 + \\dots$. Here $x = 2/5$, giving $(1 - 2/5)^{-1/2} = (3/5)^{-1/2} = \\sqrt{5/3}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q16',
-    questionNumber: 16,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q66] If S = n 1/ C n and t = n r / n C , then t /S is equal to [AIEEE 2004] n \\sum r  0 r n \\sum r  0 r n n',
-    options: [
-      { id: 'A', labelLatex: '^{1} n' },
-      { id: 'B', labelLatex: '^{1} n - 1' },
-      { id: 'C', labelLatex: '^{n} - 1' },
-      { id: 'D', labelLatex: '^{2n} - 1 2 2 2' },
+    "id": "bin-p2-q16",
+    "questionNumber": 16,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "The coefficient of $x^4$ in the expansion of $\\frac{1 + 2x + 3x^2}{(1 - x)^2}$ is-",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$13$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$14$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$20$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$22$"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 66.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.5]** $(1 - x)^{-2} = \\sum_{r=0}^\\infty (r+1)x^r$. Coefficient of $x^4$ is $1(5) + 2(4) + 3(3) = 5 + 8 + 9 = 22$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q17',
-    questionNumber: 17,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q67] If the coefficients of r^{\\text{th}} , (r + 1) th , and (r + 2) th terms in the binomial expansion of (1 + y) m are in A.P., then m and r satisfy the equation [AIEEE 2005]',
-    options: [
-      { id: 'A', labelLatex: 'm 2 - m(4r - 1) + 4r 2 - 2 = 0' },
-      { id: 'B', labelLatex: 'm 2 - m(4r + 1) + 4r 2 + 2 = 0' },
-      { id: 'C', labelLatex: 'm 2 - m(4r + 1) + 4r 2 - 2 = 0' },
-      { id: 'D', labelLatex: 'm 2 - m(4r - 1) + 4r 2 + 2 = 0' },
+    "id": "bin-p2-q17",
+    "questionNumber": 17,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If the fourth term in the expansion of $(px + 1/x)^n$ is $5/2$ then the value of $n$ and $p$ are respectively-",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$6, 1/2$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$1/2, 6$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$3, 1$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$3, 1/2$"
+      }
     ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 67.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.6]** $T_4 = {}^n C_3 (px)^{n-3} (x^{-1})^3 = {}^n C_3 p^{n-3} x^{n-6}$. For this to be constant, $n = 6$. Then ${}^6 C_3 p^3 = 20 p^3 = 5/2 \\implies p^3 = 1/8 \\implies p = 1/2$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q18',
-    questionNumber: 18,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q68] The value of 50 C + 6 56-r C is [AIEEE 2005] 4 \\sum r  1 3',
-    options: [
-      { id: 'A', labelLatex: '^{55}C_{4}' },
-      { id: 'B', labelLatex: '^{55}C_{3}' },
-      { id: 'C', labelLatex: '^{56}C_{3}' },
-      { id: 'D', labelLatex: '^{56}C_{4}' },
+    "id": "bin-p2-q18",
+    "questionNumber": 18,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "The coefficient of $x^4$ in the expansion of $(1 + x + x^2 + x^3)^n$ is -",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "${}^n C_4$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "${}^n C_4 + {}^n C_2$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "${}^n C_1 + {}^n C_2 + {}^n C_4 \\cdot {}^n C_2$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "${}^n C_4 + {}^n C_2 + {}^n C_1 \\cdot {}^n C_2$"
+      }
     ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 68.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.7]** $(1+x+x^2+x^3)^n = (1+x)^n(1+x^2)^n$. The coefficient of $x^4$ is ${}^n C_4 \\cdot {}^n C_0 + {}^n C_2 \\cdot {}^n C_1 + {}^n C_0 \\cdot {}^n C_2 = {}^n C_4 + {}^n C_2 + {}^n C_1 \\cdot {}^n C_2$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q19',
-    questionNumber: 19,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q69] If the coefficient of x^{7} in [ax 2 + (1/bx)] 11 equals the coefficient of x -7 in [ax -(1/bx 2 )] 11 , then a and b satisfy the relation [AIEEE 2005]',
-    options: [
-      { id: 'A', labelLatex: 'a - b = 1' },
-      { id: 'B', labelLatex: 'a + b = 1' },
-      { id: 'C', labelLatex: 'a = 1' },
-      { id: 'D', labelLatex: 'ab = 1 b 3/ 2 1 3 (1 + x) - 1 + 2 x' },
+    "id": "bin-p2-q19",
+    "questionNumber": 19,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $(2 - x - x^2)^{2n} = a_0 + a_1 x + a_2 x^2 + a_3 x^3 + \\dots$, then the value of $a_0 + a_2 + a_4 + \\dots$ is-",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$2^{n-1}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$2^{2n}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$2^{2n-1}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "None of these"
+      }
     ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 69.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "C",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.8]** For $x=1$, $(0)^{2n} = 0$. For $x=-1$, $(2)^{2n} = 2^{2n}$. The sum of even coefficients is $\\frac{0 + 2^{2n}}{2} = 2^{2n-1}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q20',
-    questionNumber: 20,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q70] If x is so small that x^{3} and higher powers of x may be neglected, then may be approxi- (1 - x)^{1}/2 mated as [AIEEE 2005]',
-    options: [
-      { id: 'A', labelLatex: '^{1}- 3 x^{2}' },
-      { id: 'B', labelLatex: '3x + 3 x^{2}' },
-      { id: 'C', labelLatex: '- 3 x^{2}' },
-      { id: 'D', labelLatex: 'x - 3 x^{2} 8 8 8 2 8 1 2 3' },
+    "id": "bin-p2-q20",
+    "questionNumber": 20,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If the third term in the expansion of $\\left[x + x^{\\log_{10} x}\\right]^5$ is equal to $10,00,000$, then $x$ equals-",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$10$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$10^2$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$10^3$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "No such $x$ exists"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 70.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.9]** $T_3 = {}^5 C_2 x^3 (x^{\\log_{10} x})^2 = 10 x^{3 + 2\\log_{10} x} = 10^6 \\implies x^{3 + 2\\log_{10} x} = 10^5$. Taking $\\log_{10}$ gives $2(\\log_{10} x)^2 + 3\\log_{10} x - 5 = 0$, so $\\log_{10} x = 1 \\implies x = 10$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q21',
-    questionNumber: 21,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q71] If the expansion of powers of x of the function (1 - ax)(1 - bx) is a 0 + a 1 x + a 2 x + a 3 x +........, then a n is [AIEEE 2006] b n - a n a n - b n a n 1 + - b n 1 + b n + 1 - a n + 1',
-    options: [
-      { id: 'A', labelLatex: 'b - a' },
-      { id: 'B', labelLatex: 'b - a' },
-      { id: 'C', labelLatex: 'b - a' },
-      { id: 'D', labelLatex: 'b - a' },
+    "id": "bin-p2-q21",
+    "questionNumber": 21,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $(1 + x)^n = C_0 + C_1 x + C_2 x^2 + \\dots + C_n x^n$, then $3C_0 - 5C_1 + 7C_2 + \\dots + (-1)^n (2n + 3) C_n$ equals-",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$1$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$2(2n + 3) 2^n$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$(2n+3) 2^{n-1}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$0$"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 71.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.10]** The general term is $(-1)^r (2r+3) C_r = 2(-1)^r r C_r + 3(-1)^r C_r$. For $n \\ge 2$, both $\\sum (-1)^r r C_r = 0$ and $\\sum (-1)^r C_r = 0$, so the sum is $0$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q22',
-    questionNumber: 22,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q72] For natural numbers m and n, if (1 - y) m (1 + y)^{n} = 1 + a 1 y + a 2 y^{2} +......, and a 1 = a 2 = 10, then (m, n) is [AIEEE 2006]',
-    options: [
-      { id: 'A', labelLatex: '(20, 45)' },
-      { id: 'B', labelLatex: '(35, 20)' },
-      { id: 'C', labelLatex: '(45, 35)' },
-      { id: 'D', labelLatex: '(35, 45)' },
+    "id": "bin-p2-q22",
+    "questionNumber": 22,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $6^{83} + 8^{83}$ is divided by $49$, then the remainder is",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$35$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$5$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$14$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$2$"
+      }
     ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 72.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.11]** $6^{83} + 8^{83} = (7-1)^{83} + (7+1)^{83} = 2[{}^{83}C_1 7 + {}^{83}C_3 7^3 + \\dots] = 2(83 \\times 7) + 49k = 1162 + 49k = 49(23) + 35 + 49k$, so the remainder is $35$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q23',
-    questionNumber: 23,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q73] In the binomial expansion of (a - b)^{n} , n \\ge 5, the sum of the fifth and sixth terms is zero, then a/b equals [AIEEE 2007]',
-    options: [
-      { id: 'A', labelLatex: '^{5}' },
-      { id: 'B', labelLatex: '^{6}' },
-      { id: 'C', labelLatex: '^{n} - 5' },
-      { id: 'D', labelLatex: '^{n} - 4 n - 4 n - 5 6 5' },
+    "id": "bin-p2-q23",
+    "questionNumber": 23,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $C_0, C_1, C_2 \\dots$ denotes the combinatorial coefficients in the expansion of $(1 + x)^{10}$, then the value of $\\frac{C_0}{1} + \\frac{C_1}{2} + \\frac{C_2}{3} + \\dots + \\frac{C_{10}}{11}$ is equal to",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$\\frac{2^{11}}{11}$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$\\frac{2^{11} - 1}{11}$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$\\frac{3^{11}}{11}$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$\\frac{3^{11} - 1}{11}$"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 73.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.12]** $\\sum_{r=0}^{10} \\frac{{}^{10}C_r}{r+1} = \\frac{1}{11} \\sum_{r=0}^{10} {}^{11}C_{r+1} = \\frac{2^{11} - 1}{11}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q24',
-    questionNumber: 24,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q74] The sum of the series ^{20}C_{0} - ^{20}C_{1} + ^{20}C_{2} - ^{20}C_{3} +......+ ^{20}C_{10} is : [AIEEE 2007]',
-    options: [
-      { id: 'A', labelLatex: '- 20 C' },
-      { id: 'B', labelLatex: '^{1} 20 C' },
-      { id: 'C', labelLatex: '^{0}' },
-      { id: 'D', labelLatex: '^{20}C_{r}  0 Statement 2 : n (r + 1)^{n} C x r = (1 + x)^{n} + nx(1 + x)^{n}-1 \\sum r  0 r (A) Statement 1 is false, statement 2 is true. (B) Statement 1 is true, statement 2 is true ; statement 2 is a correct explanation for statement 1. (C) Statement 1 is true, statement 2 is true; statement 2 is not a correct explanation for statement 1. (D) Statement 1 is true, statement 2 is false.' },
+    "id": "bin-p2-q24",
+    "questionNumber": 24,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "Last three digits of the number $N = 7^{100} - 3^{100}$ are",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$100$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$300$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$500$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$000$"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 74.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.13]** $7^{100} = (49)^{50} = (50 - 1)^{50} \\equiv 1 - 2500 \\equiv 501 \\pmod{1000}$. $3^{100} = (81)^{25} = (1 + 80)^{25} \\equiv 1 + 25 \\times 80 = 2001 \\equiv 501 \\pmod{1000}$ (or both are $001$ modulo $1000$ by Euler's totient since $\\phi(1000)=400$). Thus $7^{100} - 3^{100} \\equiv 000 \\pmod{1000}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q25',
-    questionNumber: 25,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q75] The remainder left out when 8 2n - (62)^{2n} + 1 is divided by 9 is [AIEEE 2009]',
-    options: [
-      { id: 'A', labelLatex: '^{0}' },
-      { id: 'B', labelLatex: '^{2}' },
-      { id: 'C', labelLatex: '^{7}' },
-      { id: 'D', labelLatex: '^{8} 10 10 10 2 10' },
+    "id": "bin-p2-q25",
+    "questionNumber": 25,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "Let $(5 + 2\\sqrt{6})^n = p + f$ where $n \\in \\mathbb{N}$ and $p \\in \\mathbb{N}$ and $0 < f < 1$ then the value of, $f^2 - f + pf - p$ is",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "a composite number"
+      },
+      {
+        "id": "B",
+        "labelLatex": "a negative integer"
+      },
+      {
+        "id": "C",
+        "labelLatex": "a prime number"
+      },
+      {
+        "id": "D",
+        "labelLatex": "an irrational number"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 75.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.14]** $f^2 - f + pf - p = (f - 1)(p + f)$. Since $0 < f' = 5 - 2\\sqrt{6} < 1$, $p + f + f'$ is an integer, so $f' = 1 - f$. Thus $(f - 1)(p + f) = -f'(p+f) = -(5 - 2\\sqrt{6})^n(5 + 2\\sqrt{6})^n = -1$, which is a negative integer.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q26',
-    questionNumber: 26,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q76] Let S 1 = \\sum j(j - 1)^{10} C j , S 2 = \\sum j. 10 C j , and S 3 = \\sum j . C j [AIEEE 2010] j 1  j 1  j 1  Statement 1 : S 3 = 55 × 2 9 . Statement 2 : S 1 = 90 × 2 8 and S 2 = 10 × 2 8 .',
-    options: [
-      { id: 'A', labelLatex: 'Statement 1 is false, statement 2 is true.' },
-      { id: 'B', labelLatex: 'Statement 1 is true, statement 2 is true ; statement 2 is a correct explanation for statement 1.' },
-      { id: 'C', labelLatex: 'Statement 1 is true, statement 2 is true; statement 2 is not a correct explanation for statement 2.' },
-      { id: 'D', labelLatex: 'Statement 1 is true, statement 2 is false.' },
+    "id": "bin-p2-q26",
+    "questionNumber": 26,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "Number of rational terms in the expansion of $(\\sqrt{2} + \\sqrt[4]{3})^{100}$ is :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "$25$"
+      },
+      {
+        "id": "B",
+        "labelLatex": "$26$"
+      },
+      {
+        "id": "C",
+        "labelLatex": "$27$"
+      },
+      {
+        "id": "D",
+        "labelLatex": "$28$"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 76.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "B",
+    "explanationLatex": "**[Binomial Theorem • EX-II Q.15]** General term is ${}^{100}C_r (2)^{50 - r/2} (3)^{r/4}$. For rationality, $r$ must be a multiple of $4$. As $0 \\le r \\le 100$, $r \\in \\{0, 4, 8, \\dots, 100\\}$, giving $\\frac{100}{4} + 1 = 26$ terms.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q27',
-    questionNumber: 27,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q77] The coefficient of x^{7} in the expansion of (1 - x - x^{2} + x^{3} )^{6} is [AIEEE 2011]',
-    options: [
-      { id: 'A', labelLatex: '^{132}' },
-      { id: 'B', labelLatex: '^{144}' },
-      { id: 'C', labelLatex: '-132' },
-      { id: 'D', labelLatex: '-144' },
+    "id": "bin-p2-q27",
+    "questionNumber": 27,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "The coefficient of the middle term in the binomial expansion in powers of x of $(1 + \\alpha x)^4$ and of $(1 - \\alpha x)^6$ is the same if $\\alpha$ equals :",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "-\\frac{5}{3}"
+      },
+      {
+        "id": "B",
+        "labelLatex": "\\frac{3}{5}"
+      },
+      {
+        "id": "C",
+        "labelLatex": "-\\frac{3}{10}"
+      },
+      {
+        "id": "D",
+        "labelLatex": "\\frac{10}{3}"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 77.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "C",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.1]** Equating the middle terms: $\\binom{4}{2}(\\alpha)^2 = \\binom{6}{3}(-\\alpha)^3$, which simplifies to $6\\alpha^2 = -20\\alpha^3$, giving $\\alpha = -3/10$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q28',
-    questionNumber: 28,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q78] If n is a positive integer then ( 3 + 1)^{2n} - ( 3 - 1)^{2n} is [AIEEE 2012]',
-    options: [
-      { id: 'A', labelLatex: 'an irrational number' },
-      { id: 'B', labelLatex: 'an odd positive integer' },
-      { id: 'C', labelLatex: 'an even positive integer' },
-      { id: 'D', labelLatex: 'a rational number other than positive integers 10 x + 1 - x - 1' },
+    "id": "bin-p2-q28",
+    "questionNumber": 28,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $S_n = \\sum_{r=0}^{n} 1/{}^{n}C_r$ and $t_n = \\sum_{r=0}^{n} r/{}^{n}C_r$, then $t_n/S_n$ is equal to",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "\\frac{1}{2}n"
+      },
+      {
+        "id": "B",
+        "labelLatex": "\\frac{1}{2}n - 1"
+      },
+      {
+        "id": "C",
+        "labelLatex": "n - 1"
+      },
+      {
+        "id": "D",
+        "labelLatex": "\\frac{2n - 1}{2}"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 78.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "A",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.2]** Using the property $\\sum_{r=0}^n \\frac{r}{{}^nC_r} = \\frac{n}{2} \\sum_{r=0}^n \\frac{1}{{}^nC_r}$, we get $t_n = \\frac{n}{2} S_n$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q29',
-    questionNumber: 29,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q79] The term independent of x in expansion of 2 3 1 3 1 2 is : [JEE Main 2013] x - x + 1 x - x',
-    options: [
-      { id: 'A', labelLatex: '^{310}' },
-      { id: 'B', labelLatex: '^{4}' },
-      { id: 'C', labelLatex: '^{120}' },
-      { id: 'D', labelLatex: '^{210}' },
+    "id": "bin-p2-q29",
+    "questionNumber": 29,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If the coefficients of $r^{th}$, $(r + 1)^{th}$, and $(r + 2)^{th}$ terms in the binomial expansion of $(1 + y)^m$ are in A.P., then $m$ and $r$ satisfy the equation",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "m^2 - m(4r - 1) + 4r^2 - 2 = 0"
+      },
+      {
+        "id": "B",
+        "labelLatex": "m^2 - m(4r + 1) + 4r^2 + 2 = 0"
+      },
+      {
+        "id": "C",
+        "labelLatex": "m^2 - m(4r + 1) + 4r^2 - 2 = 0"
+      },
+      {
+        "id": "D",
+        "labelLatex": "m^2 - m(4r - 1) + 4r^2 + 2 = 0"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 79.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "C",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.3]** The coefficients are $\\binom{m}{r-1}, \\binom{m}{r}, \\binom{m}{r+1}$. Since they are in A.P., $2\\binom{m}{r} = \\binom{m}{r-1} + \\binom{m}{r+1}$, which simplifies to $m^2 - m(4r+1) + 4r^2 - 2 = 0$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q30',
-    questionNumber: 30,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q80] If the coefficients of x^{3} and x^{4} in the expansion of (1 + ax + bx 2 ) (1 - 2x)^{18} in powers of x are both zero, then (a, b) is equal to [JEE Main 2014] 16 , 272 16 , 251 14 , 251 14 , 272',
-    options: [
-      { id: 'A', labelLatex: '^{3}' },
-      { id: 'B', labelLatex: '^{3}' },
-      { id: 'C', labelLatex: '^{3}' },
-      { id: 'D', labelLatex: '^{3}' },
+    "id": "bin-p2-q30",
+    "questionNumber": 30,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "The value of ${}^{50}C_4 + \\sum_{r=1}^{6} {}^{56-r}C_3$ is",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "{}^{55}C_4"
+      },
+      {
+        "id": "B",
+        "labelLatex": "{}^{55}C_3"
+      },
+      {
+        "id": "C",
+        "labelLatex": "{}^{56}C_3"
+      },
+      {
+        "id": "D",
+        "labelLatex": "{}^{56}C_4"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 80.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.4]** Using the hockey-stick identity $\\sum_{i=r}^n \\binom{i}{r} = \\binom{n+1}{r+1}$, the sum evaluates to $\\binom{56}{4}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q31',
-    questionNumber: 31,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q81] The sum of coefficents of integral powers of x in the binomial expansion of (1 - 2 x )^{50} is : [JEE Main 2015]',
-    options: [
-      { id: 'A', labelLatex: '^{1} (2 50 + 1)' },
-      { id: 'B', labelLatex: '^{1} (3 50 + 1)' },
-      { id: 'C', labelLatex: '^{1} (3 50 )' },
-      { id: 'D', labelLatex: '^{1} (3 50 - 1)^{2} 2 2 2 2 4 n' },
+    "id": "bin-p2-q31",
+    "questionNumber": 31,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If the coefficient of $x^7$ in $[ax^2 + (1/bx)]^{11}$ equals the coefficient of $x^{-7}$ in $[ax - (1/bx^2)]^{11}$, then $a$ and $b$ satisfy the relation",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "a - b = 1"
+      },
+      {
+        "id": "B",
+        "labelLatex": "a + b = 1"
+      },
+      {
+        "id": "C",
+        "labelLatex": "\\frac{a}{b} = 1"
+      },
+      {
+        "id": "D",
+        "labelLatex": "ab = 1"
+      }
     ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 81.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.5]** Equating the coefficients leads to $a^7 b^{-4} = a^4 b^{-7}$, which simplifies to $a^3 b^3 = 1$, or $ab = 1$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q32',
-    questionNumber: 32,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q82] If the number of terms in the expansion of 1 - x + 2 , x \\neq 0, is 28, then the sum of the coefficients of all x the terms in this expansion, is : [JEE Main 2016]',
-    options: [
-      { id: 'A', labelLatex: '^{64}' },
-      { id: 'B', labelLatex: '^{2187}' },
-      { id: 'C', labelLatex: '^{243}' },
-      { id: 'D', labelLatex: '^{729}' },
+    "id": "bin-p2-q32",
+    "questionNumber": 32,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If $x$ is so small that $x^3$ and higher powers of $x$ may be neglected, then $\\frac{(1 + x)^{3/2} - (1 + \\frac{1}{2}x)^3}{(1 - x)^{1/2}}$ may be approximated as",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "1 - \\frac{3}{8}x^2"
+      },
+      {
+        "id": "B",
+        "labelLatex": "3x + \\frac{3}{8}x^2"
+      },
+      {
+        "id": "C",
+        "labelLatex": "-\\frac{3}{8}x^2"
+      },
+      {
+        "id": "D",
+        "labelLatex": "\\frac{x}{2} - \\frac{3}{8}x^2"
+      }
     ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 82.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "C",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.6]** Expanding using binomial theorem: $(1+x)^{3/2} \\approx 1 + \\frac{3}{2}x + \\frac{3}{8}x^2$, $(1+\\frac{x}{2})^3 \\approx 1 + \\frac{3}{2}x + \\frac{3}{4}x^2$, and $(1-x)^{-1/2} \\approx 1 + \\frac{1}{2}x + \\frac{3}{8}x^2$. The expression simplifies to $-\\frac{3}{8}x^2$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q33',
-    questionNumber: 33,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q83] The value of [JEE Main 2017] ( ^{21}C_{1} - ^{10}C_{1} ) + ( ^{21}C_{2} - ^{10}C_{2} ) + ( ^{21}C_{3} - ^{10}C_{3} ) + ( ^{21}C_{4} - ^{10}C_{4} ) +........+ ( ^{21}C_{10} - ^{10}C_{10} ) is',
-    options: [
-      { id: 'A', labelLatex: '^{2} 20 - 2 10' },
-      { id: 'B', labelLatex: '^{2} 21 - 2 11' },
-      { id: 'C', labelLatex: '^{2} 21 - 2 10' },
-      { id: 'D', labelLatex: '^{2} 20 - 2 9 3 5 3 5' },
+    "id": "bin-p2-q33",
+    "questionNumber": 33,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "If the expansion of powers of $x$ of the function $\\frac{1}{(1 - ax)(1 - bx)}$ is $a_0 + a_1x + a_2x^2 + a_3x^3 + \\dots \\dots \\dots$, then $a_n$ is",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "\\frac{b^n - a^n}{b - a}"
+      },
+      {
+        "id": "B",
+        "labelLatex": "\\frac{a^n - b^n}{b - a}"
+      },
+      {
+        "id": "C",
+        "labelLatex": "\\frac{a^{n+1} - b^{n+1}}{b - a}"
+      },
+      {
+        "id": "D",
+        "labelLatex": "\\frac{b^{n+1} - a^{n+1}}{b - a}"
+      }
     ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 83.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.7]** Using partial fractions, $\\frac{1}{(1-ax)(1-bx)} = \\frac{1}{b-a} (\\frac{b}{1-bx} - \\frac{a}{1-ax})$. The coefficient of $x^n$ is $\\frac{1}{b-a} (b \\cdot b^n - a \\cdot a^n) = \\frac{b^{n+1} - a^{n+1}}{b-a}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q34',
-    questionNumber: 34,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q84] The sum of the co-efficients of all odd degree terms in the expansion of  x + x - 1  +  x - x - 1  ,(x  1) is : [JEE Main 2018]',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
+    "id": "bin-p2-q34",
+    "questionNumber": 34,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "For natural numbers $m$ and $n$, if $(1 - y)^m (1 + y)^n = 1 + a_1y + a_2y^2 + \\dots \\dots \\dots$, and $a_1 = a_2 = 10$, then $(m, n)$ is",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "(20, 45)"
+      },
+      {
+        "id": "B",
+        "labelLatex": "(35, 20)"
+      },
+      {
+        "id": "C",
+        "labelLatex": "(45, 35)"
+      },
+      {
+        "id": "D",
+        "labelLatex": "(35, 45)"
+      }
     ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 84.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.8]** Expanding: $(1-my+\\binom{m}{2}y^2)(1+ny+\\binom{n}{2}y^2) = 1 + (n-m)y + (\\binom{n}{2} + \\binom{m}{2} - mn)y^2$. Given $n-m=10$ and $\\frac{n(n-1)}{2} + \\frac{m(m-1)}{2} - mn = 10$, solving gives $n=45, m=35$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   },
   {
-    id: 'bin-p2-q35',
-    questionNumber: 35,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q85] If in the expansion of (1 + x) m (1 - x)^{n} , the co-efficients of x and x^{2} are 3 and - 6 respectively, then m is : [JEE \'99, 2 (Out of 200)]',
-    options: [
-      { id: 'A', labelLatex: '^{6}' },
-      { id: 'B', labelLatex: '^{9}' },
-      { id: 'C', labelLatex: '^{12}' },
-      { id: 'D', labelLatex: '^{24} n n n' },
+    "id": "bin-p2-q35",
+    "questionNumber": 35,
+    "sectionId": "mathematics",
+    "type": "SINGLE_CORRECT",
+    "promptLatex": "In the binomial expansion of $(a - b)^n, n \\ge 5$, the sum of the fifth and sixth terms is zero, then $a/b$ equals",
+    "options": [
+      {
+        "id": "A",
+        "labelLatex": "\\frac{5}{n - 4}"
+      },
+      {
+        "id": "B",
+        "labelLatex": "\\frac{6}{n - 5}"
+      },
+      {
+        "id": "C",
+        "labelLatex": "\\frac{n - 5}{6}"
+      },
+      {
+        "id": "D",
+        "labelLatex": "\\frac{n - 4}{5}"
+      }
     ],
-    correctAnswer: 'Bonus',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **Bonus**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 85.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q36',
-    questionNumber: 36,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q86] For 2  \\le r \\le n , + 2 r - 1 + r - 2 = r n + 1 n + 1 n + 2 n + 2',
-    options: [
-      { id: 'A', labelLatex: 'r - 1' },
-      { id: 'B', labelLatex: '^{2} r + 1' },
-      { id: 'C', labelLatex: '^{2} r' },
-      { id: 'D', labelLatex: 'r n n' },
-    ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 86.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q37',
-    questionNumber: 37,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q87] For any positive integers m , n (with n \\ge m) , let m = C m . Prove that n n - 1 n - 2 m n + 1 + m + m + ........ + = m m m + 1 Hence or otherwise prove that , n n - 1 n - 2 m n + 2 + 2 m + 3 m + ........ + (n - m + 1) = . m m m + 2 [JEE \'2000 (Mains), 6]',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 87.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q38',
-    questionNumber: 38,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q88] Find the largest co-efficient in the expansion of (1 + x)^{n} , given that the sum of co-efficients of the terms in its expansion is 4096 . [REE \'2000 (Mains)]',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 88.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q39',
-    questionNumber: 39,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q89] In the binomial expansion of (a - b)^{n} , n > 5, the sum of the 5th and 6th terms is zero. Then a/b equals n - 5 n - 4 5 6',
-    options: [
-      { id: 'A', labelLatex: '(A)' },
-      { id: 'B', labelLatex: '(B)' },
-      { id: 'C', labelLatex: '(C)' },
-      { id: 'D', labelLatex: '^{6} 5 n - 4 n - 5 [JEE \'2001 (Screening), 3]' },
-    ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 89.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q40',
-    questionNumber: 40,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q90] Find the coeffcient of x^{49} in the polynomial [REE \'2001 (Mains) , 3] C 1 ^{2}C_{2} ^{2}C_{3} ^{2}C_{50} x - x - 2  x - 3  ................. x - 50  where C r = ^{50}C_{r} . C ^{0}C_{1} C ^{2}C_{49} m 10 20',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 90.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q41',
-    questionNumber: 41,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q91] The sum \\sum  i   m - i  , (where  p  = 0 if P < q ) is maximum when m is [JEE \'2002 (Screening), 3] i  0 q',
-    options: [
-      { id: 'A', labelLatex: '^{5}' },
-      { id: 'B', labelLatex: '^{10}' },
-      { id: 'C', labelLatex: '^{15}' },
-      { id: 'D', labelLatex: '^{20}' },
-    ],
-    correctAnswer: '12C6',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **12C6**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 91.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q42',
-    questionNumber: 42,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q92] Evaluate the following mathematical expression:',
-    options: [
-      { id: 'A', labelLatex: 'Coefficient of t 24 in the expansion of (1+ t 2 )^{12} (1 + t 12 ) (1 + t 24 ) is (A) ^{12}C_{6} + 2' },
-      { id: 'B', labelLatex: '^{12}C_{6} + 1' },
-      { id: 'C', labelLatex: '^{12}C_{6}' },
-      { id: 'D', labelLatex: 'none [JEE 2003, Screening 3 out of 60] (b) Prove that : 2 K . n n - 2 K-1 n n - 1 + 2 K-2 n n - 2 ...... (-1) K n n - K  n . 0 K 1 K - 1 2 K - 2 K 0 K [JEE 2003, Mains-2 out of 60]' },
-    ],
-    correctAnswer: 'B',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **B**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 92.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q43',
-    questionNumber: 43,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q93] n-^{1}C_{r} = (K 2 - 3). ^{n}C_{r}+1 , if K \\in',
-    options: [
-      { id: 'A', labelLatex: '[- 3 , 3 ]' },
-      { id: 'B', labelLatex: '(- \\infty , - 2)' },
-      { id: 'C', labelLatex: '(2, \\infty )' },
-      { id: 'D', labelLatex: '( 3 , 2] [JEE 2004 (Screening)]' },
-    ],
-    correctAnswer: '-22100',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **-22100**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 93.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q44',
-    questionNumber: 44,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q94] The value of 30 30 - 30 30 + 30 30 ........ + 30 30 is, where n = n C . 0 10 1 11 2 12 20 30 r r',
-    options: [
-      { id: 'A', labelLatex: '^{30}' },
-      { id: 'B', labelLatex: '^{30}' },
-      { id: 'C', labelLatex: '^{60}' },
-      { id: 'D', labelLatex: '^{31} 10 15 30 10 [JEE 2005 (Screening)] 10 (1 + x)^{20} and (1 + x)^{30} . Then \\sum A r ( B 10 B r - C 10 A r ) is equal to [JEE 2010] r  1 (A) B 10 - C 10 (B) A 10 (B 10 2 - C 10 A 10 ) (C)^{0} (D) C 10 - B 10' },
-    ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 94.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q45',
-    questionNumber: 45,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q95] The coefficients of three consecutive terms of (1 + x)^{n}+5 are in the ratio 5 : 10 : 14. Then n = [JEE Advanced 2013]',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 95.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q46',
-    questionNumber: 46,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q96] Coefficient of x^{11} in the expansion of (1 + x^{2} )^{4} (1 + x^{3} )^{7} (1 + x^{4} )^{12} is : [JEE Advanced 2014]',
-    options: [
-      { id: 'A', labelLatex: '^{1051}' },
-      { id: 'B', labelLatex: '^{1106}' },
-      { id: 'C', labelLatex: '^{1113}' },
-      { id: 'D', labelLatex: '^{1120}' },
-    ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 96.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q47',
-    questionNumber: 47,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q97] The coefficient of x^{9} in the expansion of (1 + x) (1 + x^{2} ) (1 + x^{3} ) ..... (1 + x^{100} ) is [JEE Advanced 2015]',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'A',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **A**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 97.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q48',
-    questionNumber: 48,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q98] Let m be the smallest positive integer such that the coefficient of x^{2} in the expansion of (1 + x)^{2} + (1 + x)^{3} + ...... + (1 + x)^{49} + (1 + mx)^{50} is (3n + 1) ^{51}C_{3} for some positive integer n. Then the value of n is : [JEE Advanced 2016]',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'D',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **D**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 98.',
-    positiveMarks: 4,
-    negativeMarks: 1,
-  },
-  {
-    id: 'bin-p2-q49',
-    questionNumber: 49,
-    sectionId: 'mathematics',
-    type: 'NUMERICAL',
-    promptLatex: '[Binomial Theorem Q99] Let X  ^{10}C_{2} + 2 ^{10}C_{2} + 3 ^{10}C_{2} + ...... + 10 ^{10}C_{2} , where 10 C , r \\in {1, 2, ...., 10} denote binomial  1   2   3   10  r coefficients. Then, the value of 1 X is ______. [JEE Advanced 2018] 1430',
-    correctAnswer: '6',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **6**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 99.',
-    positiveMarks: 4,
-    negativeMarks: 0,
-  },
-  {
-    id: 'bin-p2-q50',
-    questionNumber: 50,
-    sectionId: 'mathematics',
-    type: 'SINGLE_CORRECT',
-    promptLatex: '[Binomial Theorem Q100] Suppose [JEE Advanced 2019] [ n n n 2 ] [ \\sum k \\sum C k k ] [ k  0 k  0 ] det [ n n ] = 0 [ n C k k ^{n}C_{3} k k ] [ \\sum \\sum ]  k  0 k  0  n n C k holds for some positive integer n. Then \\sum k + 1 equals___. k  0',
-    options: [
-      { id: 'A', labelLatex: '(A) Option A' },
-      { id: 'B', labelLatex: '(B) Option B' },
-      { id: 'C', labelLatex: '(C) Option C' },
-      { id: 'D', labelLatex: '(D) Option D' },
-    ],
-    correctAnswer: 'C',
-    explanationLatex: 'Official Vibrant Kota Faculty Verified Key: **C**.\\nStep-by-step derivation: Apply the general term expansion formula $T_{r+1} = \\binom{n}{r} a^{n-r} b^r$ and standard algebraic simplifications for Question 100.',
-    positiveMarks: 4,
-    negativeMarks: 1,
+    "correctAnswer": "D",
+    "explanationLatex": "**[Binomial Theorem • EX-III Q.9]** $T_5 + T_6 = 0 \\implies \\binom{n}{4} a^{n-4} (-b)^4 + \\binom{n}{5} a^{n-5} (-b)^5 = 0$. This gives $\\binom{n}{4} a = \\binom{n}{5} b$, so $a/b = \\frac{n-4}{5}$.",
+    "positiveMarks": 4,
+    "negativeMarks": 1
   }
 ];

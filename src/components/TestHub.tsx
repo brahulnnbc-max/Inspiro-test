@@ -34,6 +34,7 @@ import { ALL_VIBRANT_LIMIT_CONT_DIFF_PAPERS } from '../data/vibrantLimitContDiff
 import { ALL_VIBRANT_BINOMIAL_PAPERS } from '../data/vibrantBinomialData';
 import { parsePastedQuestionsInstant } from '../utils/instantQuestionParser';
 import {
+  getIsoDate,
   getTodayIso,
   getTomorrowIso,
   generateLockedSchedule,
@@ -199,11 +200,15 @@ export const TestHub: React.FC<TestHubProps> = ({
 
   const creatorRef = useRef<HTMLDivElement | null>(null);
 
-  // Today and Tomorrow strings
-  const todayStr = useMemo(() => getTodayIso(), []);
-  const tomorrowStr = useMemo(() => getTomorrowIso(), []);
+  // Today and Tomorrow strings synchronized with ticking currentTime
+  const todayStr = useMemo(() => getIsoDate(currentTime), [currentTime]);
+  const tomorrowStr = useMemo(() => {
+    const d = new Date(currentTime);
+    d.setDate(d.getDate() + 1);
+    return getIsoDate(d);
+  }, [currentTime]);
 
-  // Categorize Tests and evaluate strict live window states
+  // Categorize Tests and evaluate strict 09:00-12:00 live window states
   const { todayTests, tomorrowTests, upcomingTests, missedTests, completedTests, activeReminders } = useMemo(() => {
     const today: { test: ScheduledTest; windowInfo: ReturnType<typeof getLiveTestWindowStatus> }[] = [];
     const tomorrow: { test: ScheduledTest; windowInfo: ReturnType<typeof getLiveTestWindowStatus> }[] = [];
@@ -223,7 +228,11 @@ export const TestHub: React.FC<TestHubProps> = ({
       if (test.status === 'COMPLETED') {
         completed.push(test);
       } else if (test.scheduledDate === todayStr) {
-        today.push({ test, windowInfo });
+        if (windowInfo.status === 'MISSED') {
+          missed.push({ test, windowInfo });
+        } else {
+          today.push({ test, windowInfo });
+        }
 
         // Check reminders for today
         if (windowInfo.status === 'STARTING_SOON') {
@@ -260,7 +269,7 @@ export const TestHub: React.FC<TestHubProps> = ({
     };
   }, [scheduledTests, todayStr, tomorrowStr, currentTime]);
 
-  // Unified homepage filter matching Schedule Section
+  // Unified homepage filter matching Schedule Section (strictly live only within 09:00-12:00 window)
   const filteredHomeTests = useMemo(() => {
     const sorted = [...scheduledTests].sort((a, b) =>
       a.scheduledDate.localeCompare(b.scheduledDate)
@@ -269,8 +278,9 @@ export const TestHub: React.FC<TestHubProps> = ({
     if (homeFilter === 'ALL') return sorted;
     if (homeFilter === 'LIVE') {
       return sorted.filter((t) => {
+        if (t.status === 'COMPLETED') return false;
         const info = getLiveTestWindowStatus(t, currentTime);
-        return info.isLive || t.status === 'LIVE_NOW';
+        return info.isLive;
       });
     }
     if (homeFilter === 'TOMORROW') {
@@ -687,9 +697,10 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                   const isExpanded = !!expandedTopicTestIds[test.id];
                   const completedTopics = test.syllabus.filter((t) => t.completed).length;
                   const isCompleted = test.status === 'COMPLETED';
-                  const isLive = windowInfo.isLive || test.status === 'LIVE_NOW' || (test.scheduledDate === todayStr && !isCompleted);
-                  const isTomorrow = test.scheduledDate === tomorrowStr;
-                  const isMissed = windowInfo.status === 'MISSED' && test.scheduledDate < todayStr;
+                  const isLive = !isCompleted && windowInfo.isLive;
+                  const isTodayBeforeStart = !isCompleted && test.scheduledDate === todayStr && !windowInfo.isLive && windowInfo.status !== 'MISSED';
+                  const isTomorrow = !isCompleted && test.scheduledDate === tomorrowStr;
+                  const isMissed = !isCompleted && windowInfo.status === 'MISSED';
 
                   return (
                     <div
@@ -697,7 +708,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                       className={`rounded-xl border p-5 md:p-6 shadow-xl space-y-4 transition-all ${
                         isLive
                           ? 'bg-gradient-to-r from-red-950/50 via-zinc-950 to-black border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)]'
-                          : isTomorrow
+                          : isTodayBeforeStart || isTomorrow
                           ? 'bg-zinc-950 border-amber-600/40 hover:border-amber-500/60'
                           : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                       }`}
@@ -712,7 +723,11 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
 
                             {isLive ? (
                               <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-red-600 text-white shadow-[0_0_8px_rgba(220,38,38,0.6)] animate-pulse">
-                                ● LIVE WINDOW
+                                ● LIVE WINDOW ({test.startTime} - {test.endTime})
+                              </span>
+                            ) : isTodayBeforeStart ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                Opens Today @ {test.startTime}
                               </span>
                             ) : isTomorrow ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -729,7 +744,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                             ) : (
                               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1">
                                 <Lock className="w-2.5 h-2.5" />
-                                Locked (Opens {test.scheduledDate})
+                                Locked (Opens {test.scheduledDate} @ {test.startTime})
                               </span>
                             )}
 

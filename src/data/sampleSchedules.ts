@@ -98,19 +98,15 @@ import {
   VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER,
 } from './moduleMarathonPapers';
 
-export function getScheduleBaseDate(): string {
-  try {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  } catch {
-    return '2026-10-23';
-  }
-}
+// Fixed permanent anchor date so the schedule NEVER auto-shifts forward at midnight:
+// Day 1 (2026-10-25): Physics - Kinematics CBT Mock Test 01 (09:00 - 12:00)
+// Day 2 (2026-10-26): Math - Matrices CBT Mock Test 01 (09:00 - 12:00)
+// Strict 1-test-per-day alternate Physics/Math cadence with zero date collisions.
+export const SCHEDULE_BASE_DATE = '2026-10-25';
 
-export const SCHEDULE_BASE_DATE = getScheduleBaseDate();
+export function getScheduleBaseDate(): string {
+  return SCHEDULE_BASE_DATE;
+}
 
 export function getDateForDay(baseDateStr: string, dayIndex: number): string {
   const [year, month, day] = baseDateStr.split('-').map(Number);
@@ -139,12 +135,12 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
     { paper: VIBRANT_MODERN_PHYSICS_PAPER_1, title: 'Day 23 • Physics: Modern Physics CBT Mock Test 01 (50Q Quantum & Photoelectric)', syllabus: 'Photoelectric Effect & de Broglie Wavelength' },
     { paper: VIBRANT_MODERN_PHYSICS_PAPER_2, title: 'Day 25 • Physics: Modern Physics CBT Mock Test 02 (50Q Bohr Model & X-Rays)', syllabus: 'Bohr Hydrogen Atom & Characteristic X-Rays' },
     { paper: VIBRANT_MODERN_PHYSICS_PAPER_3, title: 'Day 27 • Physics: Modern Physics CBT Mock Test 03 (50Q Nuclear & Radioactivity)', syllabus: 'Mass Defect, Binding Energy & Radioactive Decay' },
-    { paper: VIBRANT_KINEMATICS_MARATHON_PAPER, title: 'Day 29 • Physics: Kinematics Complete Module Marathon (88Q)', syllabus: 'All Kinematics Exercise I, II & III Modules' },
-    { paper: VIBRANT_ELECTROSTATICS_MARATHON_PAPER, title: 'Day 31 • Physics: Electrostatics Complete Chapter Marathon (265Q)', syllabus: 'Complete Vibrant Kota Electrostatics Module Archive' },
-    { paper: VIBRANT_CURRENT_ELECTRICITY_MARATHON_PAPER, title: 'Day 33 • Physics: Current Electricity Complete Chapter Marathon (224Q)', syllabus: 'Complete Vibrant Kota Current Electricity Module' },
-    { paper: VIBRANT_GEOMETRICAL_OPTICS_MARATHON_PAPER, title: 'Day 35 • Physics: Geometrical Optics Complete Chapter Marathon (229Q)', syllabus: 'Complete Vibrant Kota Geometrical Optics Module' },
-    { paper: VIBRANT_MODERN_PHYSICS_MARATHON_PAPER, title: 'Day 37 • Physics: Modern Physics Complete Chapter Marathon (243Q)', syllabus: 'Complete Vibrant Kota Modern Physics Module' },
-    { paper: VIBRANT_KINEMATICS_COMPLETE_PAPER, title: 'Day 39 • Physics: Kinematics Master Grand Revision (88Q)', syllabus: 'Full Kinematics Master Revision' },
+    { paper: VIBRANT_KINEMATICS_MARATHON_PAPER, title: 'Day 29 • Physics: Kinematics Complete Module Marathon', syllabus: 'All Kinematics Exercise I, II & III Modules' },
+    { paper: VIBRANT_ELECTROSTATICS_MARATHON_PAPER, title: 'Day 31 • Physics: Electrostatics Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Electrostatics Module Archive' },
+    { paper: VIBRANT_CURRENT_ELECTRICITY_MARATHON_PAPER, title: 'Day 33 • Physics: Current Electricity Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Current Electricity Module' },
+    { paper: VIBRANT_GEOMETRICAL_OPTICS_MARATHON_PAPER, title: 'Day 35 • Physics: Geometrical Optics Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Geometrical Optics Module' },
+    { paper: VIBRANT_MODERN_PHYSICS_MARATHON_PAPER, title: 'Day 37 • Physics: Modern Physics Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Modern Physics Module' },
+    { paper: VIBRANT_KINEMATICS_COMPLETE_PAPER, title: 'Day 39 • Physics: Kinematics Master Grand Revision', syllabus: 'Full Kinematics Master Revision' },
     { paper: VIBRANT_ELECTROSTATICS_PAPER_4, title: 'Day 41 • Physics: Electrostatics CBT Mock Test 04 (50Q Capacitance)', syllabus: 'Capacitance, RC Circuits & Dielectrics' },
     { paper: VIBRANT_CURRENT_ELECTRICITY_COMPLETE_PAPER, title: 'Day 43 • Physics: Current Electricity Master Grand Revision', syllabus: 'Full Current Electricity Master Revision' },
     { paper: VIBRANT_GEOMETRICAL_OPTICS_COMPLETE_PAPER, title: 'Day 45 • Physics: Geometrical Optics Master Grand Revision', syllabus: 'Full Geometrical Optics Master Revision' },
@@ -153,38 +149,38 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
 
   // Ordered Mathematics Papers
   const mathPapers: { paper: ExamPaper; title: string; syllabus: string }[] = [
-    { paper: VIBRANT_MATRICES_PAPER_1, title: 'Day 2 • Math: Matrices CBT Mock Test 01 (50Q Types & Operations)', syllabus: 'Matrix Algebra, Symmetric, Skew-Symmetric & Orthogonal' },
-    { paper: VIBRANT_MATRICES_PAPER_2, title: 'Day 4 • Math: Matrices CBT Mock Test 02 (50Q Adjoint & Inverse)', syllabus: 'Adjoint Matrix, Inverse & System of Equations' },
-    { paper: VIBRANT_MATRICES_PAPER_3, title: 'Day 6 • Math: Matrices CBT Mock Test 03 (50Q Advanced Archive)', syllabus: 'Cayley-Hamilton, Higher Powers & Advanced Archive' },
-    { paper: VIBRANT_DETERMINANT_PAPER_1, title: 'Day 8 • Math: Determinant CBT Mock Test 01 (50Q Sprint)', syllabus: 'Determinant Expansions & Elementary Row Operations' },
-    { paper: VIBRANT_DETERMINANT_PAPER_2, title: 'Day 10 • Math: Determinant CBT Mock Test 02 (50Q Properties)', syllabus: 'Multiplication of Determinants & Factor Theorem' },
-    { paper: VIBRANT_DETERMINANT_PAPER_3, title: 'Day 12 • Math: Determinant CBT Mock Test 03 (50Q Cramer Rule & Advanced)', syllabus: 'Cramer Rule, Inconsistency & JEE Advanced Archive' },
-    { paper: VIBRANT_BINOMIAL_PAPER_1, title: 'Day 14 • Math: Binomial Theorem CBT Mock Test 01 (50Q General Term)', syllabus: 'General Term, Middle Term & Specific Coefficients' },
-    { paper: VIBRANT_BINOMIAL_PAPER_2, title: 'Day 16 • Math: Binomial Theorem CBT Mock Test 02 (50Q Series & Summation)', syllabus: 'Binomial Coefficients Summation, Differentiation & Integration' },
-    { paper: VIBRANT_BINOMIAL_PAPER_3, title: 'Day 18 • Math: Binomial Theorem CBT Mock Test 03 (50Q Divisibility & Archive)', syllabus: 'Divisibility, Remainder & Advanced Archive' },
-    { paper: VIBRANT_VECTORS_3D_PAPER_1, title: 'Day 20 • Math: Vectors & 3-D CBT Mock Test 01 (50Q Vector Algebra)', syllabus: 'Dot & Cross Products, Scalar Triple Product' },
-    { paper: VIBRANT_VECTORS_3D_PAPER_2, title: 'Day 22 • Math: Vectors & 3-D CBT Mock Test 02 (50Q 3D Lines & Planes)', syllabus: 'Direction Cosines, Lines in Space, Planes & Distances' },
+    { paper: VIBRANT_MATRICES_PAPER_1, title: 'Day 2 • Math: Matrices CBT Mock Test 01 (Types & Operations)', syllabus: 'Matrix Algebra, Symmetric, Skew-Symmetric & Orthogonal' },
+    { paper: VIBRANT_MATRICES_PAPER_2, title: 'Day 4 • Math: Matrices CBT Mock Test 02 (Adjoint & Inverse)', syllabus: 'Adjoint Matrix, Inverse & System of Equations' },
+    { paper: VIBRANT_MATRICES_PAPER_3, title: 'Day 6 • Math: Matrices CBT Mock Test 03 (Advanced Archive)', syllabus: 'Cayley-Hamilton, Higher Powers & Advanced Archive' },
+    { paper: VIBRANT_DETERMINANT_PAPER_1, title: 'Day 8 • Math: Determinant CBT Mock Test 01 (Sprint)', syllabus: 'Determinant Expansions & Elementary Row Operations' },
+    { paper: VIBRANT_DETERMINANT_PAPER_2, title: 'Day 10 • Math: Determinant CBT Mock Test 02 (Properties)', syllabus: 'Multiplication of Determinants & Factor Theorem' },
+    { paper: VIBRANT_DETERMINANT_PAPER_3, title: 'Day 12 • Math: Determinant CBT Mock Test 03 (Cramer Rule & Advanced)', syllabus: 'Cramer Rule, Inconsistency & JEE Advanced Archive' },
+    { paper: VIBRANT_BINOMIAL_PAPER_1, title: 'Day 14 • Math: Binomial Theorem CBT Mock Test 01 (General Term)', syllabus: 'General Term, Middle Term & Specific Coefficients' },
+    { paper: VIBRANT_BINOMIAL_PAPER_2, title: 'Day 16 • Math: Binomial Theorem CBT Mock Test 02 (Series & Summation)', syllabus: 'Binomial Coefficients Summation, Differentiation & Integration' },
+    { paper: VIBRANT_BINOMIAL_PAPER_3, title: 'Day 18 • Math: Binomial Theorem CBT Mock Test 03 (Divisibility & Archive)', syllabus: 'Divisibility, Remainder & Advanced Archive' },
+    { paper: VIBRANT_VECTORS_3D_PAPER_1, title: 'Day 20 • Math: Vectors & 3-D CBT Mock Test 01 (Vector Algebra)', syllabus: 'Dot & Cross Products, Scalar Triple Product' },
+    { paper: VIBRANT_VECTORS_3D_PAPER_2, title: 'Day 22 • Math: Vectors & 3-D CBT Mock Test 02 (3D Lines & Planes)', syllabus: 'Direction Cosines, Lines in Space, Planes & Distances' },
     { paper: VIBRANT_VECTORS_3D_PAPER_3, title: 'Day 24 • Math: Vectors & 3-D CBT Mock Test 03 (Remainder & Advanced)', syllabus: 'Coplanarity, Shortest Distance & Advanced Archive' },
-    { paper: VIBRANT_INTEGRATION_PAPER_1, title: 'Day 26 • Math: Integration CBT Mock Test 01 (50Q Indefinite Standard)', syllabus: 'Standard Forms, Substitution & By Parts' },
-    { paper: VIBRANT_INTEGRATION_PAPER_2, title: 'Day 28 • Math: Integration CBT Mock Test 02 (50Q Core Definite & Kings Property)', syllabus: 'Definite Integrals, Kings Rule & Periodicity' },
-    { paper: VIBRANT_INTEGRATION_PAPER_3, title: 'Day 30 • Math: Integration CBT Mock Test 03 (50Q Leibniz Rule & Limit as Sum)', syllabus: 'Leibniz Differentiation under Integral & Limit as Sum' },
-    { paper: VIBRANT_INTEGRATION_PAPER_4, title: 'Day 32 • Math: Integration CBT Mock Test 04 (35Q Advanced Archive)', syllabus: 'IIT Advanced Definite Integration Archive' },
-    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_1, title: 'Day 34 • Math: Diff Eq & Area CBT Mock Test 01 (50Q Formation & First Order)', syllabus: 'Order, Degree, Variable Separable & Homogeneous' },
-    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_2, title: 'Day 36 • Math: Diff Eq & Area CBT Mock Test 02 (50Q Linear Differential Eq)', syllabus: 'Linear Differential Equations & Integrating Factor' },
-    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_3, title: 'Day 38 • Math: Diff Eq & Area CBT Mock Test 03 (50Q Area Under Curve)', syllabus: 'Area Under Curves, Intersecting Curves & Bounded Regions' },
-    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_4, title: 'Day 40 • Math: Diff Eq & Area CBT Mock Test 04 (50Q JEE Advanced Archive)', syllabus: 'Differential Equations & Area Advanced Archive' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_1, title: 'Day 42 • Math: LCD CBT Mock Test 01 (50Q Limits Sprint)', syllabus: 'Standard Limits, Algebraic & Trigonometric Forms' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_2, title: 'Day 44 • Math: LCD CBT Mock Test 02 (50Q Advanced Limits & L-Hopital)', syllabus: 'Exp/Log Limits, 1^Infinity & Series Expansion' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_3, title: 'Day 46 • Math: LCD CBT Mock Test 03 (50Q Continuity Mastery)', syllabus: 'Continuity, Types of Discontinuity & Intermediate Value' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_4, title: 'Day 48 • Math: LCD CBT Mock Test 04 (50Q Differentiability Sprint)', syllabus: 'Differentiability, Sharp Corners & Functional Equations' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_5, title: 'Day 50 • Math: LCD CBT Mock Test 05 (50Q JEE Advanced Archive)', syllabus: 'Limits, Continuity & Differentiability IIT Archive' },
-    { paper: VIBRANT_MATRICES_MARATHON_PAPER, title: 'Day 52 • Math: Matrices Complete Chapter Marathon (146Q)', syllabus: 'Complete Vibrant Kota Matrices Mega XII Module' },
-    { paper: VIBRANT_DETERMINANT_MARATHON_PAPER, title: 'Day 54 • Math: Determinant Complete Chapter Marathon (132Q)', syllabus: 'Complete Vibrant Kota Determinant Mega XII Module' },
-    { paper: VIBRANT_BINOMIAL_MARATHON_PAPER, title: 'Day 56 • Math: Binomial Theorem Complete Chapter Marathon (108Q)', syllabus: 'Complete Vibrant Kota Binomial Micro XI Module' },
-    { paper: VIBRANT_VECTORS_3D_MARATHON_PAPER, title: 'Day 58 • Math: Vectors & 3-D Complete Chapter Marathon (113Q)', syllabus: 'Complete Vibrant Kota Vectors & 3D Module' },
-    { paper: VIBRANT_INTEGRATION_MARATHON_PAPER, title: 'Day 60 • Math: Integration Complete Chapter Marathon (185Q)', syllabus: 'Complete Vibrant Kota Indefinite & Definite Module' },
-    { paper: VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER, title: 'Day 62 • Math: Diff Eq & AUC Complete Chapter Marathon (200Q)', syllabus: 'Complete Vibrant Kota Diff Eq & AUC Mega XII Module' },
-    { paper: VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER, title: 'Day 64 • Math: LCD Complete Chapter Marathon (237Q)', syllabus: 'Complete Vibrant Kota LCD Mega XII Module' },
+    { paper: VIBRANT_INTEGRATION_PAPER_1, title: 'Day 26 • Math: Integration CBT Mock Test 01 (Indefinite Standard)', syllabus: 'Standard Forms, Substitution & By Parts' },
+    { paper: VIBRANT_INTEGRATION_PAPER_2, title: 'Day 28 • Math: Integration CBT Mock Test 02 (Core Definite & Kings Property)', syllabus: 'Definite Integrals, Kings Rule & Periodicity' },
+    { paper: VIBRANT_INTEGRATION_PAPER_3, title: 'Day 30 • Math: Integration CBT Mock Test 03 (Leibniz Rule & Limit as Sum)', syllabus: 'Leibniz Differentiation under Integral & Limit as Sum' },
+    { paper: VIBRANT_INTEGRATION_PAPER_4, title: 'Day 32 • Math: Integration CBT Mock Test 04 (Advanced Archive)', syllabus: 'IIT Advanced Definite Integration Archive' },
+    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_1, title: 'Day 34 • Math: Diff Eq & Area CBT Mock Test 01 (Formation & First Order)', syllabus: 'Order, Degree, Variable Separable & Homogeneous' },
+    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_2, title: 'Day 36 • Math: Diff Eq & Area CBT Mock Test 02 (Linear Differential Eq)', syllabus: 'Linear Differential Equations & Integrating Factor' },
+    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_3, title: 'Day 38 • Math: Diff Eq & Area CBT Mock Test 03 (Area Under Curve)', syllabus: 'Area Under Curves, Intersecting Curves & Bounded Regions' },
+    { paper: VIBRANT_DIFF_EQ_AUC_PAPER_4, title: 'Day 40 • Math: Diff Eq & Area CBT Mock Test 04 (JEE Advanced Archive)', syllabus: 'Differential Equations & Area Advanced Archive' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_1, title: 'Day 42 • Math: LCD CBT Mock Test 01 (Limits Sprint)', syllabus: 'Standard Limits, Algebraic & Trigonometric Forms' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_2, title: 'Day 44 • Math: LCD CBT Mock Test 02 (Advanced Limits & L-Hopital)', syllabus: 'Exp/Log Limits, 1^Infinity & Series Expansion' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_3, title: 'Day 46 • Math: LCD CBT Mock Test 03 (Continuity Mastery)', syllabus: 'Continuity, Types of Discontinuity & Intermediate Value' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_4, title: 'Day 48 • Math: LCD CBT Mock Test 04 (Differentiability Sprint)', syllabus: 'Differentiability, Sharp Corners & Functional Equations' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_PAPER_5, title: 'Day 50 • Math: LCD CBT Mock Test 05 (JEE Advanced Archive)', syllabus: 'Limits, Continuity & Differentiability IIT Archive' },
+    { paper: VIBRANT_MATRICES_MARATHON_PAPER, title: 'Day 52 • Math: Matrices Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Matrices Mega XII Module' },
+    { paper: VIBRANT_DETERMINANT_MARATHON_PAPER, title: 'Day 54 • Math: Determinant Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Determinant Mega XII Module' },
+    { paper: VIBRANT_BINOMIAL_MARATHON_PAPER, title: 'Day 56 • Math: Binomial Theorem Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Binomial Micro XI Module' },
+    { paper: VIBRANT_VECTORS_3D_MARATHON_PAPER, title: 'Day 58 • Math: Vectors & 3-D Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Vectors & 3D Module' },
+    { paper: VIBRANT_INTEGRATION_MARATHON_PAPER, title: 'Day 60 • Math: Integration Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Indefinite & Definite Module' },
+    { paper: VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER, title: 'Day 62 • Math: Diff Eq & AUC Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota Diff Eq & AUC Mega XII Module' },
+    { paper: VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER, title: 'Day 64 • Math: LCD Complete Chapter Marathon', syllabus: 'Complete Vibrant Kota LCD Mega XII Module' },
   ];
 
   const scheduledTests: ScheduledTest[] = [];
@@ -196,7 +192,6 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
   for (let day = 1; day <= totalDays; day++) {
     const isPhysicsDay = day % 2 === 1; // Odd days: Day 1, Day 3, Day 5...
     const dateStr = getDateForDay(baseDateStr, day - 1);
-    const isToday = dateStr === baseDateStr;
 
     if (isPhysicsDay && pIdx < physicsPapers.length) {
       const item = physicsPapers[pIdx];
@@ -212,14 +207,14 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
         pattern: 'JEE_MAIN',
         scheduledDate: dateStr,
         startTime: '09:00',
-        endTime: '23:59',
+        endTime: '12:00',
         durationMinutes: item.paper.durationMinutes || 180,
         totalMarks: item.paper.totalMarks || 200,
         paperId: item.paper.id,
         paper: item.paper,
-        status: isToday ? 'LIVE_NOW' : 'UPCOMING_LOCKED',
-        isLocked: !isToday,
-        scheduledAt: Date.now() + day,
+        status: 'UPCOMING_LOCKED',
+        isLocked: true,
+        scheduledAt: day,
         syllabus: [syllabusTopic],
       });
       pIdx++;
@@ -237,14 +232,14 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
         pattern: 'JEE_MAIN',
         scheduledDate: dateStr,
         startTime: '09:00',
-        endTime: '23:59',
+        endTime: '12:00',
         durationMinutes: item.paper.durationMinutes || 180,
         totalMarks: item.paper.totalMarks || 200,
         paperId: item.paper.id,
         paper: item.paper,
-        status: isToday ? 'LIVE_NOW' : 'UPCOMING_LOCKED',
-        isLocked: !isToday,
-        scheduledAt: Date.now() + day,
+        status: 'UPCOMING_LOCKED',
+        isLocked: true,
+        scheduledAt: day,
         syllabus: [syllabusTopic],
       });
       mIdx++;
@@ -471,7 +466,7 @@ export const SAMPLE_TAGGED_RACE_QUESTIONS: TaggedQuestionEntry[] = [
     examTitle: 'Matrices CBT Mock Test 01',
     subject: 'mathematics',
     tags: ['TRICKY', 'DOUBT'],
-    correctAnswer: 'D',
+    correctAnswer: VIBRANT_MATRICES_PAPER_1.sections[0].questions[0]?.correctAnswer || 'B',
     addedAt: Date.now() - 43200000,
     practiceCount: 1,
     notes: 'Upper triangular matrix identification: a_ij = 0 for all i > j',
@@ -495,9 +490,9 @@ export const SAMPLE_TAGGED_RACE_QUESTIONS: TaggedQuestionEntry[] = [
     examTitle: 'Determinant CBT Mock Test 01',
     subject: 'mathematics',
     tags: ['DOUBT', 'RACE_STAR'],
-    correctAnswer: 'A',
+    correctAnswer: VIBRANT_DETERMINANT_PAPER_1.sections[0].questions[0]?.correctAnswer || 'A',
     addedAt: Date.now() - 3600000,
     practiceCount: 1,
-    notes: 'Vandermonde determinant expansion: (a-b)(b-c)(c-a)',
+    notes: 'Determinant expansion and elementary row-column properties',
   },
 ];

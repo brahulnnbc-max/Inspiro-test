@@ -186,7 +186,10 @@ export const PostTestAnalytics: React.FC<PostTestAnalyticsProps> = ({
 
       sec.questions.forEach((q) => {
         const userAnswer = attempt.answers[q.id];
-        const hasAnswer = userAnswer !== undefined && userAnswer !== '';
+        const hasAnswer =
+          userAnswer !== undefined &&
+          userAnswer !== '' &&
+          !(Array.isArray(userAnswer) && userAnswer.length === 0);
         const qTime = attempt.timeSpentSeconds[q.id] || 0;
         subjectBreakdown[sec.id].timeSpent += qTime;
 

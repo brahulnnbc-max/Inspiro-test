@@ -142,81 +142,81 @@ export const VIBRANT_INTEGRATION_MARATHON_PAPER: ExamPaper = {
   ],
 };
 
-// 8. MATRICES MARATHON (146 Qs)
+// 8. MATRICES MARATHON
 export const VIBRANT_MATRICES_MARATHON_PAPER: ExamPaper = {
   id: 'module-marathon-matrices',
   title: 'Vibrant Kota Mathematics • Matrices Mega XII Complete Marathon',
   pattern: 'JEE_MAIN',
-  durationMinutes: ALL_MATRICES_QUESTIONS.length * 4, // 584 mins
+  durationMinutes: ALL_MATRICES_QUESTIONS.length * 4,
   totalMarks: ALL_MATRICES_QUESTIONS.length * 4,
   sections: [
     {
       id: 'mathematics',
-      name: 'MATHEMATICS (MATRICES COMPLETE 146Q MODULE ARCHIVE)',
+      name: `MATHEMATICS (MATRICES COMPLETE ${ALL_MATRICES_QUESTIONS.length}Q MODULE ARCHIVE)`,
       questions: ALL_MATRICES_QUESTIONS,
     },
   ],
 };
 
-// 9. DETERMINANT MARATHON (132 Qs)
+// 9. DETERMINANT MARATHON
 export const VIBRANT_DETERMINANT_MARATHON_PAPER: ExamPaper = {
   id: 'module-marathon-determinant',
   title: 'Vibrant Kota Mathematics • Determinant Mega XII Complete Marathon',
   pattern: 'JEE_MAIN',
-  durationMinutes: ALL_DETERMINANT_QUESTIONS.length * 4, // 528 mins
+  durationMinutes: ALL_DETERMINANT_QUESTIONS.length * 4,
   totalMarks: ALL_DETERMINANT_QUESTIONS.length * 4,
   sections: [
     {
       id: 'mathematics',
-      name: 'MATHEMATICS (DETERMINANTS COMPLETE 132Q MODULE ARCHIVE)',
+      name: `MATHEMATICS (DETERMINANTS COMPLETE ${ALL_DETERMINANT_QUESTIONS.length}Q MODULE ARCHIVE)`,
       questions: ALL_DETERMINANT_QUESTIONS,
     },
   ],
 };
 
-// 10. DIFF EQ & AUC MARATHON (200 Qs)
+// 10. DIFF EQ & AUC MARATHON
 export const VIBRANT_DIFF_EQ_AUC_MARATHON_PAPER: ExamPaper = {
   id: 'module-marathon-diffeq-auc',
   title: 'Vibrant Kota Mathematics • Differential Equation & AUC Complete Marathon',
   pattern: 'JEE_MAIN',
-  durationMinutes: ALL_DIFF_EQ_AUC_QUESTIONS.length * 4, // 800 mins
+  durationMinutes: ALL_DIFF_EQ_AUC_QUESTIONS.length * 4,
   totalMarks: ALL_DIFF_EQ_AUC_QUESTIONS.length * 4,
   sections: [
     {
       id: 'mathematics',
-      name: 'MATHEMATICS (DIFF EQ & AREA UNDER CURVE COMPLETE 200Q ARCHIVE)',
+      name: `MATHEMATICS (DIFF EQ & AREA UNDER CURVE COMPLETE ${ALL_DIFF_EQ_AUC_QUESTIONS.length}Q ARCHIVE)`,
       questions: ALL_DIFF_EQ_AUC_QUESTIONS,
     },
   ],
 };
 
-// 11. LIMIT, CONTINUITY & DIFFERENTIABILITY MARATHON (237 Qs)
+// 11. LIMIT, CONTINUITY & DIFFERENTIABILITY MARATHON
 export const VIBRANT_LIMIT_CONT_DIFF_MARATHON_PAPER: ExamPaper = {
   id: 'module-marathon-lcd',
   title: 'Vibrant Kota Mathematics • Limit, Continuity & Diff Complete Marathon',
   pattern: 'JEE_MAIN',
-  durationMinutes: ALL_LIMIT_CONT_DIFF_QUESTIONS.length * 4, // 948 mins
+  durationMinutes: ALL_LIMIT_CONT_DIFF_QUESTIONS.length * 4,
   totalMarks: ALL_LIMIT_CONT_DIFF_QUESTIONS.length * 4,
   sections: [
     {
       id: 'mathematics',
-      name: 'MATHEMATICS (LIMITS, CONTINUITY & DIFFERENTIABILITY COMPLETE ARCHIVE)',
+      name: `MATHEMATICS (LIMITS, CONTINUITY & DIFFERENTIABILITY COMPLETE ${ALL_LIMIT_CONT_DIFF_QUESTIONS.length}Q ARCHIVE)`,
       questions: ALL_LIMIT_CONT_DIFF_QUESTIONS,
     },
   ],
 };
 
-// 12. BINOMIAL THEOREM MARATHON (108 Qs)
+// 12. BINOMIAL THEOREM MARATHON
 export const VIBRANT_BINOMIAL_MARATHON_PAPER: ExamPaper = {
   id: 'module-marathon-binomial',
   title: 'Vibrant Kota Mathematics • Binomial Theorem Micro XI Complete Marathon',
   pattern: 'JEE_MAIN',
-  durationMinutes: ALL_BINOMIAL_QUESTIONS.length * 4, // 432 mins
+  durationMinutes: ALL_BINOMIAL_QUESTIONS.length * 4,
   totalMarks: ALL_BINOMIAL_QUESTIONS.length * 4,
   sections: [
     {
       id: 'mathematics',
-      name: 'MATHEMATICS (BINOMIAL THEOREM COMPLETE 108Q ARCHIVE)',
+      name: `MATHEMATICS (BINOMIAL THEOREM COMPLETE ${ALL_BINOMIAL_QUESTIONS.length}Q ARCHIVE)`,
       questions: ALL_BINOMIAL_QUESTIONS,
     },
   ],

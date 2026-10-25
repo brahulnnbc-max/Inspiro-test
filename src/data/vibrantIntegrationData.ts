@@ -178,19 +178,15 @@ export const ALL_VIBRANT_INTEGRATION_PAPERS: ExamPaper[] = [
  * Authentic CBT Mode with isLocked: true and UPCOMING_LOCKED status.
  */
 export function getVibrantIntegrationLockedTests(baseDateStr?: string): ScheduledTest[] {
-  const d = new Date();
-  if (!baseDateStr) {
-    // Tomorrow as Day 1
-    d.setDate(d.getDate() + 1);
-  } else {
-    const parsed = new Date(baseDateStr);
-    if (!isNaN(parsed.getTime())) {
-      d.setTime(parsed.getTime());
-    }
-  }
+  const anchor = baseDateStr || '2026-10-25';
+  const [y, m, day] = anchor.split('-').map(Number);
+  const d = new Date(y, m - 1, day);
 
   const formatIso = (dateObj: Date): string => {
-    return dateObj.toISOString().split('T')[0];
+    const yy = dateObj.getFullYear();
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    return `${yy}-${mm}-${dd}`;
   };
 
   const testsConfig = [
@@ -240,8 +236,8 @@ export function getVibrantIntegrationLockedTests(baseDateStr?: string): Schedule
       dayNum: 20,
       paper: VIBRANT_INTEGRATION_PAPER_4,
       startTime: '09:00',
-      endTime: '11:20',
-      durationMinutes: 140, // 35 questions * 4 mins
+      endTime: '12:00',
+      durationMinutes: 140,
       totalMarks: 140,
       syllabus: [
         { id: 'syl-int-4-1', subject: 'mathematics' as const, name: 'JEE Advanced Master Archive (2015–2025 Multi-Concept Problems)', completed: false },
@@ -277,8 +273,8 @@ export function getVibrantIntegrationLockedTests(baseDateStr?: string): Schedule
       dayNum: 26,
       paper: VIBRANT_INTEGRATION_COMPLETE_PAPER,
       startTime: '09:00',
-      endTime: '21:20',
-      durationMinutes: 740, // 185 questions * 4 mins
+      endTime: '12:00',
+      durationMinutes: 740,
       totalMarks: 740,
       syllabus: [
         { id: 'syl-int-7-1', subject: 'mathematics' as const, name: 'Complete Indefinite & Definite Integration Exercise I, II, III, IV & V Grand Revision', completed: false },

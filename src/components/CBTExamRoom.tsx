@@ -80,6 +80,26 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   const [sessionData] = useState(() => {
     const now = Date.now();
 
+    // Compute authoritative live window end timestamp if this is a live scheduled test
+    let officialScheduledEndMs: number | null = null;
+    if (!isModulePractice && !isReattempt && scheduledTest) {
+      try {
+        let rawEndTime = scheduledTest.endTime;
+        if (!rawEndTime && (scheduledTest as any).scheduledSlot) {
+          const parts = (scheduledTest as any).scheduledSlot.split('-').map((s: string) => s.trim());
+          if (parts.length >= 2) rawEndTime = parts[1];
+        }
+        if (!rawEndTime) rawEndTime = '12:00';
+
+        const [endH, endM] = rawEndTime.split(':').map(Number);
+        const dateStr = scheduledTest.scheduledDate || new Date().toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-').map(Number);
+        officialScheduledEndMs = new Date(year, month - 1, day, endH, endM, 0, 0).getTime();
+      } catch (err) {
+        console.warn('Error computing live window end time', err);
+      }
+    }
+
     // 1. Try to restore in-progress session if student refreshed, navigated away, or escaped
     if (!isReattempt) {
       try {
@@ -97,7 +117,14 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
               };
             }
             if (!isModulePractice && parsed.scheduledEndTimestamp) {
-              return parsed;
+              const effectiveEndMs = officialScheduledEndMs ?? parsed.scheduledEndTimestamp;
+              if (effectiveEndMs > now) {
+                return {
+                  ...parsed,
+                  scheduledEndTimestamp: effectiveEndMs,
+                  secondsRemaining: Math.max(0, Math.floor((effectiveEndMs - now) / 1000)),
+                };
+              }
             }
           }
         }
@@ -106,34 +133,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
       }
     }
 
-    // 2. Fresh session creation (4 mins x total number of questions)
+    // 2. Fresh session creation (4 mins x total number of questions, or anchored to 12:00 PM live shift end)
     const initialSec = paper.durationMinutes * 60;
-    let targetEndMs = now + initialSec * 1000;
+    const targetEndMs = officialScheduledEndMs ?? now + initialSec * 1000;
 
-    // Anchor timer strictly to official shift window for live scheduled tests:
-    // The test is live: it starts at the scheduled time and ends at the exact scheduled end time
-    // no matter when students attend. Joining late yields only remaining time until scheduled end.
-    if (!isModulePractice && !isReattempt && scheduledTest) {
-      try {
-        let rawEndTime = scheduledTest.endTime;
-        if (!rawEndTime && (scheduledTest as any).scheduledSlot) {
-          const parts = (scheduledTest as any).scheduledSlot.split('-').map((s: string) => s.trim());
-          if (parts.length >= 2) rawEndTime = parts[1];
-        }
-        if (!rawEndTime) rawEndTime = '12:00';
-
-        const [endH, endM] = rawEndTime.split(':').map(Number);
-        const dateStr = scheduledTest.scheduledDate || new Date().toISOString().split('T')[0];
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const scheduledEndMs = new Date(year, month - 1, day, endH, endM, 0, 0).getTime();
-
-        targetEndMs = scheduledEndMs;
-      } catch (err) {
-        console.warn('Error computing live window end time', err);
-      }
-    }
-
-    const calculatedSec = !isModulePractice && scheduledTest
+    const calculatedSec = !isModulePractice && !isReattempt && scheduledTest
       ? Math.max(0, Math.floor((targetEndMs - now) / 1000))
       : initialSec;
 
@@ -376,9 +380,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   // Action: Save & Next
   const handleSaveAndNext = () => {
     if (!currentQuestion) return;
+    const rawAns = answers[currentQuestion.id];
     const hasAnswer =
-      answers[currentQuestion.id] !== undefined &&
-      answers[currentQuestion.id] !== '';
+      rawAns !== undefined &&
+      rawAns !== '' &&
+      !(Array.isArray(rawAns) && rawAns.length === 0);
 
     setStatuses((prev) => ({
       ...prev,
@@ -391,9 +397,11 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
   // Action: Save & Mark for Review
   const handleSaveAndMarkForReview = () => {
     if (!currentQuestion) return;
+    const rawAns = answers[currentQuestion.id];
     const hasAnswer =
-      answers[currentQuestion.id] !== undefined &&
-      answers[currentQuestion.id] !== '';
+      rawAns !== undefined &&
+      rawAns !== '' &&
+      !(Array.isArray(rawAns) && rawAns.length === 0);
 
     setStatuses((prev) => ({
       ...prev,
@@ -1227,10 +1235,15 @@ export const CBTExamRoom: React.FC<CBTExamRoomProps> = ({
                               const next = cur.includes(option.id)
                                 ? cur.filter((x) => x !== option.id)
                                 : [...cur, option.id];
-                              setAnswers((prev) => ({
-                                ...prev,
-                                [currentQuestion.id]: next,
-                              }));
+                              setAnswers((prev) => {
+                                const updated = { ...prev };
+                                if (next.length === 0) {
+                                  delete updated[currentQuestion.id];
+                                } else {
+                                  updated[currentQuestion.id] = next;
+                                }
+                                return updated;
+                              });
                             } else {
                               setAnswers((prev) => ({
                                 ...prev,
