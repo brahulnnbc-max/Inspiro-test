@@ -67,42 +67,41 @@ export default function App() {
     }
   });
 
-  // Persistent Scheduled Tests (Alternate Day Series starting TODAY with Day 1 Kinematics 1st 50Q)
+  // Persistent Scheduled Tests (Static Locked Schedule anchored permanently to SCHEDULE_BASE_DATE)
   const [scheduledTests, setScheduledTests] = useState<ScheduledTest[]>(() => {
-    const todayIso = getTodayIso();
-    const freshMaster = buildMasterAlternateSchedule(todayIso);
+    const freshMaster = SAMPLE_SCHEDULED_TESTS;
     try {
       const stored = localStorage.getItem('jee_scheduled_tests');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Purge any past expired tests before today
-          const hasPastExpiredTests = parsed.some((t: any) => t && t.scheduledDate && t.scheduledDate < todayIso);
-          const firstStored = parsed.find((t: any) => t && t.id === 'sched-day-1-physics');
-          const isAlignedToToday = firstStored && firstStored.scheduledDate === todayIso;
-
-          const hasDay35Marathon = parsed.some((t: any) => t && t.title && t.title.includes('Day 35') && t.title.includes('Marathon'));
-
-          // If expired tests exist, Day 1 is not aligned to today, or schedule updated with new chapters:
-          // Purge and realign fresh master sequence starting today!
-          if (hasPastExpiredTests || !isAlignedToToday || hasDay35Marathon || parsed.length !== freshMaster.length) {
-            console.log('[Schedule] Updating master schedule with newly added chapters and Feb 1 schedule...');
-            localStorage.setItem('jee_scheduled_tests', JSON.stringify(freshMaster));
-            return freshMaster;
-          }
-
+          const masterIds = new Set(freshMaster.map((t) => t.id));
           const storedById = new Map<string, any>(parsed.map((t: any) => [t.id, t]));
-          const refreshed = freshMaster.map((freshTest) => {
+          const customUserTests = parsed.filter((t: any) => t && t.id && !masterIds.has(t.id));
+
+          // Always enforce static locked dates and 09:00-12:00 IST window while preserving completed attempts & syllabus progress
+          const refreshedMaster = freshMaster.map((freshTest) => {
             const prev = storedById.get(freshTest.id);
             if (!prev) return freshTest;
+            const prevCompletedById = new Map<string, boolean>(
+              Array.isArray(prev.syllabus)
+                ? prev.syllabus.map((s: any) => [s.id, Boolean(s.completed)])
+                : []
+            );
             return {
               ...freshTest,
-              status: prev.status === 'COMPLETED' ? ('COMPLETED' as const) : freshTest.status,
+              status: prev.status === 'COMPLETED' ? ('COMPLETED' as const) : ('UPCOMING_LOCKED' as const),
               score: prev.score,
+              syllabus: freshTest.syllabus.map((top) => ({
+                ...top,
+                completed: prevCompletedById.get(top.id) ?? top.completed,
+              })),
             };
           });
-          localStorage.setItem('jee_scheduled_tests', JSON.stringify(refreshed));
-          return refreshed;
+
+          const combined = [...customUserTests, ...refreshedMaster];
+          localStorage.setItem('jee_scheduled_tests', JSON.stringify(combined));
+          return combined;
         }
       }
       localStorage.setItem('jee_scheduled_tests', JSON.stringify(freshMaster));
@@ -112,10 +111,9 @@ export default function App() {
     }
   });
 
-  // Re-align coaching roadmap fresh starting today:
-  // Day 1: Kinematics 1st 50Q (Today), Day 2: Matrices Test 01, Day 3: Kinematics Remainder, Day 4: Matrices Test 02, Day 5: Electrostatics 1st 50Q...
+  // Reset coaching roadmap to the fixed static SCHEDULE_BASE_DATE (never auto-shifting dates)
   const handleResetCoachingSchedule = () => {
-    const fresh = buildMasterAlternateSchedule(getTodayIso());
+    const fresh = buildMasterAlternateSchedule(SCHEDULE_BASE_DATE);
     setScheduledTests(fresh);
     try {
       localStorage.setItem('jee_scheduled_tests', JSON.stringify(fresh));

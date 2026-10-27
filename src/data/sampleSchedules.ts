@@ -133,10 +133,10 @@ import {
 } from './moduleMarathonPapers';
 
 // Fixed permanent anchor date so the schedule NEVER auto-shifts forward at midnight:
-// Day 1 (2026-10-25): Physics - Kinematics CBT Mock Test 01 (09:00 - 12:00)
-// Day 2 (2026-10-26): Math - Matrices CBT Mock Test 01 (09:00 - 12:00)
+// Day 1 (2026-10-27): Physics - Kinematics CBT Mock Test 01 (09:00 - 12:00)
+// Day 2 (2026-10-28): Math - Matrices CBT Mock Test 01 (09:00 - 12:00)
 // Strict 1-test-per-day alternate Physics/Math cadence with zero date collisions.
-export const SCHEDULE_BASE_DATE = '2026-10-25';
+export const SCHEDULE_BASE_DATE = '2026-10-27';
 
 export function getScheduleBaseDate(): string {
   return SCHEDULE_BASE_DATE;
@@ -286,7 +286,6 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
     const isPhysicsDay = day % 2 === 1; // Odd days: Day 1, Day 3, Day 5...
     const dateStr = getDateForDay(baseDateStr, day - 1);
     if (dateStr > '2026-12-31') break;
-    const isDay1Today = day === 1 && dateStr === baseDateStr;
 
     if (isPhysicsDay && pIdx < physicsPapers.length) {
       const item = physicsPapers[pIdx];
@@ -302,13 +301,13 @@ export function buildMasterAlternateSchedule(baseDateStr: string = SCHEDULE_BASE
         pattern: 'JEE_MAIN',
         scheduledDate: dateStr,
         startTime: '09:00',
-        endTime: isDay1Today ? '23:59' : '12:00',
+        endTime: '12:00',
         durationMinutes: item.paper.durationMinutes || 180,
         totalMarks: item.paper.totalMarks || 200,
         paperId: item.paper.id,
         paper: item.paper,
-        status: isDay1Today ? 'LIVE_NOW' : 'UPCOMING_LOCKED',
-        isLocked: !isDay1Today,
+        status: 'UPCOMING_LOCKED',
+        isLocked: true,
         scheduledAt: day,
         syllabus: [syllabusTopic],
       });

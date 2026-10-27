@@ -708,7 +708,7 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                     type="button"
                     onClick={onResetCoachingSchedule}
                     className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="Re-align full series starting today: Day 1 Kinematics 1st 50Q, Day 2 Matrices Test 01, Day 3 Kinematics Remainder, Day 4 Matrices Test 02, Day 5 Electrostatics 1st 50Q"
+                    title="Restore locked static test schedule (09:00 - 12:00 IST)"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
                     <span>Re-align Series</span>
@@ -795,38 +795,69 @@ Solution: $\\int_0^1 (3x^2 + 2x) dx = [x^3 + x^2]_0^1 = (1 + 1) - 0 = 2$.`);
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {/* Day 1: Today Status */}
-                <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-600/40 flex items-start gap-2.5">
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-300 shrink-0">
-                    TODAY ({todayStr})
-                  </span>
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-white">
-                      Day 1 • Physics: Kinematics CBT Mock Test 01 (1st 50Q Sprint • Q1 to Q50)
-                    </div>
-                    <div className="text-[11px] text-emerald-300/90 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <strong>LIVE NOW • Test Series Active Today (09:00 - 23:59 IST)</strong>
-                    </div>
-                  </div>
-                </div>
+              {(() => {
+                const todayBannerTest = scheduledTests.find((t) => t.scheduledDate === todayStr);
+                const todayBannerWin = todayBannerTest
+                  ? getLiveTestWindowStatus(todayBannerTest, currentTime, activeLiveTestId)
+                  : null;
+                const tomorrowBannerTest = scheduledTests.find((t) => t.scheduledDate === tomorrowStr);
 
-                {/* Day 2: Tomorrow Status */}
-                <div className="p-3 rounded-lg bg-zinc-900/60 border border-amber-600/30 flex items-start gap-2.5">
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 shrink-0">
-                    TOMORROW ({tomorrowStr})
-                  </span>
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-white">
-                      Day 2 • Math: Matrices CBT Mock Test 01 (Module 1st 50Q • Q1 to Q50)
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    {/* Today Status */}
+                    <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-600/40 flex items-start gap-2.5">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/20 text-emerald-300 shrink-0">
+                        TODAY ({todayStr})
+                      </span>
+                      <div className="space-y-0.5">
+                        <div className="font-semibold text-white">
+                          {todayBannerTest ? todayBannerTest.title : 'No Live Test Scheduled Today'}
+                        </div>
+                        <div className="text-[11px] text-emerald-300/90 flex items-center gap-1.5">
+                          {todayBannerTest ? (
+                            todayBannerTest.status === 'COMPLETED' ? (
+                              <strong>Completed • Submitted ({todayBannerTest.startTime} - {todayBannerTest.endTime} IST)</strong>
+                            ) : todayBannerWin?.isLive ? (
+                              <>
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <strong>LIVE NOW • Active Window ({todayBannerTest.startTime} - {todayBannerTest.endTime} IST)</strong>
+                              </>
+                            ) : todayBannerWin?.status === 'MISSED' ? (
+                              <strong>Slot: {todayBannerTest.startTime} - {todayBannerTest.endTime} IST • Window Closed</strong>
+                            ) : (
+                              <strong>Slot: {todayBannerTest.startTime} - {todayBannerTest.endTime} IST • Opens Today @ {todayBannerTest.startTime} IST</strong>
+                            )
+                          ) : (
+                            <span>Static Locked Schedule • Next test opens on its scheduled date</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-amber-300/90">
-                      Slot: 09:00 - 12:00 IST • <strong>Starts Tomorrow @ 09:00 AM IST</strong>
+
+                    {/* Tomorrow Status */}
+                    <div className="p-3 rounded-lg bg-zinc-900/60 border border-amber-600/30 flex items-start gap-2.5">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 shrink-0">
+                        TOMORROW ({tomorrowStr})
+                      </span>
+                      <div className="space-y-0.5">
+                        <div className="font-semibold text-white">
+                          {tomorrowBannerTest ? tomorrowBannerTest.title : 'No Live Test Scheduled Tomorrow'}
+                        </div>
+                        <div className="text-[11px] text-amber-300/90">
+                          {tomorrowBannerTest ? (
+                            <>
+                              Slot: {tomorrowBannerTest.startTime} - {tomorrowBannerTest.endTime} IST •{' '}
+                              <strong>Starts Tomorrow @ {tomorrowBannerTest.startTime} IST</strong>
+                            </>
+                          ) : (
+                            <span>Check upcoming locked dates below</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Quick Audio Alarm Previews */}
               <div className="pt-2 border-t border-zinc-900 flex items-center justify-between flex-wrap gap-2 text-[11px]">
